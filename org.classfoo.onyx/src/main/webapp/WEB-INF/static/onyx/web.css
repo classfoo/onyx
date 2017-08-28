@@ -1,0 +1,57 @@
+/* Onyx App*/
+.onyx-web {
+	position: absolute;
+	height: 100%;
+	width: 100%;
+	overflow-x: hidden;
+	overflow-y: hidden;
+}
+
+/*Nav Bar*/
+.onyx-web-topbar {
+	height: 100%;
+	width: 100%;
+	background-color: #3095e2;
+}
+
+.onyx-web-topbar-icon {
+	color: #FFFFFF;
+	margin-left: 26px;
+	margin-top: 14px;
+	font-size: 18px;
+	line-height: 18px;
+}
+
+/*Body*/
+.onyx-web .onyx-ui-layout-body {
+	
+}
+
+/*Navbar Item TopBar*/
+.onyx-ui-navbar-topbar {
+	width: 100%;
+	display: table;
+	table-layout: fixed;
+	padding-left: 5px;
+	padding-right: 5px;
+}
+
+.onyx-ui-navbar-topbar-item {
+	position: relative;
+	display: table-cell;
+	font-size:18px;
+	color: white;
+	line-height: 46px;
+	vertical-align: bottom;
+	text-align: center;
+	cursor: pointer;
+}
+
+/*Navbar item active*/
+.onyx-ui-navbar-topbar-item-active {
+}
+
+/*Navbar item over*/
+.onyx-ui-navbar-topbar-item-over {
+	font-size:20px;
+}

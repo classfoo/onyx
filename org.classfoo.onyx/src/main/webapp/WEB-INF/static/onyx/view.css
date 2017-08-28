@@ -1,0 +1,158 @@
+.onyx-view {
+	width: 100%;
+	height: 100%;
+}
+
+.onyx-view-multipage {
+	width: 100%;
+	height: 100%;
+}
+
+/*Onyx View Entity*/
+.onyx-view-entity {
+	width: 100%;
+	height: 100%;
+	margin: 0 auto;
+	overflow-y: scroll;
+	background-color: #F2F2F2;
+}
+
+.onyx-view-entity-header {
+	width: 100%;
+	height: 30px;
+}
+
+.onyx-view-entity-body {
+	width: 100%;
+	height: auto;
+}
+
+.onyx-view-entity-footer {
+	width: 100%;
+	height: 30px;
+}
+
+.onyx-view-entity-page {
+	position: relative;
+	width: 210mm;
+	height: auto;
+	min-height: 297mm;
+	left: 50%;
+	margin-left: -105mm;
+	padding: 5mm;
+	border: 1px solid #F2F2F2;
+	background-color: white;
+	border-radius: 3px;
+	-webkit-box-shadow: 0 0 1px 1px #ccc;
+	-moz-box-shadow: 0 0 1px 1px #ccc;
+	-o-box-shadow: 0 0 1px 1px #ccc;
+	-ms-box-shadow: 0 0 1px 1px #ccc;
+	box-shadow: 0 0 1px 1px #ccc;
+}
+
+.onyx-view-entity-paragraph {
+	position: relative;
+	width: 200mm;
+	height: auto;
+	min-height: 32px;
+	margin: 0px;
+}
+
+.onyx-view-entity-tools {
+	position: absolute;
+	width: 32px;
+	height: 128px;
+	top: 50%;
+	left: 50%;
+	margin-top: -64px;
+	margin-left: 105mm;
+	border-radius: 16px;
+	background-color: white;
+	margin-left: 105mm;
+	padding-top: 16px;
+	padding-bottom: 16px;
+	-webkit-box-shadow: 0 0 1px 1px #ccc;
+	-moz-box-shadow: 0 0 1px 1px #ccc;
+	-o-box-shadow: 0 0 1px 1px #ccc;
+	-ms-box-shadow: 0 0 1px 1px #ccc;
+	box-shadow: 0 0 1px 1px #ccc;
+	-webkit-box-shadow: 0 0 1px 1px #ccc;
+}
+
+.onyx-view-entity-tool {
+	margin-bottom: 2px;
+}
+
+/*View Label*/
+.onyx-view-label {
+	width: 100%;
+	height: 100%;
+	margin: 0 auto;
+	overflow-y: scroll;
+	background-color: #F2F2F2;
+}
+
+.onyx-view-label-header {
+	width: 100%;
+	height: 30px;
+}
+
+.onyx-view-label-body {
+	width: 100%;
+	height: auto;
+}
+
+.onyx-view-label-footer {
+	width: 100%;
+	height: 30px;
+}
+
+.onyx-view-label-page {
+	position: relative;
+	width: 210mm;
+	height: auto;
+	min-height: 297mm;
+	left: 50%;
+	margin-left: -105mm;
+	padding: 5mm;
+	border: 1px solid #F2F2F2;
+	background-color: white;
+	border-radius: 3px;
+	-webkit-box-shadow: 0 0 1px 1px #ccc;
+	-moz-box-shadow: 0 0 1px 1px #ccc;
+	-o-box-shadow: 0 0 1px 1px #ccc;
+	-ms-box-shadow: 0 0 1px 1px #ccc;
+	box-shadow: 0 0 1px 1px #ccc;
+}
+
+.onyx-view-label-paragraph {
+	position: relative;
+	width: 200mm;
+	height: auto;
+	min-height: 32px;
+	margin: 0px;
+}
+
+.onyx-view-label-tools {
+	position: absolute;
+	width: 32px;
+	height: 128px;
+	top: 50%;
+	left: 50%;
+	margin-top: -64px;
+	margin-left: 105mm;
+	border-radius: 16px;
+	background-color: white;
+	margin-left: 105mm;
+	padding-top: 16px;
+	padding-bottom: 16px;
+	-webkit-box-shadow: 0 0 1px 1px #ccc;
+	-moz-box-shadow: 0 0 1px 1px #ccc;
+	-o-box-shadow: 0 0 1px 1px #ccc;
+	-ms-box-shadow: 0 0 1px 1px #ccc;
+	box-shadow: 0 0 1px 1px #ccc;
+}
+
+.onyx-view-label-tool {
+	margin-bottom: 2px;
+}

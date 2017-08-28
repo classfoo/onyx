@@ -1,0 +1,6 @@
+.root {
+	-fx-font-size: 12px;
+	-fx-font-family: "Microsoft YaHei";
+	-fx-base: rgb(255, 255, 255);
+	-fx-background: rgb(255, 255, 255);
+}
