@@ -291,6 +291,10 @@ textarea {
 	position: relative;
 	height: 100%;
 	width: 100%;
+	display: flex;
+	display: -webkit-flex;
+	align-items: center;
+	text-align: center;
 }
 
 .onyx-ui-toolbar-layout-left {
@@ -414,6 +418,16 @@ textarea {
 .onyx-ui-button-gray-drop {
 	color: white;
 	background-color: gray;
+}
+
+.onyx-ui-button-bubble {
+	margin: 5px;
+	padding-left: 8px;
+	padding-right: 8px;
+	font-size: 16px;
+	border-radius: 16px;
+	border: 1px solid transparent;
+	background-color: rgba(255, 255, 255, 0.5);
 }
 
 /*Icon*/
@@ -1185,11 +1199,22 @@ textarea {
 	text-align: center;
 }
 
-.onyx-ui-showboard-item-base-image {
+.onyx-ui-showboard-item-base-header {
 	text-align: center;
 	font-size: 64px;
 	height: 64px;
 	line-height: 64px;
+	background-color: rgba(255, 255, 255, 0.5);
+}
+
+.onyx-ui-showboard-item-base-icon {
+	text-align: center;
+	font-size: 48px;
+	width: 64px;
+	height: 64px;
+	line-height: 64px;
+	border-radius: 64px;
+	overflow: hidden;
 	background-color: rgba(255, 255, 255, 0.5);
 }
 
@@ -1224,21 +1249,11 @@ textarea {
 }
 
 .onyx-ui-showboard-item-base-tools {
+	-webkit-justify-content: center;
+	justify-content: center;
 	text-align: center;
-	padding-left: 20px;
-	padding-right: 20px;
 	height: 32px;
 	border-top: 1px solid rgba(255, 255, 255, 0.5);
-}
-
-.onyx-ui-showboard-item-base-tool {
-	margin: 5px;
-	padding-left: 8px;
-	padding-right: 8px;
-	font-size: 16px;
-	border-radius: 16px;
-	border: 1px solid transparent;
-	background-color: rgba(255, 255, 255, 0.5);
 }
 
 /*ShowBoard Item Entity*/
@@ -1290,20 +1305,18 @@ textarea {
 
 .onyx-ui-showboard-item-entity-tools {
 	text-align: center;
+	display: flex;
+	display: -webkit-flex;
+	align-items: center;
 	padding: 5px;
 	height: 28px;
 	border-top: 1px solid rgba(255, 255, 255, 0.5);
 }
 
-.onyx-ui-showboard-item-entity-tool {
-	margin-left: 5px;
-	margin-right: 5px;
-	padding-left: 4px;
-	padding-right: 4px;
-	font-size: 12px;
-	border-radius: 16px;
-	border: 1px solid transparent;
-	background-color: rgba(255, 255, 255, 0.5);
+.onyx-ui-showboard-item-entity-tools-section {
+	display: flex;
+	display: -webkit-flex;
+	align-items: center;
 }
 
 /*Edit Board*/
@@ -1716,10 +1729,10 @@ textarea {
 	width: 100%;
 	padding: 0px;
 	font-size: 14px;
-	color:gray;
+	color: gray;
 	text-align: left;
-	padding:10px;
-	border-bottom:1px solid #F2F2F2;
+	padding: 10px;
+	border-bottom: 1px solid #F2F2F2;
 }
 
 .onyx-ui-submiter-multipage {

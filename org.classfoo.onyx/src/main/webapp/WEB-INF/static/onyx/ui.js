@@ -473,6 +473,18 @@ define("onyx/ui/widget", [ "jquery", "require", "page/page" ], function($,
 		return this.dom.trigger(event, options);
 	}
 
+	Widget.prototype.docmd = function(event, button) {
+		if (!this.options.cmd) {
+			return;
+		}
+		var button = button || this.getEventTarget(event, "onyx-ui-button");
+		if (!button) {
+			return;
+		}
+		var Button = button.data();
+		this.options.cmd(Button.id, event);
+	}
+
 	Widget.prototype.redirect = function(uri) {
 		Page(uri);
 	}
@@ -503,6 +515,15 @@ define("onyx/ui/toolbar", [ "jquery", "require", "onyx/ui/widget",
 				this.dom = $("<div/>");
 				this.addClass(this.dom, "onyx-ui-toolbar");
 				this.dom.appendTo(pdom);
+				if (this.options.left || this.options.middle
+						|| this.options.right) {
+					this.buildLayout();
+				}
+				this.dom.on("click", this.docmd.bind(this));
+				return this.dom;
+			}
+
+			ToolBar.prototype.buildLayout = function() {
 				this.layout = new Layout({
 					clazz : "onyx-ui-toolbar-layout",
 					left : {},
@@ -528,8 +549,12 @@ define("onyx/ui/toolbar", [ "jquery", "require", "onyx/ui/widget",
 						this.createRightButton(this.options.right[i]);
 					}
 				}
-				this.dom.on("click", this.docmd.bind(this));
-				return this.dom;
+			}
+
+			ToolBar.prototype.createButton = function(options) {
+				return new Button($.extend(options, {
+					pdom : this.dom
+				}));
 			}
 
 			ToolBar.prototype.createLeftButton = function(options) {
@@ -1841,6 +1866,7 @@ define("onyx/ui/multipage", [ "jquery", "require", "onyx/ui/widget",
 		var page = $.extend({}, options);
 		page.id = pageid;
 		page.dom = $("<div/>");
+		page.dom.attr("id", page.id);
 		this.addClass(page.dom, "onyx-ui-multipage", "page");
 		page.dom.appendTo(this.dom);
 		this.pages[pageid] = page;
@@ -2338,6 +2364,12 @@ define(
 			}
 
 			ShowBoard.prototype.onClickItem = function(event) {
+				var button = this.getEventTarget(event, "onyx-ui-button");
+				if (button) {
+					event.stopPropagation();
+					this.docmd(event, button);
+					return;
+				}
 				var target = this.getEventTarget(event, "onyx-ui-showboard",
 						"item");
 				if (!target) {
@@ -2475,11 +2507,25 @@ define(
 				this.addClass(this.dom, "onyx-ui-showboard-item-base");
 				this.dom.css("width", "266px");
 				this.dom.appendTo(pdom);
+				this.buildHeader();
+				this.buildNameDesc();
+				this.buildSummaries();
+				this.buildTools();
+				return this.dom;
+			}
+
+			ShowBoardItem_Base.prototype.buildHeader = function() {
 				// base top image
-				this.image = $("<div class='iconfont icon-base'></div>");
-				this.addClass(this.image, "onyx-ui-showboard-item-base",
-						"image");
-				this.image.appendTo(this.dom);
+				this.header = $("<div></div>");
+				this.addClass(this.header, "onyx-ui-showboard-item-base",
+						"header");
+				this.header.appendTo(this.dom);
+				this.icon = $("<span class='iconfont icon-base'></span>");
+				this.addClass(this.icon, "onyx-ui-showboard-item-base", "icon");
+				this.icon.appendTo(this.header);
+			}
+
+			ShowBoardItem_Base.prototype.buildNameDesc = function() {
 				// base name
 				this.name = $("<div></div>");
 				this.name.text(this.options.name);
@@ -2490,6 +2536,9 @@ define(
 				this.desc.text(this.options.desc);
 				this.addClass(this.desc, "onyx-ui-showboard-item-base", "desc");
 				this.desc.appendTo(this.dom);
+			}
+
+			ShowBoardItem_Base.prototype.buildSummaries = function() {
 				// summary
 				this.summaries = $("<div></div>");
 				this.addClass(this.summaries, "onyx-ui-showboard-item-base",
@@ -2513,29 +2562,32 @@ define(
 				this.addClass(this.items, "onyx-ui-showboard-item-base",
 						"summary");
 				this.items.appendTo(this.summaries);
+			}
+
+			ShowBoardItem_Base.prototype.buildTools = function() {
 				// tools
-				this.tools = $("<div></div>");
-				this.addClass(this.tools, "onyx-ui-showboard-item-base",
-						"tools");
-				this.tools.appendTo(this.dom);
-				// explore tool
-				this.explore = $("<span class='iconfont icon-discover'/>");
-				this.explore.text("探索");
-				this.addClass(this.explore, "onyx-ui-showboard-item-base",
-						"tool");
-				this.explore.appendTo(this.tools);
-				// graph tool
-				this.graph = $("<span class='iconfont icon-relation'/>");
-				this.graph.text("图谱");
-				this
-						.addClass(this.graph, "onyx-ui-showboard-item-base",
-								"tool");
-				this.graph.appendTo(this.tools);
-				return this.dom;
+				this.toolbar = UI.createToolBar({
+					clazz : "onyx-ui-showboard-item-base-tools",
+					pdom : this.dom
+				});
+				UI.createButton({
+					id : "explorer",
+					theme : "bubble",
+					icon : "icon-search",
+					caption : "探索",
+					pdom : this.toolbar.getDom()
+				});
+				UI.createButton({
+					id : "graph",
+					theme : "bubble",
+					icon : "icon-graph",
+					caption : "图谱",
+					pdom : this.toolbar.getDom()
+				});
 			}
 
 			ShowBoardItem_Base.prototype.show = function() {
-				UI.redirect("/base/home/" + this.options.kid);
+				UI.redirect("/graph/base/" + this.options.kid);
 			}
 
 			Utils.inherits(ShowBoardItem_Base, Widget);

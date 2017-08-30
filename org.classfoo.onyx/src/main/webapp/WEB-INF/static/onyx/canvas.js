@@ -3,8 +3,7 @@
  */
 define(
 		"onyx/canvas",
-		[ "jquery", "require", "css!./canvas.css", "d3/d3",
-				"onyx/compass" ],
+		[ "jquery", "require", "css!./canvas.css", "d3/d3", "onyx/compass" ],
 		function($, require) {
 
 			var d3 = require("d3/d3");
@@ -125,7 +124,7 @@ define(
 				// init dom
 				this.width = dom.innerWidth();
 				this.height = dom.innerHeight();
-				this.buildBackGround(dom, this.width, this.height);
+				//this.buildBackGround(dom, this.width, this.height);
 				this.canvasDom = $("<canvas class='onyx-canvas'></canvas>");
 				this.canvasDom.attr("width", this.width);
 				this.canvasDom.attr("height", this.height);
@@ -144,67 +143,67 @@ define(
 				this.bindEvents();
 				this.render();
 
-				//init compass;
-				 //this.compass = new Compass();
-				 //this.compass.build(dom);
+				// init compass;
+				// this.compass = new Compass();
+				// this.compass.build(dom);
 			}
 
-			Canvas.prototype.buildBackGround = function(dom, w, h){
+			Canvas.prototype.buildBackGround = function(dom, w, h) {
 				var background = $("<canvas style='z-index:-10000;position:absolute;top:0;left:0;background-image:radial-gradient(circle at 50% 50%, #356E8E, #315B85);'></canvas>");
 				background.appendTo(dom);
 				var canvas = background[0];
 				var ctx = canvas.getContext("2d");
-				//设置画布宽高与窗口宽高一样
+				// 设置画布宽高与窗口宽高一样
 				canvas.width = w;
 				canvas.height = h;
-				//随机数函数
-				function fnRandom(min,max){
-					return parseInt((max-min)*Math.random()+min+1)
+				// 随机数函数
+				function fnRandom(min, max) {
+					return parseInt((max - min) * Math.random() + min + 1)
 				}
-				function Round(){
-					this.r = 5;//fnRandom(10,30);
-					this.diam = this.r*2;
-					//随机位置
-					var x = fnRandom(0,canvas.width - this.r);
-					this.x = x<this.r?this.r:x;
-					var y = fnRandom(0,canvas.height-this.r);
-					this.y = y<this.r?this.r:y 
-					//随机速度
-					var speed = fnRandom(2,4)/10;
-					this.speedX = fnRandom(0,4)>2?speed:-speed;
-					this.speedY = fnRandom(0,4)>2?speed:-speed;
-					//颜色
-					this.color = "gray";
+				function Round() {
+					this.r = fnRandom(10, 30);
+					this.diam = this.r * 2;
+					// 随机位置
+					var x = fnRandom(0, canvas.width - this.r);
+					this.x = x < this.r ? this.r : x;
+					var y = fnRandom(0, canvas.height - this.r);
+					this.y = y < this.r ? this.r : y
+					// 随机速度
+					var speed = fnRandom(2, 4) / 10;
+					this.speedX = fnRandom(0, 4) > 2 ? speed : -speed;
+					this.speedY = fnRandom(0, 4) > 2 ? speed : -speed;
+					// 颜色
+					this.color = "#F2F2F2";
 				}
-				Round.prototype.draw = function(){
-					//绘制函数
+				Round.prototype.draw = function() {
+					// 绘制函数
 					ctx.fillStyle = this.color;
 					ctx.beginPath();
-					ctx.arc(this.x,this.y,this.r,0,Math.PI*2,true);
+					ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2, true);
 					ctx.closePath();
 					ctx.fill();
 				}
-				Round.prototype.move = function(){
-					this.x+=this.speedX;
-					if(this.x>canvas.width-this.r){
-						this.speedX*=-1;
-						this.x=this.r2;
-					}else if(this.x<this.r){
-						this.x=canvas.width-this.r;
+				Round.prototype.move = function() {
+					this.x += this.speedX;
+					if (this.x > canvas.width - this.r) {
+						this.speedX *= -1;
+						this.x = this.r2;
+					} else if (this.x < this.r) {
+						this.x = canvas.width - this.r;
 					}
-					this.y+=this.speedY;
-					if(this.y>canvas.height-this.r){
-						this.speedY*=-1;
-						this.y=this.r;
-					}else if(this.y<this.r){
-						this.y=canvas.height-this.r;
+					this.y += this.speedY;
+					if (this.y > canvas.height - this.r) {
+						this.speedY *= -1;
+						this.y = this.r;
+					} else if (this.y < this.r) {
+						this.y = canvas.height - this.r;
 					}
 				}
-				//使用Round
+				// 使用Round
 				var allRound = [];
-				function initRound(){
-					//初始化30个圆形对象,放到数组中
-					for(var i = 0 ; i<30;i++){
+				function initRound() {
+					// 初始化30个圆形对象,放到数组中
+					for (var i = 0; i < 10; i++) {
 						var obj = new Round();
 						obj.draw();
 						obj.move();
@@ -213,38 +212,41 @@ define(
 				}
 				initRound();
 				var dxdy = [];
-				function roundMove(){
-					ctx.clearRect(0,0,canvas.width,canvas.height);
-					//遍历所有的圆形对象,让对象自己重绘,移动			
-					for (var i = 0 ;i <allRound.length;i++) {
+				function roundMove() {
+					ctx.clearRect(0, 0, canvas.width, canvas.height);
+					// 遍历所有的圆形对象,让对象自己重绘,移动
+					for (var i = 0; i < allRound.length; i++) {
 						var round = allRound[i];
 						round.draw();
 						round.move();
-						dxdy[i]={
-							dx:round.x,
-							dy:round.y
-						};
-						var dx = dxdy[i].dx;
-						var dy =dxdy[i].dy;
-						for (var j=0;j<i;j++) {
-						var sx = dxdy[j].dx;
-						var sy = dxdy[j].dy;
-						l = Math.sqrt((dx-sx)*(dx-sx)+(dy-sy)*(dy-sy));
-						var C = 1/l*7-0.009;
-						var o = C > 0.03 ? 0.03 : C;
-						ctx.strokeStyle = 'rgba(255,255,255,'+ o +')';
-						ctx.beginPath();
-						ctx.lineWidth=2;
-						ctx.moveTo(dxdy[i].dx,dxdy[i].dy);
-						ctx.lineTo(dxdy[j].dx,dxdy[j].dy);
-						ctx.closePath();
-						ctx.stroke();
-						}
+//						dxdy[i] = {
+//							dx : round.x,
+//							dy : round.y
+//						};
+//						var dx = dxdy[i].dx;
+//						var dy = dxdy[i].dy;
+//						for (var j = 0; j < i; j++) {
+//							var sx = dxdy[j].dx;
+//							var sy = dxdy[j].dy;
+//							l = Math.sqrt((dx - sx) * (dx - sx) + (dy - sy)
+//									* (dy - sy));
+//							var C = 1 / l * 7 - 0.009;
+//							var o = C > 0.03 ? 0.03 : C;
+//							ctx.strokeStyle = 'rgba(255,255,255,' + o + ')';
+//							ctx.beginPath();
+//							ctx.lineWidth = 5;
+//							ctx.moveTo(dxdy[i].dx, dxdy[i].dy);
+//							ctx.lineTo(dxdy[j].dx, dxdy[j].dy);
+//							ctx.closePath();
+//							ctx.stroke();
+//						}
 					}
 					window.requestAnimationFrame(roundMove)
 				}
+
 				roundMove();
 			}
+
 			Canvas.prototype.isMouseOvered = function(node) {
 				return this.mouseovered ? node.id === this.mouseovered : false;
 			}
@@ -519,10 +521,10 @@ define(
 				var colors = [ "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728",
 						"#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22",
 						"#17becf" ];
-				var arc = d3.arc().outerRadius(100).innerRadius(
-						40).padAngle(0.03).context(this.context);
+				var arc = d3.arc().outerRadius(100).innerRadius(40).padAngle(
+						0.03).context(this.context);
 				var pie = d3.pie();
-				var arcs = pie([ 1, 1, 1, 1, 1,1]);
+				var arcs = pie([ 1, 1, 1, 1, 1, 1 ]);
 				this.context.translate(node.x, node.y);
 				this.context.globalAlpha = 0.5;
 				var self = this;
@@ -535,13 +537,13 @@ define(
 				this.context.restore();
 
 				this.context.save();
-				//				this.context.lineWidth = 0;
-				//				this.context.strokeStyle = "#000000";
-				//				this.context.stroke();
-				//				this.context.fillStyle = "rgba(200,200,200,0.5)";
-				//				this.context.beginPath();
-				//				this.context.arc(node.x, node.y, 80, 0, 2 * Math.PI);
-				//				this.context.fill();
+				// this.context.lineWidth = 0;
+				// this.context.strokeStyle = "#000000";
+				// this.context.stroke();
+				// this.context.fillStyle = "rgba(200,200,200,0.5)";
+				// this.context.beginPath();
+				// this.context.arc(node.x, node.y, 80, 0, 2 * Math.PI);
+				// this.context.fill();
 
 				for (var i = 0, button, length = this.buttons.length; i < length; i++) {
 					button = this.buttons[i];

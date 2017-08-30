@@ -86,7 +86,7 @@ public class OnyxStorage_Cassandra implements OnyxStorage {
 			session.execute(
 					"create table if not exists material_file(mid_ text,fid_ text,fname_ text, primary key (mid_,fid_))");
 			session.execute(
-					"create table if not exists timeline(id_ text,time_ text,user_ text, type_ text, relate_ text, content_ text,properties_ map<text,text>, primary key (id_,time_,kid_)) WITH CLUSTERING ORDER BY (time_ desc,kid_ asc)");
+					"create table if not exists timeline(id_ text,time_ text,kid_ text,user_ text, type_ text, relate_ text, content_ text,properties_ map<text,text>, primary key (id_,time_,kid_)) WITH CLUSTERING ORDER BY (time_ desc,kid_ asc)");
 			this.initTestDatas(session);
 			logger.info("finish initialize cassandra tables！");
 		}

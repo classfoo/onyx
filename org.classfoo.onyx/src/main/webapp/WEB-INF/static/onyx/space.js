@@ -183,7 +183,8 @@ define("onyx/space/base", [ "jquery", "require", "onyx/ui" ], function($,
 		this.showboard = UI.createShowBoard({
 			type : "base",
 			pdom : this.dom,
-			datas : this.queryData.bind(this)
+			datas : this.queryData.bind(this),
+			cmd : this.docmd.bind(this)
 		});
 		return this.dom;
 	}
@@ -211,7 +212,9 @@ define("onyx/space/base", [ "jquery", "require", "onyx/ui" ], function($,
 	}
 
 	Base.prototype.docmd = function(cmd, event) {
+		alert(cmd);
 	}
+
 	return Base;
 });
 
