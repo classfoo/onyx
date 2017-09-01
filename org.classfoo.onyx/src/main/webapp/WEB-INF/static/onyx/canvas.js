@@ -63,7 +63,7 @@ define("onyx/canvas", [ "jquery", "require", "css!./canvas.css", "d3/d3",
 		// init canvas
 		this.canvas = document.querySelector(".onyx-canvas");
 		this.context = this.canvas.getContext("2d");
-		this.compass = new Compass(this.context);
+		this.compass = new Compass(this, this.context);
 		// bind events and render
 		this.simulation = d3.forceSimulation();
 		this.simulation.on("tick", this.render.bind(this));
@@ -71,107 +71,6 @@ define("onyx/canvas", [ "jquery", "require", "css!./canvas.css", "d3/d3",
 		this.bindEvents();
 		this.render();
 	}
-	//
-	// Canvas.prototype.buildBackGround = function(dom, w, h) {
-	// var background = $("<canvas
-	// style='z-index:-10000;position:absolute;top:0;left:0;background-image:radial-gradient(circle
-	// at 50% 50%, #356E8E, #315B85);'></canvas>");
-	// background.appendTo(dom);
-	// var canvas = background[0];
-	// var ctx = canvas.getContext("2d");
-	// // 设置画布宽高与窗口宽高一样
-	// canvas.width = w;
-	// canvas.height = h;
-	// // 随机数函数
-	// function fnRandom(min, max) {
-	// return parseInt((max - min) * Math.random() + min + 1)
-	// }
-	// function Round() {
-	// this.r = fnRandom(10, 30);
-	// this.diam = this.r * 2;
-	// // 随机位置
-	// var x = fnRandom(0, canvas.width - this.r);
-	// this.x = x < this.r ? this.r : x;
-	// var y = fnRandom(0, canvas.height - this.r);
-	// this.y = y < this.r ? this.r : y
-	// // 随机速度
-	// var speed = fnRandom(2, 4) / 10;
-	// this.speedX = fnRandom(0, 4) > 2 ? speed : -speed;
-	// this.speedY = fnRandom(0, 4) > 2 ? speed : -speed;
-	// // 颜色
-	// this.color = "#F2F2F2";
-	// }
-	// Round.prototype.draw = function() {
-	// // 绘制函数
-	// ctx.fillStyle = this.color;
-	// ctx.beginPath();
-	// ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2, true);
-	// ctx.closePath();
-	// ctx.fill();
-	// }
-	// Round.prototype.move = function() {
-	// this.x += this.speedX;
-	// if (this.x > canvas.width - this.r) {
-	// this.speedX *= -1;
-	// this.x = this.r2;
-	// } else if (this.x < this.r) {
-	// this.x = canvas.width - this.r;
-	// }
-	// this.y += this.speedY;
-	// if (this.y > canvas.height - this.r) {
-	// this.speedY *= -1;
-	// this.y = this.r;
-	// } else if (this.y < this.r) {
-	// this.y = canvas.height - this.r;
-	// }
-	// }
-	// // 使用Round
-	// var allRound = [];
-	// function initRound() {
-	// // 初始化30个圆形对象,放到数组中
-	// for (var i = 0; i < 10; i++) {
-	// var obj = new Round();
-	// obj.draw();
-	// obj.move();
-	// allRound.push(obj);
-	// }
-	// }
-	// initRound();
-	// var dxdy = [];
-	// function roundMove() {
-	// ctx.clearRect(0, 0, canvas.width, canvas.height);
-	// // 遍历所有的圆形对象,让对象自己重绘,移动
-	// for (var i = 0; i < allRound.length; i++) {
-	// var round = allRound[i];
-	// round.draw();
-	// round.move();
-	// dxdy[i] = {
-	// dx : round.x,
-	// dy : round.y
-	// };
-	// var dx = dxdy[i].dx;
-	// var dy = dxdy[i].dy;
-	// for (var j = 0; j < i; j++) {
-	// var sx = dxdy[j].dx;
-	// var sy = dxdy[j].dy;
-	// l = Math.sqrt((dx - sx) * (dx - sx) + (dy - sy)
-	// * (dy - sy));
-	// var C = 1 / l * 7 - 0.009;
-	// var o = C > 0.03 ? 0.03 : C;
-	// ctx.strokeStyle = 'rgba(255,255,255,' + o + ')';
-	// ctx.beginPath();
-	// ctx.lineWidth = 5;
-	// ctx.moveTo(dxdy[i].dx, dxdy[i].dy);
-	// ctx.lineTo(dxdy[j].dx, dxdy[j].dy);
-	// ctx.closePath();
-	// ctx.stroke();
-	// }
-	// }
-	// window.requestAnimationFrame(roundMove)
-	// }
-	//
-	// roundMove();
-	// }
 
 	Canvas.prototype.isMouseOvered = function(node) {
 		return this.mouseovered ? node.id === this.mouseovered : false;
@@ -282,6 +181,7 @@ define("onyx/canvas", [ "jquery", "require", "css!./canvas.css", "d3/d3",
 			if (this.selected || this.lastselected) {
 				this.lastselected = null;
 				this.selected = null;
+				this.compass.hide();
 				this.render();
 			}
 			return;
@@ -291,14 +191,17 @@ define("onyx/canvas", [ "jquery", "require", "css!./canvas.css", "d3/d3",
 			if (sel) {
 				this.selected[item.id] = false;
 				this.lastselected = null;
+				this.compass.hide();
 			} else {
 				this.selected[item.id] = true;
 				this.lastselected = item.id;
+				this.compass.show(item);
 			}
 		} else {
 			this.selected = {};
 			this.selected[item.id] = true;
 			this.lastselected = item.id;
+			this.compass.show(item);
 		}
 		this.render();
 	}
@@ -333,22 +236,11 @@ define("onyx/canvas", [ "jquery", "require", "css!./canvas.css", "d3/d3",
 			link = this.links[i];
 			this.renderLink(link);
 		}
-		var lastselnode = null;
 		for (var i = 0, node, n = this.nodes.length; i < n; ++i) {
 			node = this.nodes[i];
 			this.renderNode(node);
-			// draw buttons
-			if (this.lastselected && node.id === this.lastselected) {
-				lastselnode = node;
-			}
 		}
-		if (lastselnode != null && !this.isDragged(lastselnode)) {
-			this.compass.render(lastselnode);
-			// this.renderButtons(lastselnode);
-			this.renderNode(lastselnode);
-		} else {
-			this.compass.hide();
-		}
+		this.compass.render();
 	}
 
 	Canvas.prototype.renderNode = function(node) {
@@ -421,7 +313,9 @@ define("onyx/compass", [ "jquery", "require", "d3/d3" ], function($, require) {
 
 	var d3 = require("d3/d3");
 
-	var Compass = function(context) {
+	var Compass = function(canvas, context) {
+		this.canvas = canvas;
+		this.active = -1;
 		this.context = context;
 		this.buttons = [ {
 			id : 0,
@@ -457,15 +351,23 @@ define("onyx/compass", [ "jquery", "require", "d3/d3" ], function($, require) {
 			length : 1
 		} ];
 	}
+
+	Compass.prototype.show = function(node) {
+		this.node = node;
+		this.arcs = null;
+	}
+
 	Compass.prototype.hide = function() {
 		this.node = null;
 		this.arcs = null;
 	}
 
-	Compass.prototype.render = function(node) {
-		this.node = node;
-		this.x = node.x;
-		this.y = node.y;
+	Compass.prototype.render = function() {
+		if (!this.node) {
+			return;
+		}
+		this.x = this.node.x;
+		this.y = this.node.y;
 		this.context.save();
 		var arc = d3.arc().outerRadius(100).innerRadius(40).padAngle(0.03)
 				.context(this.context);
@@ -485,7 +387,8 @@ define("onyx/compass", [ "jquery", "require", "d3/d3" ], function($, require) {
 		this.context.beginPath();
 		arc.cornerRadius(10);
 		arc(d);
-		this.context.fillStyle = button.color || "#000000";// colors[i];
+		this.context.fillStyle = button.id === this.active ? "#FFFFFF"
+				: "#000000";
 		this.context.fill();
 
 		var c = arc.centroid(d);
@@ -500,39 +403,166 @@ define("onyx/compass", [ "jquery", "require", "d3/d3" ], function($, require) {
 
 	Compass.prototype.onMouseMove = function(event) {
 		if (!this.arcs) {
+			if (this.active != -1) {
+				this.active = -1;
+				this.canvas.render();
+			}
 			return;
 		}
 		var x = event.offsetX - this.x;
 		var y = event.offsetY - this.y;
 		var radius = Math.sqrt(x * x + y * y);
 		if (radius < 40 || radius > 100) {
+			if (this.active != -1) {
+				this.active = -1;
+				this.canvas.render();
+			}
 			return;
 		}
 		var angle = this.getAngle(x, y);
-		console.log(angle);
 		var self = this;
 		$.each(this.arcs, function(index, arc) {
 			if (angle < arc.startAngle || angle > arc.endAngle) {
 				return;
 			}
-			self.buttons[index].color = "#FFFFFF";
+			if(self.active == index){
+				return;
+			}
+			self.active = index;
+			console.log(angle);
+			console.log(self.active);
+			self.canvas.render();
 		})
 	}
 
 	Compass.prototype.getAngle = function(x, y) {
-		if (x >= 0 && y <= 0) {
-			return Math.atan(Math.abs(y / x));
+		if (x == 0 && y <= 0) {
+			return 0;
 		}
-		if (x <= 0 && y <= 0) {
-			return Math.PI - Math.atan(Math.abs(y / x));
+		if (x == 0 && y > 0) {
+			return Math.PI;
 		}
-		if (x <= 0 && y >= 0) {
-			return Math.atan(Math.abs(y / x)) + Math.PI;
+		if (y == 0 && x < 0) {
+			return Math.PI / 2;
 		}
-		if (x >= 0 && y >= 0) {
-			return Math.PI * 2 - Math.atan(Math.abs(y / x));
+		if (y == 0 && x > 0) {
+			return Math.PI * 3 / 2;
+		}
+		if (x > 0 && y < 0) {
+			return Math.atan(x / -y);
+		}
+		if (x > 0 && y > 0) {
+			return Math.PI - Math.atan(x / y);
+		}
+		if (x < 0 && y > 0) {
+			return Math.PI + Math.atan(-x / y);
+		}
+		if (x < 0 && y < 0) {
+			return Math.PI * 2 - Math.atan(x / y);
 		}
 	}
 
 	return Compass;
 });
+
+//
+// Canvas.prototype.buildBackGround = function(dom, w, h) {
+// var background = $("<canvas
+// style='z-index:-10000;position:absolute;top:0;left:0;background-image:radial-gradient(circle
+// at 50% 50%, #356E8E, #315B85);'></canvas>");
+// background.appendTo(dom);
+// var canvas = background[0];
+// var ctx = canvas.getContext("2d");
+// // 设置画布宽高与窗口宽高一样
+// canvas.width = w;
+// canvas.height = h;
+// // 随机数函数
+// function fnRandom(min, max) {
+// return parseInt((max - min) * Math.random() + min + 1)
+// }
+// function Round() {
+// this.r = fnRandom(10, 30);
+// this.diam = this.r * 2;
+// // 随机位置
+// var x = fnRandom(0, canvas.width - this.r);
+// this.x = x < this.r ? this.r : x;
+// var y = fnRandom(0, canvas.height - this.r);
+// this.y = y < this.r ? this.r : y
+// // 随机速度
+// var speed = fnRandom(2, 4) / 10;
+// this.speedX = fnRandom(0, 4) > 2 ? speed : -speed;
+// this.speedY = fnRandom(0, 4) > 2 ? speed : -speed;
+// // 颜色
+// this.color = "#F2F2F2";
+// }
+// Round.prototype.draw = function() {
+// // 绘制函数
+// ctx.fillStyle = this.color;
+// ctx.beginPath();
+// ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2, true);
+// ctx.closePath();
+// ctx.fill();
+// }
+// Round.prototype.move = function() {
+// this.x += this.speedX;
+// if (this.x > canvas.width - this.r) {
+// this.speedX *= -1;
+// this.x = this.r2;
+// } else if (this.x < this.r) {
+// this.x = canvas.width - this.r;
+// }
+// this.y += this.speedY;
+// if (this.y > canvas.height - this.r) {
+// this.speedY *= -1;
+// this.y = this.r;
+// } else if (this.y < this.r) {
+// this.y = canvas.height - this.r;
+// }
+// }
+// // 使用Round
+// var allRound = [];
+// function initRound() {
+// // 初始化30个圆形对象,放到数组中
+// for (var i = 0; i < 10; i++) {
+// var obj = new Round();
+// obj.draw();
+// obj.move();
+// allRound.push(obj);
+// }
+// }
+// initRound();
+// var dxdy = [];
+// function roundMove() {
+// ctx.clearRect(0, 0, canvas.width, canvas.height);
+// // 遍历所有的圆形对象,让对象自己重绘,移动
+// for (var i = 0; i < allRound.length; i++) {
+// var round = allRound[i];
+// round.draw();
+// round.move();
+// dxdy[i] = {
+// dx : round.x,
+// dy : round.y
+// };
+// var dx = dxdy[i].dx;
+// var dy = dxdy[i].dy;
+// for (var j = 0; j < i; j++) {
+// var sx = dxdy[j].dx;
+// var sy = dxdy[j].dy;
+// l = Math.sqrt((dx - sx) * (dx - sx) + (dy - sy)
+// * (dy - sy));
+// var C = 1 / l * 7 - 0.009;
+// var o = C > 0.03 ? 0.03 : C;
+// ctx.strokeStyle = 'rgba(255,255,255,' + o + ')';
+// ctx.beginPath();
+// ctx.lineWidth = 5;
+// ctx.moveTo(dxdy[i].dx, dxdy[i].dy);
+// ctx.lineTo(dxdy[j].dx, dxdy[j].dy);
+// ctx.closePath();
+// ctx.stroke();
+// }
+// }
+// window.requestAnimationFrame(roundMove)
+// }
+//
+// roundMove();
+// }
