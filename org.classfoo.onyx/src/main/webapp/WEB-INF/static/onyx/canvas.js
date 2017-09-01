@@ -442,10 +442,10 @@ define("onyx/compass", [ "jquery", "require", "d3/d3" ], function($, require) {
 		if (x == 0 && y > 0) {
 			return Math.PI;
 		}
-		if (y == 0 && x < 0) {
+		if (y == 0 && x > 0) {
 			return Math.PI / 2;
 		}
-		if (y == 0 && x > 0) {
+		if (y == 0 && x < 0) {
 			return Math.PI * 3 / 2;
 		}
 		if (x > 0 && y < 0) {
