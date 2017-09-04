@@ -27,11 +27,12 @@ define("onyx/canvas", [ "jquery", "require", "css!./canvas.css", "d3/d3", ,
 		this.canvasDom.on("clicknode", this.onClickNode.bind(this));
 		this.canvasDom.on("clickgraph", this.onClickNode.bind(this));
 		this.canvasDom.on("clickmenu", this.onClickMenu.bind(this));
+		this.canvasDom.on("contextmenu", this.onContextMenu.bind(this));
 		// init canvas
 		this.canvas = document.querySelector(".onyx-canvas");
 		this.context = this.canvas.getContext("2d");
 		this.graph = new Graph(this);
-		this.compass = new Compass(this);
+		this.compass = new Compass(this, this.graph);
 		this.render();
 	}
 
@@ -90,6 +91,10 @@ define("onyx/canvas", [ "jquery", "require", "css!./canvas.css", "d3/d3", ,
 		this.compass.hide();
 	}
 
+	Canvas.prototype.onContextMenu = function(event) {
+		return false;
+	}
+
 	Canvas.prototype.fire = function(event, options) {
 		return this.canvasDom.trigger(event, options);
 	}
@@ -106,250 +111,314 @@ define("onyx/canvas", [ "jquery", "require", "css!./canvas.css", "d3/d3", ,
 /**
  * Onyx Canvas Graph
  */
-define("onyx/canvas/graph", [ "jquery", "require", "d3/d3" ], function($,
-		require) {
+define("onyx/canvas/graph", [ "jquery", "require", "d3/d3" ],
+		function($, require) {
 
-	var d3 = require("d3/d3");
+			var d3 = require("d3/d3");
 
-	var radius = 20;
+			var radius = 20;
 
-	var Graph = function(canvas) {
-		this.nodes = [ {
-			id : 1,
-			name : "黄渤",
-			r : 30,
-			x : 100,
-			y : 100
-		}, {
-			id : 2,
-			name : "黄磊",
-			r : 30,
-			x : 100,
-			y : 200
-		}, {
-			id : 3,
-			name : "孙红雷",
-			r : 30,
-			x : 100,
-			y : 300
-		}, {
-			id : 4,
-			name : "罗志祥",
-			r : 30,
-			x : 500,
-			y : 200
-		} ];
-		this.links = [ {
-			source : 1,
-			target : 2
-		} ];
-		this.index = this.nodes.length;
-		this.canvas = canvas;
-		this.context = canvas.getContext();
-		this.bindEvents();
-	}
+			var Graph = function(canvas) {
+				this.nodes = [ {
+					id : 1,
+					name : "黄渤",
+					r : 30,
+					x : 100,
+					y : 100
+				}, {
+					id : 2,
+					name : "黄磊",
+					r : 30,
+					x : 100,
+					y : 200
+				}, {
+					id : 3,
+					name : "孙红雷",
+					r : 30,
+					x : 100,
+					y : 300
+				}, {
+					id : 4,
+					name : "罗志祥",
+					r : 30,
+					x : 500,
+					y : 200
+				} ];
+				this.links = [ {
+					source : 1,
+					target : 2
+				} ];
+				this.graph = {
+					id : "graph",
+					x : 0,
+					y : 0
+				};
+				this.index = this.nodes.length;
+				this.canvas = canvas;
+				this.context = canvas.getContext();
+				this.bindEvents();
+			}
 
-	Graph.prototype.bindEvents = function() {
-		var width = this.canvas.width;
-		var height = this.canvas.height;
-		this.simulation = d3.forceSimulation();
-		this.simulation.on("tick", this.onTick.bind(this));
-		this.simulation.nodes(this.nodes);
-		this.simulation.force("collide", d3.forceCollide(this.nodes).radius(
-				function(d) {
-					return radius + 6;
-				}).iterations(4).strength(1));
-		this.simulation.force("link", d3.forceLink(this.links).id(function(d) {
-			return d.id;
-		}).iterations(4).distance(100).strength(1));
-		this.simulation.restart();
-		d3.select(this.canvas.getCanvas()).call(
-				d3.drag().container(this.canvas.getCanvas()).subject(
-						this.dragsubject.bind(this)).on("start",
-						this.dragstarted.bind(this)).on("drag",
-						this.dragging.bind(this)).on("end",
-						this.dragended.bind(this)));
-	}
+			Graph.prototype.bindEvents = function() {
+				var width = this.canvas.width;
+				var height = this.canvas.height;
+				this.simulation = d3.forceSimulation();
+				this.simulation.on("tick", this.onTick.bind(this));
+				this.simulation.nodes(this.nodes);
+				this.simulation.force("collide", d3.forceCollide(this.nodes)
+						.radius(function(d) {
+							return radius + 6;
+						}).iterations(4).strength(1));
+				this.simulation.force("link", d3.forceLink(this.links).id(
+						function(d) {
+							return d.id;
+						}).iterations(4).distance(100).strength(1));
+				var d3Canvas = d3.select(this.canvas.getCanvas());
+				d3Canvas.call(d3.drag().container(this.canvas.getCanvas())
+						.subject(this.dragsubject.bind(this)).on("start",
+								this.dragstarted.bind(this)).on("drag",
+								this.dragging.bind(this)).on("end",
+								this.dragended.bind(this)));
+				this.simulation.restart();
+				// d3Canvas.call(d3.zoom().scaleExtent([ 1 / 2, 4 ]).on("zoom",
+				// this.zoomed.bind(this)));
+			}
 
-	Graph.prototype.dragsubject = function() {
-		return this.simulation.find(d3.event.x, d3.event.y, radius);
-	}
+			// Graph.prototype.zoomed = function(event) {
+			// this.offsetX = d3.event.transform.x;
+			// this.offsetY = d3.event.transform.y;
+			// this.zoomed = d3.event.transform.k;
+			// this.context.save();
+			// //this.context.clearRect(0, 0, this.width, this.height);
+			//
+			// //this.context.translate(this.offsetX, this.offsetY);
+			// this.context.scale(this.zoomed, this.zoomed);
+			// this.render();
+			// this.context.restore();
+			// }
 
-	Graph.prototype.dragstarted = function() {
-		if (!d3.event.active)
-			this.simulation.alphaTarget(0.3).restart();
-		d3.event.subject.fx = d3.event.subject.x;
-		d3.event.subject.fy = d3.event.subject.y;
-		this.dragged = d3.event.subject.id;
-	}
+			Graph.prototype.dragsubject = function() {
+				var node = this.simulation.find(d3.event.x - this.graph.x,
+						d3.event.y - this.graph.y, radius);
+				if (node) {
+					return node;
+				}
+				return this.graph;
+			}
 
-	Graph.prototype.dragging = function() {
-		d3.event.subject.fx = d3.event.x;
-		d3.event.subject.fy = d3.event.y;
-	}
+			Graph.prototype.dragstarted = function() {
+				var subject = d3.event.subject;
+				if (subject.id == "graph") {
+					subject.sx = d3.event.x;
+					subject.sy = d3.event.y;
+				} else {
+					if (!d3.event.active)
+						this.simulation.alphaTarget(0.3).restart();
+					subject.fx = subject.x;
+					subject.fy = subject.y;
+					this.dragged = subject.id;
+				}
+			}
 
-	Graph.prototype.dragended = function() {
-		if (!d3.event.active)
-			this.simulation.alphaTarget(0);
-		d3.event.subject.fx = null;
-		d3.event.subject.fy = null;
-		this.dragged = null;
-	}
+			Graph.prototype.dragging = function() {
+				var subject = d3.event.subject;
+				if (subject.id == "graph") {
+					subject.x += d3.event.x - subject.sx;
+					subject.y += d3.event.y - subject.sy;
+					subject.sx = d3.event.x;
+					subject.sy = d3.event.y;
+					this.canvas.render();
+				} else {
+					subject.fx = d3.event.x;
+					subject.fy = d3.event.y;
+				}
+			}
 
-	Graph.prototype.isMouseOvered = function(node) {
-		return this.mouseovered ? node.id === this.mouseovered : false;
-	}
+			Graph.prototype.dragended = function() {
+				var subject = d3.event.subject;
+				if (subject.id == "graph") {
+					this.render();
+				} else {
+					if (!d3.event.active)
+						this.simulation.alphaTarget(0);
+					subject.fx = null;
+					subject.fy = null;
+					this.dragged = null;
+				}
+			}
 
-	Graph.prototype.isSelected = function(node) {
-		return this.selected ? (this.selected[node.id] ? true : false) : false;
-	}
+			Graph.prototype.isMouseOvered = function(node) {
+				return node.id === this.mouseovered;
+			}
 
-	Graph.prototype.isDragged = function(node) {
-		return this.dragged ? node.id === this.dragged : false;
-	}
+			Graph.prototype.isSelected = function(node) {
+				return this.selected ? (this.selected[node.id] ? true : false)
+						: false;
+			}
 
-	Graph.prototype.onTick = function(event) {
-		this.canvas.render();
-	}
+			Graph.prototype.isDragged = function(node) {
+				return this.dragged ? node.id === this.dragged : false;
+			}
 
-	Graph.prototype.onClick = function(event) {
-		var item = this.simulation.find(event.offsetX, event.offsetY, radius);
-		if (item == null) {
-			if (this.selected || this.lastselected) {
-				this.lastselected = null;
-				this.selected = null;
-				this.canvas.fire("clickgraph");
+			Graph.prototype.onTick = function(event) {
+				this.canvas.render();
+			}
+
+			Graph.prototype.onClick = function(event) {
+				var item = this.simulation.find(event.offsetX - this.graph.x,
+						event.offsetY - this.graph.y, radius);
+				if (item == null) {
+					if (this.selected || this.lastselected) {
+						this.lastselected = null;
+						this.selected = null;
+						this.canvas.fire("clickgraph");
+						return true;
+					}
+					this.canvas.fire("clickgraph");
+					return false;
+				}
+				if (this.selected) {
+					var sel = this.selected[item.id];
+					if (sel) {
+						this.selected[item.id] = false;
+						this.lastselected = null;
+						this.canvas.fire("clickgraph");
+						return true;
+					} else {
+						this.selected[item.id] = true;
+						this.lastselected = item.id;
+						this.canvas.fire("clicknode", item);
+						return true;
+					}
+				} else {
+					this.selected = {};
+					this.selected[item.id] = true;
+					this.lastselected = item.id;
+					this.canvas.fire("clicknode", item);
+					return true;
+				}
+			}
+
+			Graph.prototype.onDblClick = function(event) {
+				this.addNode({
+					id : ++this.index,
+					x : event.offsetX - this.graph.x,
+					y : event.offsetY - this.graph.y
+				});
 				return true;
 			}
-			return false;
-		}
-		if (this.selected) {
-			var sel = this.selected[item.id];
-			if (sel) {
-				this.selected[item.id] = false;
-				this.lastselected = null;
-				this.canvas.fire("clickgraph");
-				return true;
-			} else {
-				this.selected[item.id] = true;
-				this.lastselected = item.id;
-				this.canvas.fire("clicknode", item);
+
+			Graph.prototype.onMouseMove = function(event) {
+				var item = this.simulation.find(event.offsetX - this.graph.x,
+						event.offsetY - this.graph.y, radius);
+				if (item == null) {
+					if (this.mouseovered) {
+						this.mouseovered = null;
+						return true;
+					}
+					return false;
+				}
+				if (this.mouseovered == item.id) {
+					return false;
+				}
+				this.mouseovered = item.id;
 				return true;
 			}
-		} else {
-			this.selected = {};
-			this.selected[item.id] = true;
-			this.lastselected = item.id;
-			this.canvas.fire("clicknode", item);
-			return true;
-		}
-	}
 
-	Graph.prototype.onDblClick = function(event) {
-		this.addNode({
-			id : ++this.index,
-			x : event.offsetX,
-			y : event.offsetY
+			Graph.prototype.render = function() {
+				for (var i = 0, link, n = this.links.length; i < n; i++) {
+					link = this.links[i];
+					this.renderLink(link);
+				}
+				for (var i = 0, node, n = this.nodes.length; i < n; ++i) {
+					node = this.nodes[i];
+					this.renderNode(node);
+				}
+			}
+
+			Graph.prototype.renderNode = function(node) {
+				var dragged = this.isDragged(node);
+				var selected = this.isSelected(node);
+				var mouseovered = this.isMouseOvered(node);
+				var nodex = node.x + this.graph.x;
+				var nodey = node.y + this.graph.y;
+				// draw node
+				this.context.save();
+				this.context.beginPath();
+				this.context.moveTo(nodex + radius, nodey);
+				this.context.arc(nodex, nodey, radius, 0, 2 * Math.PI);
+				if (mouseovered) {
+					this.context.fillStyle = "#000000";
+				} else {
+					this.context.fillStyle = "#FFFFFF";
+				}
+				this.context.fill();
+				this.context.restore();
+				// draw border
+				this.context.save();
+				if (dragged) {
+					this.context.setLineDash([ 3, 3 ]);
+					this.context.lineWidth = 3;
+					this.context.stroke();
+				} else if (selected) {
+					this.context.lineWidth = 3;
+					this.context.stroke();
+				} else {
+					// this.context.lineWidth = 1;
+					// this.context.stroke();
+				}
+				this.context.restore();
+				// draw icon
+				this.context.save();
+				this.context.font = "26px iconfont";
+				this.context.textAlign = "center"
+				if (mouseovered) {
+					this.context.fillStyle = "#FFFFFF";
+				} else {
+					this.context.fillStyle = "#000000";
+				}
+				this.context.fillText("\ue60a", nodex, nodey + radius / 2);
+				this.context.restore();
+				// draw label
+				this.context.save();
+				this.context.font = "14px 微软雅黑";
+				this.context.textAlign = "center"
+				this.context.fillStyle = "#FFFFFF";
+				this.context.fillText(node.name || node.id, nodex, nodey
+						+ radius + 20);
+				this.context.restore();
+			}
+
+			Graph.prototype.renderLink = function(link) {
+				this.context.save();
+				this.context.beginPath();
+				this.context.moveTo(link.source.x + this.graph.x, link.source.y
+						+ this.graph.y);
+				this.context.lineTo(link.target.x + this.graph.x, link.target.y
+						+ this.graph.y);
+				this.context.strokeStyle = "#FFFFFF";
+				this.context.stroke();
+				this.context.restore();
+			}
+
+			Graph.prototype.addNode = function(node) {
+				this.nodes.push(node);
+				this.bindEvents();
+			}
+
+			Graph.prototype.addLine = function(options) {
+				this.lines.push(node);
+			}
+
+			Graph.prototype.getX = function() {
+				return this.graph.x;
+			}
+
+			Graph.prototype.getY = function() {
+				return this.graph.y;
+			}
+			return Graph;
 		});
-		return true;
-	}
-
-	Graph.prototype.onMouseMove = function(event) {
-		var item = this.simulation.find(event.offsetX, event.offsetY, radius);
-		if (item == null) {
-			if (this.mouseovered) {
-				this.mouseovered = null;
-				return true;
-			}
-			return false;
-		}
-		this.mouseovered = item.id;
-		return true;
-	}
-
-	Graph.prototype.render = function() {
-		for (var i = 0, link, n = this.links.length; i < n; i++) {
-			link = this.links[i];
-			this.renderLink(link);
-		}
-		for (var i = 0, node, n = this.nodes.length; i < n; ++i) {
-			node = this.nodes[i];
-			this.renderNode(node);
-		}
-	}
-
-	Graph.prototype.renderNode = function(node) {
-		var dragged = this.isDragged(node);
-		var selected = this.isSelected(node);
-		var mouseovered = this.isMouseOvered(node);
-		// draw node
-		this.context.save();
-		this.context.beginPath();
-		this.context.moveTo(node.x + radius, node.y);
-		this.context.arc(node.x, node.y, radius, 0, 2 * Math.PI);
-		if (mouseovered) {
-			this.context.fillStyle = "#000000";
-		} else {
-			this.context.fillStyle = "#FFFFFF";
-		}
-		this.context.fill();
-		this.context.restore();
-		// draw border
-		this.context.save();
-		if (dragged) {
-			this.context.setLineDash([ 3, 3 ]);
-			this.context.lineWidth = 3;
-			this.context.stroke();
-		} else if (selected) {
-			this.context.lineWidth = 3;
-			this.context.stroke();
-		} else {
-			// this.context.lineWidth = 1;
-			// this.context.stroke();
-		}
-		this.context.restore();
-		// draw icon
-		this.context.save();
-		this.context.font = "26px iconfont";
-		this.context.textAlign = "center"
-		if (mouseovered) {
-			this.context.fillStyle = "#FFFFFF";
-		} else {
-			this.context.fillStyle = "#000000";
-		}
-		this.context.fillText("\ue60a", node.x, node.y + radius / 2);
-		this.context.restore();
-		// draw label
-		this.context.save();
-		this.context.font = "14px 微软雅黑";
-		this.context.textAlign = "center"
-		this.context.fillStyle = "#FFFFFF";
-		this.context.fillText(node.name || node.id, node.x, node.y + radius
-				+ 20);
-		this.context.restore();
-	}
-
-	Graph.prototype.renderLink = function(link) {
-		this.context.save();
-		this.context.beginPath();
-		this.context.moveTo(link.source.x, link.source.y);
-		this.context.lineTo(link.target.x, link.target.y);
-		this.context.strokeStyle = "#FFFFFF";
-		this.context.stroke();
-		this.context.restore();
-	}
-
-	Graph.prototype.addNode = function(node) {
-		this.nodes.push(node);
-		this.bindEvents();
-	}
-
-	Graph.prototype.addLine = function(options) {
-		this.lines.push(node);
-	}
-
-	return Graph;
-});
 
 /**
  * Onyx Canvas Compass Controller Class
@@ -363,7 +432,8 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 
 	var INNERRADIUS = 40;
 
-	var Compass = function(canvas) {
+	var Compass = function(canvas, graph) {
+		this.graph = graph;
 		this.canvas = canvas;
 		this.context = canvas.getContext();
 		this.active = -1;
@@ -371,43 +441,43 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 			id : 0,
 			icon : '\ue66e',
 			length : 1,
-			name : "乾"
+			name : "雷达"
 		}, {
 			id : 1,
 			icon : '\ue66e',
 			length : 1,
-			name : "巽"
+			name : "关系"
 		}, {
 			id : 2,
 			icon : '\ue618',
 			length : 1,
-			name : "坎"
+			name : "查看"
 		}, {
 			id : 3,
 			icon : '\ue61c',
 			length : 1,
-			name : "艮",
+			name : "选择",
 			children : [ {}, {}, {} ]
 		}, {
 			id : 4,
 			icon : '\ue61f',
 			length : 1,
-			name : "坤"
+			name : "添加"
 		}, {
 			id : 5,
 			icon : '\ue624',
 			length : 1,
-			name : "震"
+			name : "移除"
 		}, {
 			id : 6,
 			icon : '\ue626',
 			length : 1,
-			name : "离",
+			name : "选择",
 		}, {
 			id : 7,
 			icon : '\u3438',
 			length : 1,
-			name : "兑"
+			name : "选择"
 		} ];
 	}
 
@@ -425,8 +495,8 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 		if (!this.node) {
 			return;
 		}
-		this.x = this.node.x;
-		this.y = this.node.y;
+		this.x = this.node.x + this.graph.getX();
+		this.y = this.node.y + this.graph.getY();
 		this.context.save();
 		var arc = d3.arc().outerRadius(OUTERRADIUS).innerRadius(INNERRADIUS)
 				.padAngle(0.03).context(this.context);
