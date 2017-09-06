@@ -2,7 +2,8 @@
  * Onyx Canvas Class
  */
 define("onyx/canvas", [ "jquery", "require", "css!./canvas.css", "d3/d3", ,
-		"onyx/canvas/graph", "onyx/canvas/compass" ], function($, require) {
+		"onyx/canvas/graph", "onyx/canvas/compass", "onyx/canvas/searchpanel",
+		"onyx/canvas/cornerbutton" ], function($, require) {
 
 	var d3 = require("d3/d3");
 
@@ -10,29 +11,41 @@ define("onyx/canvas", [ "jquery", "require", "css!./canvas.css", "d3/d3", ,
 
 	var Compass = require("onyx/canvas/compass");
 
-	function Canvas() {
+	var SearchPanel = require("onyx/canvas/searchpanel");
+
+	var CornerButton = require("onyx/canvas/cornerbutton");
+
+	function Canvas(resource) {
+		this.resource= resource;
+		this.kid = this.resource.kid;
 	}
 
-	Canvas.prototype.build = function(dom) {
+	Canvas.prototype.build = function(pdom) {
 		// init dom
-		this.width = dom.innerWidth();
-		this.height = dom.innerHeight();
-		this.canvasDom = $("<canvas class='onyx-canvas'></canvas>");
+		this.width = pdom.innerWidth();
+		this.height = pdom.innerHeight();
+		this.dom = $("<div class='onyx-canvas'></div>");
+		this.dom.appendTo(pdom);
+		this.canvasDom = $("<canvas class='onyx-canvas-canvas'></canvas>");
 		this.canvasDom.attr("width", this.width);
 		this.canvasDom.attr("height", this.height);
-		this.canvasDom.appendTo(dom);
+		this.canvasDom.appendTo(this.dom);
 		this.canvasDom.on("dblclick", this.onDblClick.bind(this));
 		this.canvasDom.on("click", this.onClick.bind(this));
 		this.canvasDom.on("mousemove", this.onMouseMove.bind(this));
 		this.canvasDom.on("clicknode", this.onClickNode.bind(this));
-		this.canvasDom.on("clickgraph", this.onClickNode.bind(this));
+		this.canvasDom.on("dblclicknode", this.onDblClickNode.bind(this));
+		this.canvasDom.on("clickgraph", this.onClickGraph.bind(this));
+		this.canvasDom.on("dblclickgraph", this.onDblClickGraph.bind(this));
 		this.canvasDom.on("clickmenu", this.onClickMenu.bind(this));
 		this.canvasDom.on("contextmenu", this.onContextMenu.bind(this));
 		// init canvas
-		this.canvas = document.querySelector(".onyx-canvas");
+		this.canvas = document.querySelector(".onyx-canvas-canvas");
 		this.context = this.canvas.getContext("2d");
 		this.graph = new Graph(this);
 		this.compass = new Compass(this, this.graph);
+		this.searchPanel = new SearchPanel(this);
+		this.connerButton = new CornerButton(this);
 		this.render();
 	}
 
@@ -80,15 +93,22 @@ define("onyx/canvas", [ "jquery", "require", "css!./canvas.css", "d3/d3", ,
 	}
 
 	Canvas.prototype.onClickMenu = function(event, menu) {
-		alert(menu);
+		this.compass.hide();
 	}
 
 	Canvas.prototype.onClickNode = function(event, node) {
 		this.compass.show(node);
 	}
 
+	Canvas.prototype.onDblClickNode = function(event, node) {
+	}
+
 	Canvas.prototype.onClickGraph = function(event, graph) {
 		this.compass.hide();
+	}
+
+	Canvas.prototype.onDblClickGraph = function(event, graph) {
+		this.compass.show(graph);
 	}
 
 	Canvas.prototype.onContextMenu = function(event) {
@@ -119,35 +139,37 @@ define("onyx/canvas/graph", [ "jquery", "require", "d3/d3" ],
 			var radius = 20;
 
 			var Graph = function(canvas) {
-				this.nodes = [ {
-					id : 1,
-					name : "黄渤",
-					r : 30,
-					x : 100,
-					y : 100
-				}, {
-					id : 2,
-					name : "黄磊",
-					r : 30,
-					x : 100,
-					y : 200
-				}, {
-					id : 3,
-					name : "孙红雷",
-					r : 30,
-					x : 100,
-					y : 300
-				}, {
-					id : 4,
-					name : "罗志祥",
-					r : 30,
-					x : 500,
-					y : 200
-				} ];
-				this.links = [ {
-					source : 1,
-					target : 2
-				} ];
+				this.nodes = [];
+				this.links = [];
+				// this.nodes = [ {
+				// id : 1,
+				// name : "黄渤",
+				// r : 30,
+				// x : 100,
+				// y : 100
+				// }, {
+				// id : 2,
+				// name : "黄磊",
+				// r : 30,
+				// x : 100,
+				// y : 200
+				// }, {
+				// id : 3,
+				// name : "孙红雷",
+				// r : 30,
+				// x : 100,
+				// y : 300
+				// }, {
+				// id : 4,
+				// name : "罗志祥",
+				// r : 30,
+				// x : 500,
+				// y : 200
+				// } ];
+				// this.links = [ {
+				// source : 1,
+				// target : 2
+				// } ];
 				this.graph = {
 					id : "graph",
 					x : 0,
@@ -300,11 +322,16 @@ define("onyx/canvas/graph", [ "jquery", "require", "d3/d3" ],
 			}
 
 			Graph.prototype.onDblClick = function(event) {
-				this.addNode({
-					id : ++this.index,
-					x : event.offsetX - this.graph.x,
-					y : event.offsetY - this.graph.y
-				});
+				var item = this.simulation.find(event.offsetX - this.graph.x,
+						event.offsetY - this.graph.y, radius);
+				if (item == null) {
+					this.canvas.fire("dblclickgraph", {
+						x : event.offsetX - this.graph.x,
+						y : event.offsetY - this.graph.y
+					});
+					return true;
+				}
+				this.canvas.fire("dblclicknode", item);
 				return true;
 			}
 
@@ -638,6 +665,104 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 	}
 	return Compass;
 });
+
+/**
+ * Onyx Canvas Search Bar
+ */
+define("onyx/canvas/searchpanel", [ "jquery", "require", "d3/d3" ], function($,
+		require) {
+
+	var d3 = require("d3/d3");
+
+	var SearchPanel = function(canvas) {
+		this.canvas = canvas;
+		this.build(canvas.dom);
+	}
+
+	SearchPanel.prototype.build = function(pdom) {
+		this.dom = $("<div class='onyx-canvas-searchpanel'></div>");
+		this.dom.appendTo(pdom);
+		this.layout = UI.createLayout({
+			clazz : "onyx-canvas-searchpanel-layout",
+			header : {
+				height : 46
+			},
+			body : {
+
+			},
+			footer : {
+				height : 128
+			},
+			pdom : this.dom
+		});
+		UI.createSearchBox({
+			clazz : "onyx-canvas-searchpanel-search",
+			pdom : this.layout.getHeader()
+		});
+		this.showboard = UI.createShowBoard({
+			type : "entity",
+			datas : this.queryEntities.bind(this),
+			pdom : this.layout.getBody()
+		});
+		UI.createButton({
+			clazz : "onyx-canvas-searchpanel-button",
+			id : "start",
+			theme : "blue",
+			icon : "icon-graph",
+			caption : "开始探索",
+			pdom : this.layout.getFooter()
+		});
+	}
+
+
+	SearchPanel.prototype.queryEntities = function() {
+		return Api.entity(this.canvas.kid).list();
+	}
+
+	SearchPanel.prototype.show = function() {
+
+	}
+
+	SearchPanel.prototype.hide = function() {
+	}
+
+	SearchPanel.prototype.render = function() {
+
+	}
+	return SearchPanel;
+});
+
+/**
+ * Onyx Canvas Search Bar
+ */
+define(
+		"onyx/canvas/cornerbutton",
+		[ "jquery", "require" ],
+		function($, require) {
+
+			var CornerButton = function(canvas) {
+				this.canvas = canvas;
+				this.build(canvas.dom);
+			}
+
+			CornerButton.prototype.build = function(pdom) {
+				this.dom = $("<div class='onyx-canvas-cornerbutton shadow'></div>");
+				this.dom.appendTo(pdom);
+				//this.dom.on("mouseover", this.onMouseOver.bind(this));
+			}
+
+			CornerButton.prototype.show = function() {
+
+			}
+
+			CornerButton.prototype.hide = function() {
+			}
+
+			CornerButton.prototype.render = function() {
+
+			}
+			return CornerButton;
+		});
 
 //
 // Canvas.prototype.buildBackGround = function(dom, w, h) {

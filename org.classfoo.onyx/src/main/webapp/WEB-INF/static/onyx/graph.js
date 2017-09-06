@@ -34,7 +34,9 @@ define("onyx/graph/base", [ "jquery", "require", "onyx/ui", "onyx/canvas" ],
 		function($, require) {
 
 			var UI = require("onyx/ui");
+
 			var Canvas = require("onyx/canvas");
+
 			function Base(options) {
 				this.options = options;
 				this.resource = this.options.resource;
@@ -45,41 +47,41 @@ define("onyx/graph/base", [ "jquery", "require", "onyx/ui", "onyx/canvas" ],
 			Base.prototype.build = function(pdom) {
 				this.dom = $("<div class='onyx-graph-base'></div>");
 				this.dom.appendTo(pdom);
-				this.canvas = new Canvas();
+				this.canvas = new Canvas(this.resource);
 				this.canvas.build(this.dom);
-				this.floatPanel = UI.createFloatPanel({
-					pdom : this.dom,
-					style : {
-						position : "absolute",
-						right : 5,
-						top : 5,
-						width : 100,
-						height : 32,
-						"border-radius" : 5,
-						"background-color" : "rgba(100, 100, 100, 100)"
-					}
-				});
-				this.closeIcon = UI.createIcon({
-					icon : "icon-close",
-					pdom : this.floatPanel.getDom(),
-					style : {
-						"font-size" : 12
-					}
-				});
-				this.nextIcon = UI.createIcon({
-					icon : "icon-next",
-					pdom : this.floatPanel.getDom(),
-					style : {
-						"font-size" : 12
-					}
-				});
-				this.preIcon = UI.createIcon({
-					icon : "icon-pre",
-					pdom : this.floatPanel.getDom(),
-					style : {
-						"font-size" : 12
-					}
-				});
+				// this.floatPanel = UI.createFloatPanel({
+				// pdom : this.dom,
+				// style : {
+				// position : "absolute",
+				// right : 5,
+				// top : 5,
+				// width : 100,
+				// height : 32,
+				// "border-radius" : 5,
+				// "background-color" : "rgba(100, 100, 100, 100)"
+				// }
+				// });
+				// this.closeIcon = UI.createIcon({
+				// icon : "icon-close",
+				// pdom : this.floatPanel.getDom(),
+				// style : {
+				// "font-size" : 12
+				// }
+				// });
+				// this.nextIcon = UI.createIcon({
+				// icon : "icon-next",
+				// pdom : this.floatPanel.getDom(),
+				// style : {
+				// "font-size" : 12
+				// }
+				// });
+				// this.preIcon = UI.createIcon({
+				// icon : "icon-pre",
+				// pdom : this.floatPanel.getDom(),
+				// style : {
+				// "font-size" : 12
+				// }
+				// });
 				return this.dom;
 			}
 
