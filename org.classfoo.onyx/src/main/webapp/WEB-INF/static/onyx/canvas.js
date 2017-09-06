@@ -455,43 +455,43 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 		this.active = -1;
 		this.buttons = [ {
 			id : 0,
-			icon : '\ue66e',
+			icon : '\ue6b4',
 			length : 1,
 			name : "雷达"
 		}, {
 			id : 1,
-			icon : '\ue66e',
+			icon : '\ue6b6',
 			length : 1,
 			name : "关系"
 		}, {
 			id : 2,
-			icon : '\ue618',
+			icon : '\ue6ae',
 			length : 1,
 			name : "查看"
 		}, {
 			id : 3,
-			icon : '\ue61c',
+			icon : '\ue6b3',
 			length : 1,
 			name : "选择",
 			children : [ {}, {}, {} ]
 		}, {
 			id : 4,
-			icon : '\ue61f',
+			icon : '\ue6b5',
 			length : 1,
 			name : "添加"
 		}, {
 			id : 5,
-			icon : '\ue624',
+			icon : '\ue6b1',
 			length : 1,
 			name : "移除"
 		}, {
 			id : 6,
-			icon : '\ue626',
+			icon : '\ue6b2',
 			length : 1,
 			name : "选择",
 		}, {
 			id : 7,
-			icon : '\u3438',
+			icon : '\ue6b0',
 			length : 1,
 			name : "选择"
 		} ];
