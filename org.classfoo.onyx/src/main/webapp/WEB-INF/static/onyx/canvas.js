@@ -1,132 +1,138 @@
 /**
  * Onyx Canvas Class
  */
-define("onyx/canvas", [ "jquery", "require", "css!./canvas.css", "d3/d3", ,
-		"onyx/canvas/graph", "onyx/canvas/compass", "onyx/canvas/searchpanel",
-		"onyx/canvas/cornerbutton" ], function($, require) {
+define(
+		"onyx/canvas",
+		[ "jquery", "require", "css!./canvas.css", "d3/d3", ,
+				"onyx/canvas/graph", "onyx/canvas/compass",
+				"onyx/canvas/searchpanel", "onyx/canvas/cornerbutton" ],
+		function($, require) {
 
-	var d3 = require("d3/d3");
+			var d3 = require("d3/d3");
 
-	var Graph = require("onyx/canvas/graph");
+			var Graph = require("onyx/canvas/graph");
 
-	var Compass = require("onyx/canvas/compass");
+			var Compass = require("onyx/canvas/compass");
 
-	var SearchPanel = require("onyx/canvas/searchpanel");
+			var SearchPanel = require("onyx/canvas/searchpanel");
 
-	var CornerButton = require("onyx/canvas/cornerbutton");
+			var CornerButton = require("onyx/canvas/cornerbutton");
 
-	function Canvas(resource) {
-		this.resource= resource;
-		this.kid = this.resource.kid;
-	}
+			function Canvas(resource) {
+				this.resource = resource;
+				this.kid = this.resource.kid;
+			}
 
-	Canvas.prototype.build = function(pdom) {
-		// init dom
-		this.width = pdom.innerWidth();
-		this.height = pdom.innerHeight();
-		this.dom = $("<div class='onyx-canvas'></div>");
-		this.dom.appendTo(pdom);
-		this.canvasDom = $("<canvas class='onyx-canvas-canvas'></canvas>");
-		this.canvasDom.attr("width", this.width);
-		this.canvasDom.attr("height", this.height);
-		this.canvasDom.appendTo(this.dom);
-		this.canvasDom.on("dblclick", this.onDblClick.bind(this));
-		this.canvasDom.on("click", this.onClick.bind(this));
-		this.canvasDom.on("mousemove", this.onMouseMove.bind(this));
-		this.canvasDom.on("clicknode", this.onClickNode.bind(this));
-		this.canvasDom.on("dblclicknode", this.onDblClickNode.bind(this));
-		this.canvasDom.on("clickgraph", this.onClickGraph.bind(this));
-		this.canvasDom.on("dblclickgraph", this.onDblClickGraph.bind(this));
-		this.canvasDom.on("clickmenu", this.onClickMenu.bind(this));
-		this.canvasDom.on("contextmenu", this.onContextMenu.bind(this));
-		// init canvas
-		this.canvas = document.querySelector(".onyx-canvas-canvas");
-		this.context = this.canvas.getContext("2d");
-		this.graph = new Graph(this);
-		this.compass = new Compass(this, this.graph);
-		this.searchPanel = new SearchPanel(this);
-		this.connerButton = new CornerButton(this);
-		this.render();
-	}
+			Canvas.prototype.build = function(pdom) {
+				// init dom
+				this.width = pdom.innerWidth();
+				this.height = pdom.innerHeight();
+				this.dom = $("<div class='onyx-canvas'></div>");
+				this.dom.appendTo(pdom);
+				this.canvasDom = $("<canvas class='onyx-canvas-canvas'></canvas>");
+				this.canvasDom.attr("width", this.width);
+				this.canvasDom.attr("height", this.height);
+				this.canvasDom.appendTo(this.dom);
+				this.canvasDom.on("dblclick", this.onDblClick.bind(this));
+				this.canvasDom.on("click", this.onClick.bind(this));
+				this.canvasDom.on("mousemove", this.onMouseMove.bind(this));
+				this.canvasDom.on("clicknode", this.onClickNode.bind(this));
+				this.canvasDom.on("dblclicknode", this.onDblClickNode
+						.bind(this));
+				this.canvasDom.on("clickgraph", this.onClickGraph.bind(this));
+				this.canvasDom.on("dblclickgraph", this.onDblClickGraph
+						.bind(this));
+				this.canvasDom.on("clickmenu", this.onClickMenu.bind(this));
+				this.canvasDom.on("contextmenu", this.onContextMenu.bind(this));
+				// init canvas
+				this.canvas = document.querySelector(".onyx-canvas-canvas");
+				this.context = this.canvas.getContext("2d");
+				this.graph = new Graph(this);
+				this.compass = new Compass(this, this.graph);
+				this.searchPanel = new SearchPanel(this, this.graph);
+				this.connerButton = new CornerButton(this, this.graph,
+						this.searchPanel);
+				this.render();
+			}
 
-	Canvas.prototype.getCanvas = function() {
-		return this.canvas;
-	}
+			Canvas.prototype.getCanvas = function() {
+				return this.canvas;
+			}
 
-	Canvas.prototype.getContext = function() {
-		return this.context;
-	}
+			Canvas.prototype.getContext = function() {
+				return this.context;
+			}
 
-	Canvas.prototype.onDblClick = function(event) {
-		if (this.compass.onDblClick(event)) {
-			this.render();
-			return;
-		}
-		if (this.graph.onDblClick(event)) {
-			this.render();
-			return;
-		}
-	}
+			Canvas.prototype.onDblClick = function(event) {
+				if (this.compass.onDblClick(event)) {
+					this.render();
+					return;
+				}
+				if (this.graph.onDblClick(event)) {
+					this.render();
+					return;
+				}
+			}
 
-	Canvas.prototype.onClick = function(event) {
-		event.stopPropagation();
-		if (this.compass.onClick(event)) {
-			this.render();
-			return;
-		}
-		if (this.graph.onClick(event)) {
-			this.render();
-			return;
-		}
-	}
+			Canvas.prototype.onClick = function(event) {
+				event.stopPropagation();
+				if (this.compass.onClick(event)) {
+					this.render();
+					return;
+				}
+				if (this.graph.onClick(event)) {
+					this.render();
+					return;
+				}
+			}
 
-	Canvas.prototype.onMouseMove = function(event) {
-		event.stopPropagation();
-		if (this.compass.onMouseMove(event)) {
-			this.render();
-			return;
-		}
-		if (this.graph.onMouseMove(event)) {
-			this.render();
-			return;
-		}
-	}
+			Canvas.prototype.onMouseMove = function(event) {
+				event.stopPropagation();
+				if (this.compass.onMouseMove(event)) {
+					this.render();
+					return;
+				}
+				if (this.graph.onMouseMove(event)) {
+					this.render();
+					return;
+				}
+			}
 
-	Canvas.prototype.onClickMenu = function(event, menu) {
-		this.compass.hide();
-	}
+			Canvas.prototype.onClickMenu = function(event, menu) {
+				this.compass.hide();
+			}
 
-	Canvas.prototype.onClickNode = function(event, node) {
-		this.compass.show(node);
-	}
+			Canvas.prototype.onClickNode = function(event, node) {
+				this.compass.show(node);
+			}
 
-	Canvas.prototype.onDblClickNode = function(event, node) {
-	}
+			Canvas.prototype.onDblClickNode = function(event, node) {
+			}
 
-	Canvas.prototype.onClickGraph = function(event, graph) {
-		this.compass.hide();
-	}
+			Canvas.prototype.onClickGraph = function(event, pos) {
+				this.compass.hide();
+			}
 
-	Canvas.prototype.onDblClickGraph = function(event, graph) {
-		this.compass.show(graph);
-	}
+			Canvas.prototype.onDblClickGraph = function(event, pos) {
+				this.searchPanel.show(pos);
+			}
 
-	Canvas.prototype.onContextMenu = function(event) {
-		return false;
-	}
+			Canvas.prototype.onContextMenu = function(event) {
+				return false;
+			}
 
-	Canvas.prototype.fire = function(event, options) {
-		return this.canvasDom.trigger(event, options);
-	}
+			Canvas.prototype.fire = function(event, options) {
+				return this.canvasDom.trigger(event, options);
+			}
 
-	Canvas.prototype.render = function() {
-		this.context.clearRect(0, 0, this.width, this.height);
-		this.graph.render();
-		this.compass.render();
-	}
+			Canvas.prototype.render = function() {
+				this.context.clearRect(0, 0, this.width, this.height);
+				this.graph.render();
+				this.compass.render();
+			}
 
-	return Canvas;
-});
+			return Canvas;
+		});
 
 /**
  * Onyx Canvas Graph
@@ -139,45 +145,20 @@ define("onyx/canvas/graph", [ "jquery", "require", "d3/d3" ],
 			var radius = 20;
 
 			var Graph = function(canvas) {
+				this.canvas = canvas;
+				this.context = canvas.getContext();
 				this.nodes = [];
 				this.links = [];
-				// this.nodes = [ {
-				// id : 1,
-				// name : "黄渤",
-				// r : 30,
-				// x : 100,
-				// y : 100
-				// }, {
-				// id : 2,
-				// name : "黄磊",
-				// r : 30,
-				// x : 100,
-				// y : 200
-				// }, {
-				// id : 3,
-				// name : "孙红雷",
-				// r : 30,
-				// x : 100,
-				// y : 300
-				// }, {
-				// id : 4,
-				// name : "罗志祥",
-				// r : 30,
-				// x : 500,
-				// y : 200
-				// } ];
-				// this.links = [ {
-				// source : 1,
-				// target : 2
-				// } ];
+				this.width = this.canvas.width;
+				this.height = this.canvas.height;
 				this.graph = {
 					id : "graph",
 					x : 0,
-					y : 0
+					y : 0,
+					width : this.width,
+					height : this.height
 				};
 				this.index = this.nodes.length;
-				this.canvas = canvas;
-				this.context = canvas.getContext();
 				this.bindEvents();
 			}
 
@@ -189,7 +170,7 @@ define("onyx/canvas/graph", [ "jquery", "require", "d3/d3" ],
 				this.simulation.nodes(this.nodes);
 				this.simulation.force("collide", d3.forceCollide(this.nodes)
 						.radius(function(d) {
-							return radius + 6;
+							return radius + 12;
 						}).iterations(4).strength(1));
 				this.simulation.force("link", d3.forceLink(this.links).id(
 						function(d) {
@@ -444,6 +425,14 @@ define("onyx/canvas/graph", [ "jquery", "require", "d3/d3" ],
 			Graph.prototype.getY = function() {
 				return this.graph.y;
 			}
+
+			Graph.prototype.getWidth = function() {
+				return this.graph.width;
+			}
+
+			Graph.prototype.getHeight = function() {
+				return this.graph.height;
+			}
 			return Graph;
 		});
 
@@ -674,8 +663,9 @@ define("onyx/canvas/searchpanel", [ "jquery", "require", "d3/d3" ], function($,
 
 	var d3 = require("d3/d3");
 
-	var SearchPanel = function(canvas) {
+	var SearchPanel = function(canvas, graph) {
 		this.canvas = canvas;
+		this.graph = graph;
 		this.build(canvas.dom);
 	}
 
@@ -690,40 +680,42 @@ define("onyx/canvas/searchpanel", [ "jquery", "require", "d3/d3" ], function($,
 			body : {
 
 			},
-			footer : {
-				height : 128
-			},
 			pdom : this.dom
 		});
-		UI.createSearchBox({
+		this.searchbox = UI.createSearchBox({
 			clazz : "onyx-canvas-searchpanel-search",
 			pdom : this.layout.getHeader()
 		});
-		this.showboard = UI.createShowBoard({
+		this.slideboard = UI.createSlideBoard({
 			type : "entity",
 			datas : this.queryEntities.bind(this),
 			pdom : this.layout.getBody()
 		});
-		UI.createButton({
-			clazz : "onyx-canvas-searchpanel-button",
-			id : "start",
-			theme : "blue",
-			icon : "icon-graph",
-			caption : "开始探索",
-			pdom : this.layout.getFooter()
-		});
+		this.slideboard.on("clickitem", this.onClickItem.bind(this));
 	}
 
+	SearchPanel.prototype.onClickItem = function(event, item) {
+		var node = $(item).data();
+		var nodex = (this.pos && this.pos.x) || this.graph.getWidth() / 2 - this.graph.getX();
+		var nodey = (this.pos && this.pos.y) || this.graph.getHeight() / 2- this.graph.getY();
+		this.graph.addNode($.extend({
+			x : nodex,
+			y : nodey
+		}, node));
+		this.hide();
+	}
 
 	SearchPanel.prototype.queryEntities = function() {
 		return Api.entity(this.canvas.kid).list();
 	}
 
-	SearchPanel.prototype.show = function() {
-
+	SearchPanel.prototype.show = function(pos) {
+		this.pos = pos;
+		this.dom.css("display", "block");
 	}
 
 	SearchPanel.prototype.hide = function() {
+		this.dom.css("display", "none");
 	}
 
 	SearchPanel.prototype.render = function() {
@@ -740,27 +732,24 @@ define(
 		[ "jquery", "require" ],
 		function($, require) {
 
-			var CornerButton = function(canvas) {
+			var CornerButton = function(canvas, graph, searchpanel) {
 				this.canvas = canvas;
+				this.graph = graph;
+				this.searchpanel = searchpanel;
 				this.build(canvas.dom);
 			}
 
 			CornerButton.prototype.build = function(pdom) {
 				this.dom = $("<div class='onyx-canvas-cornerbutton shadow'></div>");
 				this.dom.appendTo(pdom);
-				//this.dom.on("mouseover", this.onMouseOver.bind(this));
+				// this.dom.on("mouseover", this.onMouseOver.bind(this));
+				this.dom.on("click", this.onClick.bind(this));
 			}
 
-			CornerButton.prototype.show = function() {
-
+			CornerButton.prototype.onClick = function(event) {
+				this.searchpanel.show();
 			}
 
-			CornerButton.prototype.hide = function() {
-			}
-
-			CornerButton.prototype.render = function() {
-
-			}
 			return CornerButton;
 		});
 

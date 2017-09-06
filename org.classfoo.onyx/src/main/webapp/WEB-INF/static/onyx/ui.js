@@ -6,235 +6,240 @@ define("onyx/ui", [ "jquery", "require", "css!./ui.css", "onyx/utils",
 		"onyx/ui/navpanel", "onyx/ui/multipage", "onyx/ui/searchbox",
 		"onyx/ui/breadcrumb", "onyx/ui/list", "onyx/ui/timeline",
 		"onyx/ui/image", "onyx/ui/button", "onyx/ui/icon", "onyx/ui/showboard",
-		"onyx/ui/editboard", "onyx/ui/uploadboard", "onyx/ui/floatpanel",
-		"onyx/ui/menu", "onyx/ui/explorer", "onyx/ui/text", "onyx/ui/textarea",
-		"onyx/ui/pagelayout", "onyx/ui/editlayout", "onyx/ui/resourcebrowser",
-		"onyx/ui/dialog", "onyx/ui/form", "onyx/ui/form/input",
-		"onyx/ui/form/items", "onyx/ui/form/item", "onyx/ui/submiter" ],
-		function($, require) {
+		"onyx/ui/editboard", "onyx/ui/slideboard", "onyx/ui/uploadboard",
+		"onyx/ui/floatpanel", "onyx/ui/menu", "onyx/ui/explorer",
+		"onyx/ui/text", "onyx/ui/textarea", "onyx/ui/pagelayout",
+		"onyx/ui/editlayout", "onyx/ui/resourcebrowser", "onyx/ui/dialog",
+		"onyx/ui/form", "onyx/ui/form/input", "onyx/ui/form/items",
+		"onyx/ui/form/item", "onyx/ui/submiter" ], function($, require) {
 
-			var Utils = require("onyx/utils");
+	var Utils = require("onyx/utils");
 
-			var Page = require("page/page");
+	var Page = require("page/page");
 
-			function UI() {
+	function UI() {
 
-			}
+	}
 
-			/**
-			 * Redirect to uri
-			 */
-			UI.redirect = function(uri) {
-				Page(uri);
-			}
+	/**
+	 * Redirect to uri
+	 */
+	UI.redirect = function(uri) {
+		Page(uri);
+	}
 
-			/**
-			 * create Layout
-			 */
-			UI.createLayout = function(options) {
-				var Layout = require("onyx/ui/layout");
-				return new Layout(options);
-			};
+	/**
+	 * create Layout
+	 */
+	UI.createLayout = function(options) {
+		var Layout = require("onyx/ui/layout");
+		return new Layout(options);
+	};
 
-			/**
-			 * create Page Layout
-			 */
-			UI.createPageLayout = function(options) {
-				var PageLayout = require("onyx/ui/pagelayout");
-				return new PageLayout(options);
-			};
+	/**
+	 * create Page Layout
+	 */
+	UI.createPageLayout = function(options) {
+		var PageLayout = require("onyx/ui/pagelayout");
+		return new PageLayout(options);
+	};
 
-			/**
-			 * create Edit Layout
-			 */
-			UI.createEditLayout = function(options) {
-				var EditLayout = require("onyx/ui/editlayout");
-				return new EditLayout(options);
-			};
+	/**
+	 * create Edit Layout
+	 */
+	UI.createEditLayout = function(options) {
+		var EditLayout = require("onyx/ui/editlayout");
+		return new EditLayout(options);
+	};
 
-			/**
-			 * create Navbar
-			 */
-			UI.createDialog = function(options) {
-				var Dialog = require("onyx/ui/dialog");
-				return new Dialog(options);
-			}
+	/**
+	 * create Navbar
+	 */
+	UI.createDialog = function(options) {
+		var Dialog = require("onyx/ui/dialog");
+		return new Dialog(options);
+	}
 
-			/**
-			 * create Form
-			 */
-			UI.createForm = function(options) {
-				var Form = require("onyx/ui/form");
-				return new Form(options);
-			}
+	/**
+	 * create Form
+	 */
+	UI.createForm = function(options) {
+		var Form = require("onyx/ui/form");
+		return new Form(options);
+	}
 
-			/**
-			 * create Form Input
-			 */
-			UI.createFormInput = function(options) {
-				var FormInput = require("onyx/ui/form/input");
-				return new FormInput(options);
-			}
+	/**
+	 * create Form Input
+	 */
+	UI.createFormInput = function(options) {
+		var FormInput = require("onyx/ui/form/input");
+		return new FormInput(options);
+	}
 
-			/**
-			 * create Form Item
-			 */
-			UI.createFormItem = function(options) {
-				var FormItem = require("onyx/ui/form/item");
-				return new FormItem(options);
-			}
+	/**
+	 * create Form Item
+	 */
+	UI.createFormItem = function(options) {
+		var FormItem = require("onyx/ui/form/item");
+		return new FormItem(options);
+	}
 
-			/**
-			 * create Form Items
-			 */
-			UI.createFormItems = function(options) {
-				var FormItems = require("onyx/ui/form/items");
-				return new FormItems(options);
-			}
+	/**
+	 * create Form Items
+	 */
+	UI.createFormItems = function(options) {
+		var FormItems = require("onyx/ui/form/items");
+		return new FormItems(options);
+	}
 
-			/**
-			 * create Text
-			 */
-			UI.createText = function(options) {
-				var Text = require("onyx/ui/text");
-				return new Text(options);
-			}
+	/**
+	 * create Text
+	 */
+	UI.createText = function(options) {
+		var Text = require("onyx/ui/text");
+		return new Text(options);
+	}
 
-			/**
-			 * create TextArea
-			 */
-			UI.createTextArea = function(options) {
-				var TextArea = require("onyx/ui/textarea");
-				return new TextArea(options);
-			}
+	/**
+	 * create TextArea
+	 */
+	UI.createTextArea = function(options) {
+		var TextArea = require("onyx/ui/textarea");
+		return new TextArea(options);
+	}
 
-			/**
-			 * create Navbar
-			 */
-			UI.createNavBar = function(options) {
-				var NavBar = require("onyx/ui/navbar");
-				return new NavBar(options);
-			}
+	/**
+	 * create Navbar
+	 */
+	UI.createNavBar = function(options) {
+		var NavBar = require("onyx/ui/navbar");
+		return new NavBar(options);
+	}
 
-			/**
-			 * create NavPanel
-			 */
-			UI.createNavPanel = function(options) {
-				var NavPanel = require("onyx/ui/navpanel");
-				return new NavPanel(options);
-			}
+	/**
+	 * create NavPanel
+	 */
+	UI.createNavPanel = function(options) {
+		var NavPanel = require("onyx/ui/navpanel");
+		return new NavPanel(options);
+	}
 
-			/**
-			 * create MultiPage
-			 */
-			UI.createMultiPage = function(options) {
-				var MultiPage = require("onyx/ui/multipage");
-				return new MultiPage(options);
-			}
+	/**
+	 * create MultiPage
+	 */
+	UI.createMultiPage = function(options) {
+		var MultiPage = require("onyx/ui/multipage");
+		return new MultiPage(options);
+	}
 
-			/**
-			 * create Toolbar
-			 */
-			UI.createToolBar = function(options) {
-				var ToolBar = require("onyx/ui/toolbar");
-				return new ToolBar(options);
-			};
+	/**
+	 * create Toolbar
+	 */
+	UI.createToolBar = function(options) {
+		var ToolBar = require("onyx/ui/toolbar");
+		return new ToolBar(options);
+	};
 
-			/**
-			 * create Button
-			 */
-			UI.createButton = function(options) {
-				var Button = require("onyx/ui/button");
-				return new Button(options);
-			};
+	/**
+	 * create Button
+	 */
+	UI.createButton = function(options) {
+		var Button = require("onyx/ui/button");
+		return new Button(options);
+	};
 
-			/**
-			 * create Icon
-			 */
-			UI.createIcon = function(options) {
-				var Icon = require("onyx/ui/icon");
-				return new Icon(options);
-			};
+	/**
+	 * create Icon
+	 */
+	UI.createIcon = function(options) {
+		var Icon = require("onyx/ui/icon");
+		return new Icon(options);
+	};
 
-			/**
-			 * create SearchBox
-			 */
-			UI.createSearchBox = function(options) {
-				var SearchBox = require("onyx/ui/searchbox");
-				return new SearchBox(options);
-			};
+	/**
+	 * create SearchBox
+	 */
+	UI.createSearchBox = function(options) {
+		var SearchBox = require("onyx/ui/searchbox");
+		return new SearchBox(options);
+	};
 
-			/**
-			 * create BreadCrumb
-			 */
-			UI.createBreadCrumb = function(options) {
-				var BreadCrumb = require("onyx/ui/breadcrumb");
-				return new BreadCrumb(options);
-			};
+	/**
+	 * create BreadCrumb
+	 */
+	UI.createBreadCrumb = function(options) {
+		var BreadCrumb = require("onyx/ui/breadcrumb");
+		return new BreadCrumb(options);
+	};
 
-			/**
-			 * create List
-			 */
-			UI.createList = function(options) {
-				var List = require("onyx/ui/list");
-				return new List(options);
-			}
+	/**
+	 * create List
+	 */
+	UI.createList = function(options) {
+		var List = require("onyx/ui/list");
+		return new List(options);
+	}
 
-			/**
-			 * create TimeLine
-			 */
-			UI.createTimeLine = function(options) {
-				var TimeLine = require("onyx/ui/timeline");
-				return new TimeLine(options);
-			}
+	/**
+	 * create TimeLine
+	 */
+	UI.createTimeLine = function(options) {
+		var TimeLine = require("onyx/ui/timeline");
+		return new TimeLine(options);
+	}
 
-			UI.createImage = function(options) {
-				var Image = require("onyx/ui/image");
-				return new Image(options);
-			}
+	UI.createImage = function(options) {
+		var Image = require("onyx/ui/image");
+		return new Image(options);
+	}
 
-			UI.createShowBoard = function(options) {
-				var ShowBoard = require("onyx/ui/showboard");
-				return new ShowBoard(options);
-			}
+	UI.createShowBoard = function(options) {
+		var ShowBoard = require("onyx/ui/showboard");
+		return new ShowBoard(options);
+	}
 
-			UI.createEditBoard = function(options) {
-				var EditBoard = require("onyx/ui/editboard");
-				return new EditBoard(options);
-			}
+	UI.createEditBoard = function(options) {
+		var EditBoard = require("onyx/ui/editboard");
+		return new EditBoard(options);
+	}
 
-			UI.createUploadBoard = function(options) {
-				var UploadBoard = require("onyx/ui/uploadboard");
-				return new UploadBoard(options);
-			}
+	UI.createSlideBoard = function(options) {
+		var SlideBoard = require("onyx/ui/slideboard");
+		return new SlideBoard(options);
+	}
 
-			UI.createFloatPanel = function(options) {
-				var FloatPanel = require("onyx/ui/floatpanel");
-				return new FloatPanel(options);
-			}
+	UI.createUploadBoard = function(options) {
+		var UploadBoard = require("onyx/ui/uploadboard");
+		return new UploadBoard(options);
+	}
 
-			UI.createMenu = function(options) {
-				var Menu = require("onyx/ui/menu");
-				return new Menu(options);
-			}
+	UI.createFloatPanel = function(options) {
+		var FloatPanel = require("onyx/ui/floatpanel");
+		return new FloatPanel(options);
+	}
 
-			UI.createExplorer = function(options) {
-				var Explorer = require("onyx/ui/explorer");
-				return new Explorer(options);
-			}
+	UI.createMenu = function(options) {
+		var Menu = require("onyx/ui/menu");
+		return new Menu(options);
+	}
 
-			UI.createResourceBrowser = function(options) {
-				var ResourceBrowser = require("onyx/ui/resourcebrowser");
-				return new ResourceBrowser(options);
-			}
+	UI.createExplorer = function(options) {
+		var Explorer = require("onyx/ui/explorer");
+		return new Explorer(options);
+	}
 
-			UI.createSubmiter = function(options) {
-				var createSubmiter = require("onyx/ui/submiter");
-				return new createSubmiter(options);
-			}
+	UI.createResourceBrowser = function(options) {
+		var ResourceBrowser = require("onyx/ui/resourcebrowser");
+		return new ResourceBrowser(options);
+	}
 
-			return UI;
-		});
+	UI.createSubmiter = function(options) {
+		var createSubmiter = require("onyx/ui/submiter");
+		return new createSubmiter(options);
+	}
+
+	return UI;
+});
 
 /**
  * Onyx UI Framework Widget
@@ -2931,6 +2936,134 @@ define("onyx/ui/editboard/item", [ "jquery", "require", "onyx/ui/widget",
 
 	return EditBoardItem;
 });
+
+/**
+ * Onyx UI Framework SlideBoard
+ */
+define(
+		"onyx/ui/slideboard",
+		[ "jquery", "require", "onyx/ui/widget", "onyx/utils" ],
+		function($, require) {
+
+			var Widget = require("onyx/ui/widget");
+
+			var Utils = require("onyx/utils");
+
+			function SlideBoard(options) {
+				Widget.call(this, options);
+				this.options = options;
+			}
+
+			SlideBoard.prototype.build = function(pdom) {
+				this.dom = $("<div></div>");
+				this.addClass(this.dom, "onyx-ui-slideboard");
+				this.dom.appendTo(pdom);
+				this.layout = UI.createLayout({
+					clazz : "onyx-ui-slideboard-layout",
+					body : {
+
+					},
+					footer : {
+						height : 64
+					},
+					pdom : this.dom
+				});
+				this.container = $("<div></div>");
+				this
+						.addClass(this.container, "onyx-ui-slideboard",
+								"container");
+				this.container.appendTo(this.layout.getBody());
+				this.container.on("mouseover", this.onMouseOver.bind(this));
+				this.container.on("mouseout", this.onMouseOut.bind(this));
+				this.container.on("click", this.onClickItem.bind(this));
+				var self = this;
+				this.getDatas(this.options.datas).done(function(datas) {
+					self.buildData(datas);
+				});
+				return this.dom;
+			}
+
+			SlideBoard.prototype.buildData = function(datas) {
+				var self = this;
+				$
+						.each(
+								datas,
+								function(index, data) {
+									var item = $("<div></div>");
+									self.addClass(item, "onyx-ui-slideboard",
+											"item");
+									item.appendTo(self.container);
+									var icon = $("<div class='iconfont icon-user-circle'></div>");
+									self.addClass(icon, "onyx-ui-slideboard",
+											"item", "icon");
+									icon.appendTo(item);
+									var text = $("<span></span>");
+									self.addClass(text, "onyx-ui-slideboard",
+											"item", "text");
+									text.text(data.name);
+									text.appendTo(item);
+									item.data(data);
+								});
+			}
+
+			SlideBoard.prototype.onMouseOver = function(event) {
+				var target = this.getEventTarget(event, "onyx-ui-slideboard",
+						"item");
+				if (!target) {
+					return;
+				}
+				if (this.hoverGridItem && this.hoverGridItem != target) {
+					this.removeClass(this.hoverGridItem, "onyx-ui-slideboard",
+							"item", "over");
+				}
+				this.hoverGridItem = target;
+				this.addClass(this.hoverGridItem, "onyx-ui-slideboard", "item",
+						"over");
+			}
+
+			SlideBoard.prototype.onMouseOut = function(event) {
+				var target = this.getEventTarget(event, "onyx-ui-slideboard",
+						"item");
+				if (!target) {
+					return;
+				}
+				if (this.hoverGridItem) {
+					this.removeClass(this.hoverGridItem, "onyx-ui-slideboard",
+							"item", "over");
+				}
+			}
+
+			SlideBoard.prototype.onClickItem = function(event) {
+				var button = this.getEventTarget(event, "onyx-ui-button");
+				if (button) {
+					event.stopPropagation();
+					this.docmd(event, button);
+					return;
+				}
+				var target = this.getEventTarget(event, "onyx-ui-slideboard",
+						"item");
+				if (!target) {
+					return;
+				}
+				var item = target.data();
+				if (item && item.show) {
+					item.show();
+				}
+				this.fire("clickitem", target);
+			}
+
+			SlideBoard.prototype.setData = function(datas) {
+				var children = this.container.children();
+				if (children) {
+					children.remove();
+				}
+				this.buildData(datas);
+			}
+
+			Utils.inherits(SlideBoard, Widget);
+
+			return SlideBoard;
+		});
 
 /**
  * Onyx UI Framework Upload Board

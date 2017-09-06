@@ -1380,6 +1380,79 @@ textarea {
 	box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 1);
 }
 
+/*Slide Board*/
+.onyx-ui-slideboard {
+	position: absolute;
+	display: inline-block;
+	overflow-y: auto;
+	width: 100%;
+	height: 100%;
+}
+
+.onyx-ui-slideboard-layout-body {
+	overflow: hidden;
+}
+
+.onyx-ui-slideboard-container {
+	position: absolute;
+	width: 1024px;
+	left: 50%;
+	margin-left: -512px;
+	height: 512px;
+	top: 50%;
+	margin-top: -256px;
+	overflow: hidden;
+}
+
+.onyx-ui-slideboard-item {
+	position: relative;
+	float: left;
+	width: 96px;
+	height: 96px;
+	margin: 16px;
+	cursor: pointer;
+	text-align: center;
+	padding:4px;
+}
+
+.onyx-ui-slideboard-item-over {
+	border-radius:5px;
+	background-color:rgba(255,255,255,0.1);
+}
+
+.onyx-ui-slideboard-item-icon {
+	position: relative;
+	dispaly: block;
+	width: 56px;
+	height: 56px;
+	left: 50%;
+	margin-left: -32px;
+	border-radius: 64px;
+	background-color: #66ccff;
+	color: white;
+	width: 64px;
+	height: 64px;
+	left: 50%;
+	margin-left: -32px;
+	border-radius: 64px;
+	background-color: #66ccff;
+	color: white;
+	cursor: pointer;
+	border-radius: 64px;
+	font-size: 32px;
+	line-height: 64px;
+}
+
+.onyx-ui-slideboard-item-text {
+	position: relative;
+	dispaly: block;
+	width: 64px;
+	color: white;
+	cursor: pointer;
+	font-size: 16px;
+	line-height: 32px;
+}
+
 /*Upload Board*/
 .onyx-ui-uploadboard {
 	width: auto;
