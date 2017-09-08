@@ -2592,7 +2592,7 @@ define(
 			}
 
 			ShowBoardItem_Base.prototype.show = function() {
-				UI.redirect("/graph/base/" + this.options.kid);
+				UI.redirect("/graph/base/" + this.options.id);
 			}
 
 			Utils.inherits(ShowBoardItem_Base, Widget);
@@ -2671,7 +2671,8 @@ define("onyx/ui/showboard/item/entity", [ "jquery", "require",
 	}
 
 	ShowBoardItem_Entity.prototype.show = function() {
-		UI.redirect("/view/entity/" + this.options.eid);
+		debugger;
+		UI.redirect("/view/entity/" + this.options.id);
 	}
 
 	Utils.inherits(ShowBoardItem_Entity, Widget);
@@ -2702,7 +2703,7 @@ define("onyx/ui/showboard/item/label", [ "jquery", "require", "onyx/ui/widget",
 			}
 
 			ShowBoardItem_Label.prototype.show = function() {
-				UI.redirect("/view/label/" + this.options.lid);
+				UI.redirect("/view/label/" + this.options.id);
 			}
 
 			Utils.inherits(ShowBoardItem_Label, Widget);

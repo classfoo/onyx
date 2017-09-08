@@ -20,7 +20,7 @@ define(
 
 			function Canvas(resource) {
 				this.resource = resource;
-				this.kid = this.resource.kid;
+				this.kid = this.resource.id;
 			}
 
 			Canvas.prototype.build = function(pdom) {
@@ -100,7 +100,7 @@ define(
 
 			Canvas.prototype.onClickMenu = function(event, menu) {
 				this.compass.hide();
-				if(menu.button.id == "add"){
+				if (menu.button.id == "add") {
 					this.searchPanel.show(menu.node);
 				}
 			}
@@ -132,6 +132,7 @@ define(
 				this.context.clearRect(0, 0, this.width, this.height);
 				this.graph.render();
 				this.compass.render();
+				//console.log("render");
 			}
 
 			return Canvas;
@@ -168,40 +169,25 @@ define("onyx/canvas/graph", [ "jquery", "require", "d3/d3" ],
 			Graph.prototype.bindEvents = function() {
 				var width = this.canvas.width;
 				var height = this.canvas.height;
-				this.simulation = d3.forceSimulation();
-				this.simulation.on("tick", this.onTick.bind(this));
-				this.simulation.nodes(this.nodes);
+				this.simulation = d3.forceSimulation(this.nodes);
 				this.simulation.force("collide", d3.forceCollide(this.nodes)
 						.radius(function(d) {
 							return radius + 12;
 						}).iterations(4).strength(1));
-				this.simulation.force("link", d3.forceLink(this.links).id(
-						function(d) {
-							return d.id;
-						}).iterations(4).distance(100).strength(1));
+//				this.simulation.force("link", d3.forceLink(this.links).id(
+//						function(d) {
+//							return d.id;
+//						}).iterations(4).distance(100).strength(1));
+				this.simulation.on("tick", this.onTick.bind(this));
+				this.simulation.on("end",this.onTickEnd.bind(this));
+				this.simulation.restart();
 				var d3Canvas = d3.select(this.canvas.getCanvas());
 				d3Canvas.call(d3.drag().container(this.canvas.getCanvas())
 						.subject(this.dragsubject.bind(this)).on("start",
 								this.dragstarted.bind(this)).on("drag",
 								this.dragging.bind(this)).on("end",
 								this.dragended.bind(this)));
-				this.simulation.restart();
-				// d3Canvas.call(d3.zoom().scaleExtent([ 1 / 2, 4 ]).on("zoom",
-				// this.zoomed.bind(this)));
 			}
-
-			// Graph.prototype.zoomed = function(event) {
-			// this.offsetX = d3.event.transform.x;
-			// this.offsetY = d3.event.transform.y;
-			// this.zoomed = d3.event.transform.k;
-			// this.context.save();
-			// //this.context.clearRect(0, 0, this.width, this.height);
-			//
-			// //this.context.translate(this.offsetX, this.offsetY);
-			// this.context.scale(this.zoomed, this.zoomed);
-			// this.render();
-			// this.context.restore();
-			// }
 
 			Graph.prototype.dragsubject = function() {
 				var node = this.simulation.find(d3.event.x - this.graph.x,
@@ -270,6 +256,10 @@ define("onyx/canvas/graph", [ "jquery", "require", "d3/d3" ],
 				this.canvas.render();
 			}
 
+			Graph.prototype.onTickEnd = function(event) {
+				this.canvas.render();
+			}
+			
 			Graph.prototype.onClick = function(event) {
 				var item = this.simulation.find(event.offsetX - this.graph.x,
 						event.offsetY - this.graph.y, radius);
@@ -365,10 +355,10 @@ define("onyx/canvas/graph", [ "jquery", "require", "d3/d3" ],
 				}
 				this.context.fill();
 				this.context.restore();
-				//draw circle
+				// draw circle
 				this.context.save();
 				this.context.beginPath();
-				this.context.arc(nodex, nodey, radius+5, 0, 2 * Math.PI);
+				this.context.arc(nodex, nodey, radius + 5, 0, 2 * Math.PI);
 				this.context.strokeStyle = "#C5DBF0";
 				this.context.lineWidth = 3;
 				this.context.stroke();
@@ -488,28 +478,28 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 			children : [ {
 				id : "all",
 				length : 1,
-				name:"所有"
-			},{
+				name : "所有"
+			}, {
 				id : "entities",
 				length : 1,
-				name:"实体"
+				name : "实体"
 			}, {
 				id : "properties",
 				length : 1,
-				name:"属性"
+				name : "属性"
 			}, {
 				id : "labels",
 				length : 1,
-				name:"标签"
-			} , {
+				name : "标签"
+			}, {
 				id : "sources",
 				length : 1,
-				name:"来源"
+				name : "来源"
 			}, {
 				id : "reference",
 				length : 1,
-				name:"引用"
-			}]
+				name : "引用"
+			} ]
 		}, {
 			id : "add",
 			icon : '\ue6b5',

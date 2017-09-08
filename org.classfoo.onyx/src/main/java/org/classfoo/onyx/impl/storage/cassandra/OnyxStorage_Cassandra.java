@@ -70,21 +70,23 @@ public class OnyxStorage_Cassandra implements OnyxStorage {
 
 			}
 			session.execute(
-					"create table if not exists bases(kid_ text,name_ text, desc_ text,primary key(kid_,name_) )");
+					"CREATE KEYSPACE if not exists onyx WITH REPLICATION={'class':'SimpleStrategy','replication_factor':3};");
 			session.execute(
-					"create table if not exists entities(kid_ text, eid_ text, name_ text,property_ text,operate_ text,key_ text,value_ map<text,text>,event_ timeuuid,order_ int,user_ text, primary key (eid_,event_,order_,property_,operate_,key_)) WITH CLUSTERING ORDER BY (event_ asc,order_ asc)");
+					"create table if not exists bases(id_ text,name_ text, desc_ text,primary key(id_,name_) )");
 			session.execute(
-					"create table if not exists base_entity(kid_ text, eid_ text, name_ text,primary key (kid_,eid_,name_)) WITH CLUSTERING ORDER BY (eid_ asc,name_ asc)");
+					"create table if not exists entities(id_ text, kid_ text, name_ text,property_ text,operate_ text,key_ text,value_ map<text,text>,event_ timeuuid,order_ int,user_ text, primary key (id_,event_,order_,property_,operate_,key_)) WITH CLUSTERING ORDER BY (event_ asc,order_ asc)");
 			session.execute(
-					"create table if not exists labels(lid_ text, event_ timeuuid,order_ int,key_ text, operate_ text,name_ text,parent_ text,pname_ text,ptype_ text,poptions_ map<text,text>,kid_ text, user_ text, primary key (lid_,event_,order_)) WITH CLUSTERING ORDER BY (event_ asc,order_ asc)");
+					"create table if not exists base_entity(kid_ text, id_ text, name_ text,primary key (kid_,id_,name_)) WITH CLUSTERING ORDER BY (id_ asc,name_ asc)");
 			session.execute(
-					"create table if not exists base_label(kid_ text, lid_ text, name_ text,primary key (kid_,lid_,name_)) WITH CLUSTERING ORDER BY (lid_ asc,name_ asc)");
+					"create table if not exists labels(id_ text, event_ timeuuid,order_ int,key_ text, operate_ text,name_ text,parent_ text,pname_ text,ptype_ text,poptions_ map<text,text>,kid_ text, user_ text, primary key (id_,event_,order_)) WITH CLUSTERING ORDER BY (event_ asc,order_ asc)");
+			session.execute(
+					"create table if not exists base_label(kid_ text, id_ text, name_ text,primary key (kid_,id_,name_)) WITH CLUSTERING ORDER BY (id_ asc,name_ asc)");
 			session.execute(
 					"create table if not exists materials(id_ text, kid_ text,user_ text,name_ text, desc_ text, properties_ map<text,text>,primary key (id_))");
 			session.execute(
 					"create table if not exists files(id_ text, kid_ text,mid_ text,user_ text,name_ text, desc_ text, primary key (id_))");
 			session.execute(
-					"create table if not exists material_file(mid_ text,fid_ text,fname_ text, primary key (mid_,fid_))");
+					"create table if not exists material_file(mid_ text,id_ text,fname_ text, primary key (mid_,id_))");
 			session.execute(
 					"create table if not exists timeline(id_ text,time_ text,kid_ text,user_ text, type_ text, relate_ text, content_ text,properties_ map<text,text>, primary key (id_,time_,kid_)) WITH CLUSTERING ORDER BY (time_ desc,kid_ asc)");
 			this.initTestDatas(session);
@@ -97,21 +99,21 @@ public class OnyxStorage_Cassandra implements OnyxStorage {
 
 	private void initTestDatas(Session session) {
 		String kid = OnyxUtils.getRandomUUID("k");
-		session.execute("insert into bases (kid_,name_,desc_) values(?,?,?)", kid, "娱乐圈知识库",
+		session.execute("insert into bases (id_,name_,desc_) values(?,?,?)", kid, "娱乐圈知识库",
 				"娱乐圈知识库，明星档案，绯闻事件，演艺公司，娱乐圈周边");
 		for (int i = 1; i <= 100; i++) {
 			String eid = OnyxUtils.getRandomUUID("e");
 			String entityName = "实体" + i;
 			session.execute(
-					"insert into entities (kid_,eid_,name_,event_,order_,property_,operate_,key_,value_,user_) values(?,?,?,now(),1,'name','add',?,?,?)",
+					"insert into entities (kid_,id_,name_,event_,order_,property_,operate_,key_,value_,user_) values(?,?,?,now(),1,'name','add',?,?,?)",
 					kid, eid, entityName, entityName, null, "admin");
-			session.execute("insert into base_entity (kid_,eid_,name_) values(?,?,?)", kid, eid, entityName);
+			session.execute("insert into base_entity (kid_,id_,name_) values(?,?,?)", kid, eid, entityName);
 			String lid = OnyxUtils.getRandomUUID("l");
 			String labelName = "标签" + i;
 			session.execute(
-					"insert into labels (kid_,lid_,event_,order_,key_,name_,operate_,pname_,ptype_,poptions_,user_) values(?,?,now(),1,?,?,'add',null,null,null,'admin')",
+					"insert into labels (kid_,id_,event_,order_,key_,name_,operate_,pname_,ptype_,poptions_,user_) values(?,?,now(),1,?,?,'add',null,null,null,'admin')",
 					kid, lid, "name", labelName);
-			session.execute("insert into base_label (kid_,lid_,name_) values(?,?,?)", kid, lid, labelName);
+			session.execute("insert into base_label (kid_,id_,name_) values(?,?,?)", kid, lid, labelName);
 		}
 	}
 
@@ -126,7 +128,7 @@ public class OnyxStorage_Cassandra implements OnyxStorage {
 	@Override
 	public Map<String, Object> queryBase(String id) {
 		try (Session session = this.getCluster().connect("onyx")) {
-			ResultSet value = session.execute("select * from bases where kid_=?", id);
+			ResultSet value = session.execute("select * from bases where id_=?", id);
 			return convertToMap(value);
 		}
 		catch (Exception e) {
@@ -146,7 +148,7 @@ public class OnyxStorage_Cassandra implements OnyxStorage {
 	@Override
 	public List<Map<String, Object>> queryEntityModifies(String eid) {
 		try (Session session = this.getCluster().connect("onyx")) {
-			ResultSet value = session.execute("select * from entities where eid_=?", eid);
+			ResultSet value = session.execute("select * from entities where id_=?", eid);
 			return convertToList(value);
 		}
 		catch (Exception e) {
@@ -166,7 +168,7 @@ public class OnyxStorage_Cassandra implements OnyxStorage {
 	@Override
 	public List<Map<String, Object>> queryLabelModifies(String lid) {
 		try (Session session = this.getCluster().connect("onyx")) {
-			ResultSet value = session.execute("select * from labels where lid_=? ALLOW FILTERING", lid);
+			ResultSet value = session.execute("select * from labels where id_=? ALLOW FILTERING", lid);
 			return this.convertToList(value);
 		}
 		catch (Exception e) {
@@ -237,7 +239,7 @@ public class OnyxStorage_Cassandra implements OnyxStorage {
 		try (Session session = this.getCluster().connect("onyx")) {
 			String lid = OnyxUtils.getRandomUUID("l");
 			ResultSet value = session.execute(
-					"insert into labels (lid,kid,name,parents,links,properties) values (?,?,?,?,?,?)", lid, kid,
+					"insert into labels (id,kid,name,parents,links,properties) values (?,?,?,?,?,?)", lid, kid,
 					labelName, parents, links, properties);
 			return convertToMap(value);
 		}
@@ -252,7 +254,7 @@ public class OnyxStorage_Cassandra implements OnyxStorage {
 			List<String> links, List<String> properties) {
 		try (Session session = this.getCluster().connect("onyx")) {
 			ResultSet value = session.execute(
-					"update labels set name=?,parents=?,links=?,properties=? where kid=? and lid=?", labelName, parents,
+					"update labels set name=?,parents=?,links=?,properties=? where kid=? and id=?", labelName, parents,
 					links, properties, kid, lid);
 			return convertToMap(value);
 		}
@@ -281,7 +283,7 @@ public class OnyxStorage_Cassandra implements OnyxStorage {
 				String pname = OnyxUtils.readJson(modify, "pname", String.class);
 				String poptions = OnyxUtils.readJson(modify, "poptions", String.class);
 				session.execute(
-						"insert into labels (lid_,event_,order_,key_,operate_,name_,parent_,ptype_,pname_,poptions_,kid_,user_) values (?,now(),?,?,?,?,?,?,?,?,?,?)",
+						"insert into labels (id_,event_,order_,key_,operate_,name_,parent_,ptype_,pname_,poptions_,kid_,user_) values (?,now(),?,?,?,?,?,?,?,?,?,?)",
 						lid, i, key, operate, name, parent, ptype, pname, poptions, kid, "admin");
 			}
 			return null;

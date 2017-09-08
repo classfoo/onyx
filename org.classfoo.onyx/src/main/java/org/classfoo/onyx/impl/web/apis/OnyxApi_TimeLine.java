@@ -42,7 +42,7 @@ public class OnyxApi_TimeLine extends OnyxApiImpl implements OnyxApi {
 		for (Map<String, Object> base : bases) {
 			base.put("type", "base");
 			result.add(base);
-			String kid = MapUtils.getString(base, "kid");
+			String kid = MapUtils.getString(base, "id");
 			OnyxQueryEntities queryEntities = this.onyxService.createQuery(OnyxQueryEntities.class);
 			queryEntities.setKid(kid);
 			List<Map<String, Object>> entities = queryEntities.queryList();

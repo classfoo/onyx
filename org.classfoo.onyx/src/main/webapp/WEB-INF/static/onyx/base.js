@@ -113,7 +113,7 @@ define(
 			function Home(options) {
 				this.options = options;
 				this.resource = this.options.resource;
-				this.kid = this.resource.kid;
+				this.kid = this.resource.id;
 				this.build(options);
 			}
 
@@ -239,7 +239,7 @@ define("onyx/base/knowledges", [ "jquery", "require", "onyx/ui" ], function($,
 	function Knowledges(options) {
 		this.options = options;
 		this.resource = this.options.resource;
-		this.kid = this.resource.kid;
+		this.kid = this.resource.id;
 		this.build(options);
 	}
 
@@ -292,7 +292,7 @@ define("onyx/base/labels", [ "jquery", "require", "onyx/ui" ], function($,
 	function Labels(options) {
 		this.options = options;
 		this.resource = this.options.resource;
-		this.kid = this.resource.kid;
+		this.kid = this.resource.id;
 		this.build(options);
 	}
 
@@ -344,6 +344,7 @@ define("onyx/base/analysis", [ "jquery", "require", "onyx/ui" ], function($,
 	function Analysis(options) {
 		this.options = options;
 		this.resource = this.options.resource;
+		this.kid = this.resource.id;
 		this.build(options.pdom);
 	}
 
@@ -398,7 +399,7 @@ define("onyx/base/materials", [ "jquery", "require", "onyx/ui" ], function($,
 	function Materials(options) {
 		this.options = options;
 		this.resource = this.options.resource;
-		this.kid = this.resource.kid;
+		this.kid = this.resource.id;
 		this.build(options.pdom);
 	}
 
@@ -449,7 +450,7 @@ define("onyx/base/members", [ "jquery", "require", "onyx/ui" ], function($,
 	function Members(options) {
 		this.options = options;
 		this.resource = this.options.resource;
-		this.kid = this.resource.kid;
+		this.kid = this.resource.id;
 		this.build(options.pdom);
 	}
 
@@ -504,7 +505,7 @@ define("onyx/base/tasks", [ "jquery", "require", "onyx/ui" ], function($,
 	function Tasks(options) {
 		this.options = options;
 		this.resource = this.options.resource;
-		this.kid = this.resource.kid;
+		this.kid = this.resource.id;
 		this.build(options.pdom);
 	}
 

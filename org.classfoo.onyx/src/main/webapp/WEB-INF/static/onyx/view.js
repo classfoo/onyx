@@ -47,7 +47,7 @@ define("onyx/view/entity", [ "jquery", "require", "onyx/utils", "onyx/ui" ],
 				this.options = options;
 				this.resource = this.options.resource;
 				this.kid = this.resource.kid;
-				this.eid = this.resource.eid;
+				this.eid = this.resource.id;
 				this.build(this.options.pdom);
 			}
 
@@ -151,7 +151,7 @@ define("onyx/view/label", [ "jquery", "require", "onyx/utils", "onyx/ui" ],
 				this.options = options;
 				this.resource = this.options.resource;
 				this.kid = this.resource.kid;
-				this.lid = this.resource.lid;
+				this.lid = this.resource.id;
 				this.build(this.options.pdom);
 			}
 

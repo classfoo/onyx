@@ -286,7 +286,7 @@ define("onyx/edit/label", [ "jquery", "require", "onyx/ui" ], function($,
 		this.options = options;
 		this.resource = options.resource;
 		this.kid = this.resource.kid;
-		this.lid = this.resource.lid;
+		this.lid = this.resource.id;
 		this.edit = options.page;
 		this.modifies = [];
 		this.build(options.pdom);
@@ -621,7 +621,7 @@ define("onyx/edit/entity", [ "jquery", "require", "onyx/ui" ], function($,
 		this.options = options;
 		this.resource = this.options.resource;
 		this.kid = this.resource.kid;
-		this.eid = this.resource.eid;
+		this.eid = this.resource.id;
 		this.edit = options.page;
 		this.modifies = [];
 		this.build(options.pdom);

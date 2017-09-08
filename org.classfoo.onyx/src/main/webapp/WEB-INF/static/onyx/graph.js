@@ -40,7 +40,7 @@ define("onyx/graph/base", [ "jquery", "require", "onyx/ui", "onyx/canvas" ],
 			function Base(options) {
 				this.options = options;
 				this.resource = this.options.resource;
-				this.kid = this.resource.kid;
+				this.kid = this.resource.id;
 				this.build(options.pdom);
 			}
 
