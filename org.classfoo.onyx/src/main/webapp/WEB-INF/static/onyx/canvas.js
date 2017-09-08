@@ -100,6 +100,9 @@ define(
 
 			Canvas.prototype.onClickMenu = function(event, menu) {
 				this.compass.hide();
+				if(menu.button.id == "add"){
+					this.searchPanel.show(menu.node);
+				}
 			}
 
 			Canvas.prototype.onClickNode = function(event, node) {
@@ -362,6 +365,14 @@ define("onyx/canvas/graph", [ "jquery", "require", "d3/d3" ],
 				}
 				this.context.fill();
 				this.context.restore();
+				//draw circle
+				this.context.save();
+				this.context.beginPath();
+				this.context.arc(nodex, nodey, radius+5, 0, 2 * Math.PI);
+				this.context.strokeStyle = "#C5DBF0";
+				this.context.lineWidth = 3;
+				this.context.stroke();
+				this.context.restore();
 				// draw border
 				this.context.save();
 				if (dragged) {
@@ -370,6 +381,7 @@ define("onyx/canvas/graph", [ "jquery", "require", "d3/d3" ],
 					this.context.stroke();
 				} else if (selected) {
 					this.context.lineWidth = 3;
+					this.context.strokeStyle = "#C5DBF0";
 					this.context.stroke();
 				} else {
 					// this.context.lineWidth = 1;
@@ -454,46 +466,70 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 		this.context = canvas.getContext();
 		this.active = -1;
 		this.buttons = [ {
-			id : 0,
+			id : "raida",
 			icon : '\ue6b4',
 			length : 1,
 			name : "雷达"
 		}, {
-			id : 1,
+			id : "links",
 			icon : '\ue6b6',
 			length : 1,
 			name : "关系"
 		}, {
-			id : 2,
+			id : "properties",
 			icon : '\ue6ae',
 			length : 1,
 			name : "查看"
 		}, {
-			id : 3,
+			id : "search",
 			icon : '\ue6b3',
 			length : 1,
-			name : "选择",
-			children : [ {}, {}, {} ]
+			name : "搜索",
+			children : [ {
+				id : "all",
+				length : 1,
+				name:"所有"
+			},{
+				id : "entities",
+				length : 1,
+				name:"实体"
+			}, {
+				id : "properties",
+				length : 1,
+				name:"属性"
+			}, {
+				id : "labels",
+				length : 1,
+				name:"标签"
+			} , {
+				id : "sources",
+				length : 1,
+				name:"来源"
+			}, {
+				id : "reference",
+				length : 1,
+				name:"引用"
+			}]
 		}, {
-			id : 4,
+			id : "add",
 			icon : '\ue6b5',
 			length : 1,
 			name : "添加"
 		}, {
-			id : 5,
+			id : "remove",
 			icon : '\ue6b1',
 			length : 1,
 			name : "移除"
 		}, {
-			id : 6,
+			id : "select",
 			icon : '\ue6b2',
 			length : 1,
 			name : "选择",
 		}, {
-			id : 7,
+			id : "expand",
 			icon : '\ue6b0',
 			length : 1,
-			name : "选择"
+			name : "展开"
 		} ];
 	}
 
@@ -513,9 +549,15 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 		}
 		this.x = this.node.x + this.graph.getX();
 		this.y = this.node.y + this.graph.getY();
+		this.renderInner();
+		if (this.active) {
+			this.renderOutter();
+		}
+	}
+	Compass.prototype.renderInner = function() {
 		this.context.save();
 		var arc = d3.arc().outerRadius(OUTERRADIUS).innerRadius(INNERRADIUS)
-				.padAngle(0.03).context(this.context);
+				.padAngle(0.01).context(this.context);
 		this.arcs = d3.pie().startAngle(-Math.PI / 8).endAngle(
 				Math.PI * 2 - Math.PI / 8).value(function(d) {
 			return d.length;
@@ -526,10 +568,36 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 		this.context.restore();
 	}
 
+	Compass.prototype.renderOutter = function() {
+		if (!this.active) {
+			return;
+		}
+		var button = this.getButton(this.active);
+		;
+		if (!button) {
+			return;
+		}
+		var children = button.children;
+		if (!children) {
+			return;
+		}
+		this.context.save();
+		var arc = d3.arc().outerRadius(OUTERRADIUS + 3).innerRadius(
+				OUTERRADIUS + 63).padAngle(0.01).context(this.context);
+		var arcs = d3.pie().startAngle(-Math.PI / 8).endAngle(
+				Math.PI - Math.PI / 8).value(function(d) {
+			return d.length;
+		})(children);
+		this.context.translate(this.x, this.y);
+		this.context.globalAlpha = 0.8;
+		arcs.forEach(this.renderArc.bind(this, arc));
+		this.context.restore();
+	}
+
 	Compass.prototype.renderArc = function(arc, d, i) {
 		var button = d.data;
 		this.context.beginPath();
-		arc.cornerRadius(button.id === this.active ? 5 : 10);
+		arc.cornerRadius(button.id === this.active ? 2 : 4);
 		arc(d);
 		this.context.fillStyle = button.id === this.active ? "#FFFFFF"
 				: "#000000";
@@ -576,11 +644,16 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 		if (!this.node) {
 			return false;
 		}
-		if (this.active == -1) {
+		if (!this.active) {
 			return false;
 		}
+		var button = this.getButton(this.active);
+		if (button.children) {
+			this.showOutterMenu(button);
+			return true;
+		}
 		this.canvas.fire("clickmenu", {
-			button : this.buttons[this.active],
+			button : button,
 			node : this.node
 		});
 		return true;
@@ -588,8 +661,8 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 
 	Compass.prototype.onMouseMove = function(event) {
 		if (!this.arcs) {
-			if (this.active != -1) {
-				this.active = -1;
+			if (this.active) {
+				this.active = null;
 				this.canvas.render();
 			}
 			return;
@@ -598,8 +671,8 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 		var y = event.offsetY - this.y;
 		var radius = Math.sqrt(x * x + y * y);
 		if (radius < INNERRADIUS || radius > OUTERRADIUS) {
-			if (this.active != -1) {
-				this.active = -1;
+			if (this.active != null) {
+				this.active = null;
 				this.canvas.render();
 			}
 			return;
@@ -618,12 +691,22 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 					return;
 				}
 			}
-			if (self.active == index) {
+			var button = self.buttons[index];
+			if (self.active == button.id) {
 				return;
 			}
-			self.active = index;
+			self.active = button.id;
 			self.canvas.render();
 		})
+	}
+
+	Compass.prototype.getButton = function(id) {
+		for (var i = 0; i < this.buttons.length; i++) {
+			if (this.buttons[i].id == id) {
+				return this.buttons[i];
+			}
+		}
+		return null;
 	}
 
 	Compass.prototype.getAngle = function(x, y) {
@@ -682,6 +765,7 @@ define("onyx/canvas/searchpanel", [ "jquery", "require", "d3/d3" ], function($,
 			},
 			pdom : this.dom
 		});
+		this.layout.on("click", this.onClickBlank.bind(this));
 		this.searchbox = UI.createSearchBox({
 			clazz : "onyx-canvas-searchpanel-search",
 			pdom : this.layout.getHeader()
@@ -691,13 +775,20 @@ define("onyx/canvas/searchpanel", [ "jquery", "require", "d3/d3" ], function($,
 			datas : this.queryEntities.bind(this),
 			pdom : this.layout.getBody()
 		});
+		this.slideboard.on("clickblank", this.onClickBlank.bind(this));
 		this.slideboard.on("clickitem", this.onClickItem.bind(this));
+	}
+
+	SearchPanel.prototype.onClickBlank = function(event) {
+		this.hide();
 	}
 
 	SearchPanel.prototype.onClickItem = function(event, item) {
 		var node = $(item).data();
-		var nodex = (this.pos && this.pos.x) || this.graph.getWidth() / 2 - this.graph.getX();
-		var nodey = (this.pos && this.pos.y) || this.graph.getHeight() / 2- this.graph.getY();
+		var nodex = (this.pos && this.pos.x) || this.graph.getWidth() / 2
+				- this.graph.getX();
+		var nodey = (this.pos && this.pos.y) || this.graph.getHeight() / 2
+				- this.graph.getY();
 		this.graph.addNode($.extend({
 			x : nodex,
 			y : nodey
@@ -740,14 +831,27 @@ define(
 			}
 
 			CornerButton.prototype.build = function(pdom) {
-				this.dom = $("<div class='onyx-canvas-cornerbutton shadow'></div>");
+				this.dom = $("<div class='onyx-canvas-cornerbutton'></div>");
 				this.dom.appendTo(pdom);
+				this.icon = $("<span class='onyx-canvas-cornerbutton-icon iconfont icon-search'></span>");
+				this.icon.appendTo(this.dom);
 				// this.dom.on("mouseover", this.onMouseOver.bind(this));
 				this.dom.on("click", this.onClick.bind(this));
+				this.dom.on("mouseover", this.onMouseOver.bind(this));
+				this.dom.on("mouseout", this.onMouseOut.bind(this));
+
 			}
 
 			CornerButton.prototype.onClick = function(event) {
 				this.searchpanel.show();
+			}
+
+			CornerButton.prototype.onMouseOver = function(event) {
+				this.dom.addClass("onyx-canvas-cornerbutton-over");
+			}
+
+			CornerButton.prototype.onMouseOut = function(event) {
+				this.dom.removeClass("onyx-canvas-cornerbutton-over");
 			}
 
 			return CornerButton;

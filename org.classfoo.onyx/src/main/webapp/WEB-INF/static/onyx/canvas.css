@@ -24,7 +24,7 @@
 	width: 256px;
 	left: 50%;
 	margin-left: -128px;
-	margin-top:24px;
+	margin-top: 24px;
 }
 
 .onyx-canvas-searchpanel-search .onyx-ui-searchbox-input {
@@ -43,18 +43,29 @@
 	line-height: 32px;
 	margin-top: 10px;
 }
+
 /*Corner Button*/
 .onyx-canvas-cornerbutton {
-	width: 32px;
-	height: 32px;
-	border-radius: 0 0 0 32px;
-	background-color: rgba(255, 255, 255, 0.5);
+	width: 48px;
+	height: 48px;
+	padding-top:10px;
+	padding-right:10px;
+	border-radius: 0 0 0 48px;
+	background-color: rgba(0, 0, 0, 0.5);
 	position: absolute;
 	top: 0px;
 	right: 0px;
 	cursor: pointer;
-	
-	-webkit-box-shadow: 0px 0px 75px 20px rgba(242,14,14,1);
-	-moz-box-shadow: 0px 0px 75px 20px rgba(242,14,14,1);
-	box-shadow: 0px 0px 75px 20px rgba(242,14,14,1);
+	text-align: right;
+}
+
+.onyx-canvas-cornerbutton-icon {
+	font-size: 18px;
+	color: white;
+}
+
+.onyx-canvas-cornerbutton-over {
+	-webkit-box-shadow: 0px 0px 75px 20px rgba(0, 0, 0, 0.5);
+	-moz-box-shadow: 0px 0px 75px 20px rgba(0, 0, 0, 0.5);
+	box-shadow: 0px 0px 75px 20px rgba(0, 0, 0, 0.5);
 }

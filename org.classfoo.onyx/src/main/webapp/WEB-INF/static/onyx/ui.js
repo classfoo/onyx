@@ -2958,6 +2958,7 @@ define(
 				this.dom = $("<div></div>");
 				this.addClass(this.dom, "onyx-ui-slideboard");
 				this.dom.appendTo(pdom);
+				this.dom.on("click", this.onClickBlank.bind(this));
 				this.layout = UI.createLayout({
 					clazz : "onyx-ui-slideboard-layout",
 					body : {
@@ -3034,22 +3035,18 @@ define(
 			}
 
 			SlideBoard.prototype.onClickItem = function(event) {
-				var button = this.getEventTarget(event, "onyx-ui-button");
-				if (button) {
-					event.stopPropagation();
-					this.docmd(event, button);
-					return;
-				}
+				event.stopPropagation();
 				var target = this.getEventTarget(event, "onyx-ui-slideboard",
 						"item");
 				if (!target) {
+					this.fire("clickblank");
 					return;
 				}
-				var item = target.data();
-				if (item && item.show) {
-					item.show();
-				}
 				this.fire("clickitem", target);
+			}
+
+			SlideBoard.prototype.onClickBlank = function(event) {
+				this.fire("clickblank");
 			}
 
 			SlideBoard.prototype.setData = function(datas) {
