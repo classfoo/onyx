@@ -132,7 +132,7 @@ define(
 				this.context.clearRect(0, 0, this.width, this.height);
 				this.graph.render();
 				this.compass.render();
-				//console.log("render");
+				console.log("render");
 			}
 
 			return Canvas;
@@ -174,12 +174,10 @@ define("onyx/canvas/graph", [ "jquery", "require", "d3/d3" ],
 						.radius(function(d) {
 							return radius + 12;
 						}).iterations(4).strength(1));
-//				this.simulation.force("link", d3.forceLink(this.links).id(
-//						function(d) {
-//							return d.id;
-//						}).iterations(4).distance(100).strength(1));
-				this.simulation.on("tick", this.onTick.bind(this));
-				this.simulation.on("end",this.onTickEnd.bind(this));
+				this.simulation.force("link", d3.forceLink(this.links).id(
+						function(d) {
+							return d.id;
+						}).iterations(4).distance(100).strength(1));
 				this.simulation.restart();
 				var d3Canvas = d3.select(this.canvas.getCanvas());
 				d3Canvas.call(d3.drag().container(this.canvas.getCanvas())
@@ -223,7 +221,9 @@ define("onyx/canvas/graph", [ "jquery", "require", "d3/d3" ],
 				} else {
 					subject.fx = d3.event.x;
 					subject.fy = d3.event.y;
+					this.canvas.render();
 				}
+
 			}
 
 			Graph.prototype.dragended = function() {
@@ -236,6 +236,7 @@ define("onyx/canvas/graph", [ "jquery", "require", "d3/d3" ],
 					subject.fx = null;
 					subject.fy = null;
 					this.dragged = null;
+					this.doTicks();
 				}
 			}
 
@@ -252,14 +253,21 @@ define("onyx/canvas/graph", [ "jquery", "require", "d3/d3" ],
 				return this.dragged ? node.id === this.dragged : false;
 			}
 
-			Graph.prototype.onTick = function(event) {
-				this.canvas.render();
+			Graph.prototype.doTicks = function(event) {
+				var self = this;
+				var count = 0;
+				function tick() {
+					count++;
+					if (count >= 10) {
+						return;
+					}
+					//self.simulation.tick();
+					self.canvas.render();
+					requestAnimFrame(tick);
+				}
+				requestAnimFrame(tick);
 			}
 
-			Graph.prototype.onTickEnd = function(event) {
-				this.canvas.render();
-			}
-			
 			Graph.prototype.onClick = function(event) {
 				var item = this.simulation.find(event.offsetX - this.graph.x,
 						event.offsetY - this.graph.y, radius);
@@ -354,32 +362,20 @@ define("onyx/canvas/graph", [ "jquery", "require", "d3/d3" ],
 					this.context.fillStyle = "#FFFFFF";
 				}
 				this.context.fill();
-				this.context.restore();
 				// draw circle
-				this.context.save();
 				this.context.beginPath();
 				this.context.arc(nodex, nodey, radius + 5, 0, 2 * Math.PI);
-				this.context.strokeStyle = "#C5DBF0";
+				if (dragged) {
+					this.context.strokeStyle = "#C5DBF0";
+					this.context.setLineDash([ 3, 3 ]);
+				} else if (selected) {
+					this.context.strokeStyle = "#C5DBF0";
+				} else {
+					this.context.strokeStyle = "#C5DBF0";
+				}
 				this.context.lineWidth = 3;
 				this.context.stroke();
-				this.context.restore();
-				// draw border
-				this.context.save();
-				if (dragged) {
-					this.context.setLineDash([ 3, 3 ]);
-					this.context.lineWidth = 3;
-					this.context.stroke();
-				} else if (selected) {
-					this.context.lineWidth = 3;
-					this.context.strokeStyle = "#C5DBF0";
-					this.context.stroke();
-				} else {
-					// this.context.lineWidth = 1;
-					// this.context.stroke();
-				}
-				this.context.restore();
 				// draw icon
-				this.context.save();
 				this.context.font = "26px iconfont";
 				this.context.textAlign = "center"
 				if (mouseovered) {
@@ -388,9 +384,7 @@ define("onyx/canvas/graph", [ "jquery", "require", "d3/d3" ],
 					this.context.fillStyle = "#000000";
 				}
 				this.context.fillText("\ue60a", nodex, nodey + radius / 2);
-				this.context.restore();
 				// draw label
-				this.context.save();
 				this.context.font = "14px 微软雅黑";
 				this.context.textAlign = "center"
 				this.context.fillStyle = "#FFFFFF";
@@ -414,6 +408,7 @@ define("onyx/canvas/graph", [ "jquery", "require", "d3/d3" ],
 			Graph.prototype.addNode = function(node) {
 				this.nodes.push(node);
 				this.bindEvents();
+				this.doTicks();
 			}
 
 			Graph.prototype.addLine = function(options) {

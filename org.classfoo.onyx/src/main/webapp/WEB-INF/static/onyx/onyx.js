@@ -19,6 +19,25 @@ define("onyx/onyx", [ "jquery", "require", "css!./ui.css", "onyx/utils",
 
 	window.UI = require("onyx/ui");
 
+	window.requestAnimFrame = (function() {
+		return window.requestAnimationFrame
+				|| window.webkitRequestAnimationFrame
+				|| window.mozRequestAnimationFrame
+				|| window.oRequestAnimationFrame
+				|| window.msRequestAnimationFrame
+				|| function(callback, element) {
+					return window.setTimeout(callback, 1000 / 60);
+				};
+	})();
+
+	window.cancelAnimFrame = (function() {
+		return window.cancelAnimationFrame
+				|| window.webkitCancelRequestAnimationFrame
+				|| window.mozCancelRequestAnimationFrame
+				|| window.oCancelRequestAnimationFrame
+				|| window.msCancelRequestAnimationFrame || clearTimeout;
+	})();
+
 	var Page = require("page/page");
 
 	function Onyx() {
