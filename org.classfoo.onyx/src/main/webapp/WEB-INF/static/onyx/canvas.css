@@ -48,8 +48,8 @@
 .onyx-canvas-cornerbutton {
 	width: 48px;
 	height: 48px;
-	padding-top:10px;
-	padding-right:10px;
+	padding-top: 10px;
+	padding-right: 10px;
 	border-radius: 0 0 0 48px;
 	background-color: rgba(0, 0, 0, 0.5);
 	position: absolute;
@@ -68,4 +68,38 @@
 	-webkit-box-shadow: 0px 0px 75px 20px rgba(0, 0, 0, 0.5);
 	-moz-box-shadow: 0px 0px 75px 20px rgba(0, 0, 0, 0.5);
 	box-shadow: 0px 0px 75px 20px rgba(0, 0, 0, 0.5);
+}
+
+/*Relation Dialog*/
+.onyx-canvas-relationdialog {
+	position: absolute;
+}
+
+
+/*Relation Dialog*/
+.onyx-canvas-relationdialog-center {
+	position: absolute;
+	left:50%;
+	top:50%;
+	margin-left:-91px;
+	margin-top:-91px;
+	width: 182px;
+	height: auto;
+	overflow:hidden;
+	text-align:center;
+}
+
+.onyx-canvas-relationdialog-item {
+	display:block;
+	max-width: 64px;
+	width:auto;
+	height: 18px;
+	line-height:18px;
+	padding-left:8px;
+	padding-right:8px;
+	margin:1px;
+	float: left;
+	background-color: white;
+	border-radius: 16px;
+	cursor:pointer;
 }

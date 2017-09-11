@@ -5,7 +5,8 @@ define(
 		"onyx/canvas",
 		[ "jquery", "require", "css!./canvas.css", "d3/d3", ,
 				"onyx/canvas/graph", "onyx/canvas/compass",
-				"onyx/canvas/searchpanel", "onyx/canvas/cornerbutton" ],
+				"onyx/canvas/searchpanel", "onyx/canvas/cornerbutton",
+				"onyx/canvas/relationdialog" ],
 		function($, require) {
 
 			var d3 = require("d3/d3");
@@ -33,17 +34,15 @@ define(
 				this.canvasDom.attr("width", this.width);
 				this.canvasDom.attr("height", this.height);
 				this.canvasDom.appendTo(this.dom);
-				this.canvasDom.on("dblclick", this.onDblClick.bind(this));
-				this.canvasDom.on("click", this.onClick.bind(this));
-				this.canvasDom.on("mousemove", this.onMouseMove.bind(this));
-				this.canvasDom.on("clicknode", this.onClickNode.bind(this));
-				this.canvasDom.on("dblclicknode", this.onDblClickNode
-						.bind(this));
-				this.canvasDom.on("clickgraph", this.onClickGraph.bind(this));
-				this.canvasDom.on("dblclickgraph", this.onDblClickGraph
-						.bind(this));
-				this.canvasDom.on("clickmenu", this.onClickMenu.bind(this));
-				this.canvasDom.on("contextmenu", this.onContextMenu.bind(this));
+				this.dom.on("dblclick", this.onDblClick.bind(this));
+				this.dom.on("click", this.onClick.bind(this));
+				this.dom.on("mousemove", this.onMouseMove.bind(this));
+				this.dom.on("clicknode", this.onClickNode.bind(this));
+				this.dom.on("dblclicknode", this.onDblClickNode.bind(this));
+				this.dom.on("clickgraph", this.onClickGraph.bind(this));
+				this.dom.on("dblclickgraph", this.onDblClickGraph.bind(this));
+				this.dom.on("clickmenu", this.onClickMenu.bind(this));
+				this.dom.on("contextmenu", this.onContextMenu.bind(this));
 				// init canvas
 				this.canvas = document.querySelector(".onyx-canvas-canvas");
 				this.context = this.canvas.getContext("2d");
@@ -102,6 +101,11 @@ define(
 				this.compass.hide();
 				if (menu.button.id == "add") {
 					this.searchPanel.show(menu.node);
+					return;
+				}
+				if (menu.button.id == "links") {
+					this.graph.showRelationNode(menu.node);
+					return;
 				}
 			}
 
@@ -141,12 +145,14 @@ define(
 /**
  * Onyx Canvas Graph
  */
-define("onyx/canvas/graph", [ "jquery", "require", "d3/d3" ],
+define(
+		"onyx/canvas/graph",
+		[ "jquery", "require", "d3/d3" ],
 		function($, require) {
 
 			var d3 = require("d3/d3");
 
-			var radius = 20;
+			var RADIUS = 20;
 
 			var Graph = function(canvas) {
 				this.canvas = canvas;
@@ -169,15 +175,37 @@ define("onyx/canvas/graph", [ "jquery", "require", "d3/d3" ],
 			Graph.prototype.bindEvents = function() {
 				var width = this.canvas.width;
 				var height = this.canvas.height;
+				var nodes = [];
+				for (var i = 0; i < this.nodes.length; i++) {
+					var n = this.nodes[i];
+					nodes.push($.extend({}, n));
+				}
+				this.nodes = nodes;
+				var links = [];
+				for (var i = 0; i < this.links.length; i++) {
+					var l = this.links[i];
+					var source = l.source;
+					var target = l.target;
+					links.push({
+						source : source.id,
+						target : target.id,
+						distance : l.distance
+					});
+				}
+				this.links = links;
 				this.simulation = d3.forceSimulation(this.nodes);
 				this.simulation.force("collide", d3.forceCollide(this.nodes)
 						.radius(function(d) {
-							return radius + 12;
-						}).iterations(4).strength(1));
+							return (d.radius || RADIUS) + 12;
+						}).iterations(1).strength(2));
+				// this.simulation.on("tick", this.onTick.bind(this));
 				this.simulation.force("link", d3.forceLink(this.links).id(
 						function(d) {
 							return d.id;
-						}).iterations(4).distance(100).strength(1));
+						}).iterations(1).strength(1).distance(function(link) {
+					return link.distance;
+				}));
+
 				this.simulation.restart();
 				var d3Canvas = d3.select(this.canvas.getCanvas());
 				d3Canvas.call(d3.drag().container(this.canvas.getCanvas())
@@ -187,9 +215,12 @@ define("onyx/canvas/graph", [ "jquery", "require", "d3/d3" ],
 								this.dragended.bind(this)));
 			}
 
+			Graph.prototype.onTick = function() {
+				this.canvas.render();
+			}
+
 			Graph.prototype.dragsubject = function() {
-				var node = this.simulation.find(d3.event.x - this.graph.x,
-						d3.event.y - this.graph.y, radius);
+				var node = this.findNode(d3.event.x, d3.event.y);
 				if (node) {
 					return node;
 				}
@@ -202,8 +233,9 @@ define("onyx/canvas/graph", [ "jquery", "require", "d3/d3" ],
 					subject.sx = d3.event.x;
 					subject.sy = d3.event.y;
 				} else {
-					if (!d3.event.active)
+					if (!d3.event.active) {
 						this.simulation.alphaTarget(0.3).restart();
+					}
 					subject.fx = subject.x;
 					subject.fy = subject.y;
 					this.dragged = subject.id;
@@ -223,20 +255,42 @@ define("onyx/canvas/graph", [ "jquery", "require", "d3/d3" ],
 					subject.fy = d3.event.y;
 					this.canvas.render();
 				}
-
 			}
 
 			Graph.prototype.dragended = function() {
 				var subject = d3.event.subject;
 				if (subject.id == "graph") {
-					this.render();
+					this.canvas.render();
 				} else {
-					if (!d3.event.active)
+					if (!d3.event.active) {
 						this.simulation.alphaTarget(0);
+					}
 					subject.fx = null;
 					subject.fy = null;
 					this.dragged = null;
 					this.doTicks();
+				}
+			}
+
+			Graph.prototype.findNode = function(eventX, eventY) {
+				var x = eventX - this.graph.x;
+				var y = eventY - this.graph.y;
+				for (var i = 0; i < this.nodes.length; i++) {
+					var node = this.nodes[i];
+					var nodex = node.x;
+					var nodey = node.y;
+					var radius = node.radius || RADIUS;
+					if (nodex <= -radius || nodex >= this.width + radius) {
+						continue;
+					}
+					if (nodey <= -radius || nodey >= this.height + radius) {
+						continue;
+					}
+					var distance = Math.sqrt((x - nodex) * (x - nodex)
+							+ (y - nodey) * (y - nodey));
+					if (distance <= radius) {
+						return node;
+					}
 				}
 			}
 
@@ -261,7 +315,7 @@ define("onyx/canvas/graph", [ "jquery", "require", "d3/d3" ],
 					if (count >= 10) {
 						return;
 					}
-					//self.simulation.tick();
+					self.simulation.tick();
 					self.canvas.render();
 					requestAnimFrame(tick);
 				}
@@ -269,8 +323,7 @@ define("onyx/canvas/graph", [ "jquery", "require", "d3/d3" ],
 			}
 
 			Graph.prototype.onClick = function(event) {
-				var item = this.simulation.find(event.offsetX - this.graph.x,
-						event.offsetY - this.graph.y, radius);
+				var item = this.findNode(event.offsetX, event.offsetY);
 				if (item == null) {
 					if (this.selected || this.lastselected) {
 						this.lastselected = null;
@@ -304,8 +357,7 @@ define("onyx/canvas/graph", [ "jquery", "require", "d3/d3" ],
 			}
 
 			Graph.prototype.onDblClick = function(event) {
-				var item = this.simulation.find(event.offsetX - this.graph.x,
-						event.offsetY - this.graph.y, radius);
+				var item = this.findNode(event.offsetX, event.offsetY);
 				if (item == null) {
 					this.canvas.fire("dblclickgraph", {
 						x : event.offsetX - this.graph.x,
@@ -318,8 +370,7 @@ define("onyx/canvas/graph", [ "jquery", "require", "d3/d3" ],
 			}
 
 			Graph.prototype.onMouseMove = function(event) {
-				var item = this.simulation.find(event.offsetX - this.graph.x,
-						event.offsetY - this.graph.y, radius);
+				var item = this.findNode(event.offsetX, event.offsetY);
 				if (item == null) {
 					if (this.mouseovered) {
 						this.mouseovered = null;
@@ -341,7 +392,21 @@ define("onyx/canvas/graph", [ "jquery", "require", "d3/d3" ],
 				}
 				for (var i = 0, node, n = this.nodes.length; i < n; ++i) {
 					node = this.nodes[i];
-					this.renderNode(node);
+					var type = node.type || 'node';
+					switch (type) {
+					case 'node': {
+						this.renderNode(node);
+						continue;
+					}
+					case 'relation': {
+						if (!this.relation) {
+							var RelationDialog = require("onyx/canvas/relationdialog");
+							this.relation = new RelationDialog(this.canvas);
+						}
+						this.relation.show(node)
+						continue;
+					}
+					}
 				}
 			}
 
@@ -351,6 +416,7 @@ define("onyx/canvas/graph", [ "jquery", "require", "d3/d3" ],
 				var mouseovered = this.isMouseOvered(node);
 				var nodex = node.x + this.graph.x;
 				var nodey = node.y + this.graph.y;
+				var radius = node.radius || RADIUS;
 				// draw node
 				this.context.save();
 				this.context.beginPath();
@@ -400,6 +466,7 @@ define("onyx/canvas/graph", [ "jquery", "require", "d3/d3" ],
 						+ this.graph.y);
 				this.context.lineTo(link.target.x + this.graph.x, link.target.y
 						+ this.graph.y);
+				this.context.lineWidth = 3;
 				this.context.strokeStyle = "#FFFFFF";
 				this.context.stroke();
 				this.context.restore();
@@ -411,8 +478,28 @@ define("onyx/canvas/graph", [ "jquery", "require", "d3/d3" ],
 				this.doTicks();
 			}
 
-			Graph.prototype.addLine = function(options) {
-				this.lines.push(node);
+			Graph.prototype.addLink = function(link) {
+				this.links.push(link);
+				this.bindEvents();
+				this.doTicks();
+			}
+
+			Graph.prototype.showRelationNode = function(node) {
+				var relations = {
+					type : "relation",
+					id : 'relations',
+					x : node.x + 128,
+					y : node.y - 128,
+					radius : 128
+				};
+				this.nodes.push(relations);
+				this.links.push({
+					source : relations,
+					target : node,
+					distance : Math.sqrt(128 * 128 + 128 * 128)
+				});
+				this.bindEvents();
+				this.doTicks();
 			}
 
 			Graph.prototype.getX = function() {
@@ -431,6 +518,227 @@ define("onyx/canvas/graph", [ "jquery", "require", "d3/d3" ],
 				return this.graph.height;
 			}
 			return Graph;
+		});
+
+/**
+ * Onyx Canvas Relation Dialog
+ */
+define("onyx/canvas/node", [ "jquery", "require" ],
+		function($, require) {
+
+			var Node = function(canvas, node) {
+				this.canvas = canvas;
+				this.context = canvas.getContext();
+				this.node = node;
+				this.x = node.x;
+				this.y = node.y;
+				this.radius = 20;
+			}
+
+			Node.prototype.render = function() {
+				var dragged = this.isDragged(node);
+				var selected = this.isSelected(node);
+				var mouseovered = this.isMouseOvered(node);
+				var nodex = node.x + this.graph.x;
+				var nodey = node.y + this.graph.y;
+				// draw node
+				this.context.save();
+				this.context.beginPath();
+				this.context.moveTo(nodex + radius, nodey);
+				this.context.arc(nodex, nodey, radius, 0, 2 * Math.PI);
+				if (mouseovered) {
+					this.context.fillStyle = "#000000";
+				} else {
+					this.context.fillStyle = "#FFFFFF";
+				}
+				this.context.fill();
+				// draw circle
+				this.context.beginPath();
+				this.context.arc(nodex, nodey, radius + 5, 0, 2 * Math.PI);
+				if (dragged) {
+					this.context.strokeStyle = "#C5DBF0";
+					this.context.setLineDash([ 3, 3 ]);
+				} else if (selected) {
+					this.context.strokeStyle = "#C5DBF0";
+				} else {
+					this.context.strokeStyle = "#C5DBF0";
+				}
+				this.context.lineWidth = 3;
+				this.context.stroke();
+				// draw icon
+				this.context.font = "26px iconfont";
+				this.context.textAlign = "center"
+				if (mouseovered) {
+					this.context.fillStyle = "#FFFFFF";
+				} else {
+					this.context.fillStyle = "#000000";
+				}
+				this.context.fillText("\ue60a", nodex, nodey + radius / 2);
+				// draw label
+				this.context.font = "14px 微软雅黑";
+				this.context.textAlign = "center"
+				this.context.fillStyle = "#FFFFFF";
+				this.context.fillText(node.name || node.id, nodex, nodey
+						+ radius + 20);
+				this.context.restore();
+			}
+
+			Node.prototype.setX = function(x) {
+				this.x = x;
+				return this;
+			}
+
+			Node.prototype.getX = function() {
+				return this.x;
+			}
+
+			Node.prototype.setY = function(y) {
+				this.y = y;
+				return this;
+			}
+
+			Node.prototype.getY = function() {
+				return this.y;
+			}
+
+			Node.prototype.setRadius = function(radius) {
+				this.radius = radius;
+				return this;
+			}
+
+			Node.prototype.getRadius = function() {
+				return this.radius;
+			}
+
+			return Node;
+		});
+/**
+ * Onyx Canvas Relation Dialog
+ */
+define(
+		"onyx/canvas/relationdialog",
+		[ "jquery", "require", "d3/d3" ],
+		function($, require) {
+
+			var d3 = require("d3/d3");
+
+			var RelationDialog = function(canvas) {
+				this.canvas = canvas;
+				this.context = canvas.getContext();
+				this.build(canvas.dom);
+			}
+
+			RelationDialog.prototype.build = function(pdom) {
+				this.dom = $("<div class='onyx-canvas-relationdialog'></div>");
+				this.dom.appendTo(pdom);
+				this.center = $("<ul class='onyx-canvas-relationdialog-center'></ul>");
+				this.center.appendTo(this.dom);
+			}
+
+			RelationDialog.prototype.show = function(node) {
+				this.render(node);
+				this.renderRelations(node);
+			}
+
+			RelationDialog.prototype.render = function(node) {
+				// draw node
+				var nodex = node.x;
+				var nodey = node.y;
+				this.context.save();
+				this.context.globalAlpha = 0.2;
+				this.context.beginPath();
+				this.context.moveTo(nodex, nodey);
+				this.context.arc(nodex, nodey, 128, 0, 2 * Math.PI);
+				this.context.fillStyle = "#5381B2";
+				this.context.fill();
+				// draw circle
+				this.context.beginPath();
+				this.context.arc(nodex, nodey, 128 + 5, 0, 2 * Math.PI);
+				this.context.strokeStyle = "#FFFFFF";
+				this.context.setLineDash([ 3, 3 ]);
+				this.context.lineWidth = 3;
+				this.context.stroke();
+				this.context.restore();
+			}
+
+			RelationDialog.prototype.renderRelations = function(node) {
+				var pack = d3.pack().size([ 256, 256 ]).padding(3);
+				var data = {
+					name : "root",
+					children : [ {
+						name : "电影"
+					}, {
+						name : "导演"
+					}, {
+						name : "父母"
+					}, {
+						name : "子女"
+					}, {
+						name : "亲戚"
+					} , {
+						name : "公司"
+					}, {
+						name : "广告"
+					} , {
+						name : "综艺节目"
+					} , {
+						name : "房产"
+					} , {
+						name : "兄弟"
+					} , {
+						name : "朋友"
+					} , {
+						name : "情敌"
+					} , {
+						name : "丈夫"
+					} , {
+						name : "绯闻"
+					} , {
+						name : "酒庄"
+					}  ]
+				};
+				var root = d3.hierarchy(data).sum(function(d) { return d.name.length; }).sort(function(a, b) { return 1; });
+				pack(root);
+				var self = this;
+				$.each(root.children, function(index, item) {
+					self.renderRelation(node, item);
+				});
+			}
+
+			RelationDialog.prototype.renderRelation = function(node, item) {
+				// draw node
+				var nodex = node.x + item.x - 128;
+				var nodey = node.y + item.y - 128;
+				var noder = item.r;
+				this.context.save();
+				this.context.globalAlpha = 0.8;
+				this.context.beginPath();
+				this.context.moveTo(nodex, nodey);
+				this.context.arc(nodex, nodey, noder, 0, 2 * Math.PI);
+				this.context.fillStyle = "red";
+				this.context.fill();
+				
+				this.context.font = "12px 微软雅黑";
+				this.context.textAlign = "center"
+				this.context.fillStyle = "#FFFFFF";
+				
+				this.context.fillText(item.data.name, nodex, nodey+4);
+
+				this.context.restore();
+			}
+			
+			RelationDialog.prototype.onClick = function(event) {
+			}
+
+			RelationDialog.prototype.onMouseOver = function(event) {
+				this.dom.addClass("onyx-canvas-relationdialog-over");
+			}
+
+			RelationDialog.prototype.onMouseOut = function(event) {
+				this.dom.removeClass("onyx-canvas-relationdialog-over");
+			}
+
+			return RelationDialog;
 		});
 
 /**
