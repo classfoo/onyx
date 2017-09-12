@@ -4,16 +4,13 @@
 define(
 		"onyx/canvas",
 		[ "jquery", "require", "css!./canvas.css", "d3/d3", ,
-				"onyx/canvas/graph", "onyx/canvas/compass",
-				"onyx/canvas/searchpanel", "onyx/canvas/cornerbutton",
-				"onyx/canvas/relationdialog" ],
+				"onyx/canvas/graph", "onyx/canvas/searchpanel",
+				"onyx/canvas/cornerbutton" ],
 		function($, require) {
 
 			var d3 = require("d3/d3");
 
 			var Graph = require("onyx/canvas/graph");
-
-			var Compass = require("onyx/canvas/compass");
 
 			var SearchPanel = require("onyx/canvas/searchpanel");
 
@@ -47,7 +44,6 @@ define(
 				this.canvas = document.querySelector(".onyx-canvas-canvas");
 				this.context = this.canvas.getContext("2d");
 				this.graph = new Graph(this);
-				this.compass = new Compass(this, this.graph);
 				this.searchPanel = new SearchPanel(this, this.graph);
 				this.connerButton = new CornerButton(this, this.graph,
 						this.searchPanel);
@@ -63,10 +59,6 @@ define(
 			}
 
 			Canvas.prototype.onDblClick = function(event) {
-				if (this.compass.onDblClick(event)) {
-					this.render();
-					return;
-				}
 				if (this.graph.onDblClick(event)) {
 					this.render();
 					return;
@@ -75,10 +67,6 @@ define(
 
 			Canvas.prototype.onClick = function(event) {
 				event.stopPropagation();
-				if (this.compass.onClick(event)) {
-					this.render();
-					return;
-				}
 				if (this.graph.onClick(event)) {
 					this.render();
 					return;
@@ -87,10 +75,6 @@ define(
 
 			Canvas.prototype.onMouseMove = function(event) {
 				event.stopPropagation();
-				if (this.compass.onMouseMove(event)) {
-					this.render();
-					return;
-				}
 				if (this.graph.onMouseMove(event)) {
 					this.render();
 					return;
@@ -98,7 +82,6 @@ define(
 			}
 
 			Canvas.prototype.onClickMenu = function(event, menu) {
-				this.compass.hide();
 				if (menu.button.id == "add") {
 					this.searchPanel.show(menu.node);
 					return;
@@ -110,14 +93,13 @@ define(
 			}
 
 			Canvas.prototype.onClickNode = function(event, node) {
-				this.compass.show(node);
 			}
 
 			Canvas.prototype.onDblClickNode = function(event, node) {
 			}
 
 			Canvas.prototype.onClickGraph = function(event, pos) {
-				this.compass.hide();
+				this.graph.hideTools();
 			}
 
 			Canvas.prototype.onDblClickGraph = function(event, pos) {
@@ -132,10 +114,13 @@ define(
 				return this.canvasDom.trigger(event, options);
 			}
 
+			Canvas.prototype.on = function(event, func) {
+				this.canvasDom.on(event, func);
+			}
+
 			Canvas.prototype.render = function() {
 				this.context.clearRect(0, 0, this.width, this.height);
 				this.graph.render();
-				this.compass.render();
 				console.log("render");
 			}
 
@@ -145,18 +130,27 @@ define(
 /**
  * Onyx Canvas Graph
  */
-define(
-		"onyx/canvas/graph",
-		[ "jquery", "require", "d3/d3" ],
-		function($, require) {
+define("onyx/canvas/graph",
+		[ "jquery", "require", "d3/d3", "onyx/canvas/compass",
+				"onyx/canvas/node", "onyx/canvas/relationnode" ], function($,
+				require) {
 
 			var d3 = require("d3/d3");
+
+			var Compass = require("onyx/canvas/compass");
+
+			var RelationNode = require("onyx/canvas/relationnode");
 
 			var RADIUS = 20;
 
 			var Graph = function(canvas) {
 				this.canvas = canvas;
 				this.context = canvas.getContext();
+				this.compass = new Compass(this.canvas, this);
+				this.relationNode = new RelationNode(this.canvas, this);
+				this.canvas.on("clickmenu", this.onClickMenu.bind(this));
+				this.canvas
+						.on("clickrelation", this.onClickRelation.bind(this));
 				this.nodes = [];
 				this.links = [];
 				this.width = this.canvas.width;
@@ -169,43 +163,26 @@ define(
 					height : this.height
 				};
 				this.index = this.nodes.length;
-				this.bindEvents();
+				this.initSimulations();
 			}
 
-			Graph.prototype.bindEvents = function() {
+			Graph.prototype.initSimulations = function() {
 				var width = this.canvas.width;
 				var height = this.canvas.height;
-				var nodes = [];
-				for (var i = 0; i < this.nodes.length; i++) {
-					var n = this.nodes[i];
-					nodes.push($.extend({}, n));
-				}
-				this.nodes = nodes;
-				var links = [];
-				for (var i = 0; i < this.links.length; i++) {
-					var l = this.links[i];
-					var source = l.source;
-					var target = l.target;
-					links.push({
-						source : source.id,
-						target : target.id,
-						distance : l.distance
-					});
-				}
-				this.links = links;
-				this.simulation = d3.forceSimulation(this.nodes);
-				this.simulation.force("collide", d3.forceCollide(this.nodes)
-						.radius(function(d) {
-							return (d.radius || RADIUS) + 12;
-						}).iterations(1).strength(2));
-				// this.simulation.on("tick", this.onTick.bind(this));
-				this.simulation.force("link", d3.forceLink(this.links).id(
-						function(d) {
+				this.simulationNodes = this.initSimulationNodes();
+				this.simulationLinks = this.initSimulationLinks();
+				this.simulation = d3.forceSimulation(this.simulationNodes);
+				this.simulation.force("collide", d3.forceCollide(
+						this.simulationNodes).radius(function(d) {
+					return (d.radius || RADIUS) + 12;
+				}).iterations(1).strength(1));
+				this.simulation.on("tick", this.onTick.bind(this));
+				this.simulation.force("link", d3
+						.forceLink(this.simulationLinks).id(function(d) {
 							return d.id;
 						}).iterations(1).strength(1).distance(function(link) {
-					return link.distance;
-				}));
-
+							return link.distance;
+						}));
 				this.simulation.restart();
 				var d3Canvas = d3.select(this.canvas.getCanvas());
 				d3Canvas.call(d3.drag().container(this.canvas.getCanvas())
@@ -215,6 +192,41 @@ define(
 								this.dragended.bind(this)));
 			}
 
+			Graph.prototype.initSimulationNodes = function() {
+				var nodes = [];
+				for (var i = 0; i < this.nodes.length; i++) {
+					var node = this.nodes[i];
+					nodes.push(node);
+				}
+				var node = this.relationNode.initSimulationNode();
+				if (node) {
+					nodes.push(node);
+				}
+				return nodes;
+			}
+
+			Graph.prototype.initSimulationLinks = function() {
+				var links = [];
+				for (var i = 0; i < this.links.length; i++) {
+					var l = this.links[i];
+					var source = l.source;
+					var target = l.target;
+					var distance = l.distance;
+					var link = {
+						source : source.id,
+						target : target.id,
+						distance : distance
+					};
+					links.push(link);
+					this.links[i] = link;
+				}
+				var link = this.relationNode.initSimulationLink();
+				if (link) {
+					links.push(link);
+				}
+				return links;
+			}
+
 			Graph.prototype.onTick = function() {
 				this.canvas.render();
 			}
@@ -222,6 +234,7 @@ define(
 			Graph.prototype.dragsubject = function() {
 				var node = this.findNode(d3.event.x, d3.event.y);
 				if (node) {
+					node.dragged = true;
 					return node;
 				}
 				return this.graph;
@@ -267,16 +280,15 @@ define(
 					}
 					subject.fx = null;
 					subject.fy = null;
-					this.dragged = null;
-					this.doTicks();
+					subject.dragged = false;
 				}
 			}
 
 			Graph.prototype.findNode = function(eventX, eventY) {
 				var x = eventX - this.graph.x;
 				var y = eventY - this.graph.y;
-				for (var i = 0; i < this.nodes.length; i++) {
-					var node = this.nodes[i];
+				for (var i = 0; i < this.simulationNodes.length; i++) {
+					var node = this.simulationNodes[i];
 					var nodex = node.x;
 					var nodey = node.y;
 					var radius = node.radius || RADIUS;
@@ -293,19 +305,19 @@ define(
 					}
 				}
 			}
-
-			Graph.prototype.isMouseOvered = function(node) {
-				return node.id === this.mouseovered;
-			}
-
-			Graph.prototype.isSelected = function(node) {
-				return this.selected ? (this.selected[node.id] ? true : false)
-						: false;
-			}
-
-			Graph.prototype.isDragged = function(node) {
-				return this.dragged ? node.id === this.dragged : false;
-			}
+			//
+			// Graph.prototype.isMouseOvered = function(node) {
+			// return node.id === this.mouseovered;
+			// }
+			//
+			// Graph.prototype.isSelected = function(node) {
+			// return this.selected ? (this.selected[node.id] ? true : false)
+			// : false;
+			// }
+			//
+			// Graph.prototype.isDragged = function(node) {
+			// return this.dragged ? node.id === this.dragged : false;
+			// }
 
 			Graph.prototype.doTicks = function(event) {
 				var self = this;
@@ -323,6 +335,14 @@ define(
 			}
 
 			Graph.prototype.onClick = function(event) {
+				if (this.compass.onClick(event)) {
+					this.render();
+					return;
+				}
+				if (this.relationNode.onClick(event)) {
+					this.render();
+					return;
+				}
 				var item = this.findNode(event.offsetX, event.offsetY);
 				if (item == null) {
 					if (this.selected || this.lastselected) {
@@ -345,6 +365,7 @@ define(
 						this.selected[item.id] = true;
 						this.lastselected = item.id;
 						this.canvas.fire("clicknode", item);
+						this.showCompass(item);
 						return true;
 					}
 				} else {
@@ -352,11 +373,77 @@ define(
 					this.selected[item.id] = true;
 					this.lastselected = item.id;
 					this.canvas.fire("clicknode", item);
+					this.showCompass(item);
 					return true;
 				}
 			}
 
+			Graph.prototype.onClickMenu = function(event, menu) {
+				this.hideTools();
+			}
+
+			Graph.prototype.onClickRelation = function(event, options) {
+				this.hideTools();
+				var relation = options.relation;
+				var node = options.node;
+				var distance = Math.sqrt(128 * 128 + 128 * 128);
+				var nodex = node.x + 128;
+				var nodey = node.y - 128;
+				var nodes = [ {
+					id : Utils.guid(),
+					name:"节点1",
+					x : nodex,
+					y : nodey
+				}, {
+					id : Utils.guid(),
+					name:"节点2",
+					x : nodex,
+					y : nodey
+				}, {
+					id : Utils.guid(),
+					name:"节点3",
+					x : nodex,
+					y : nodey
+				}, {
+					id : Utils.guid(),
+					name:"节点4",
+					x : nodex,
+					y : nodey
+				}, {
+					id : Utils.guid(),
+					name:"节点5",
+					x : nodex,
+					y : nodey
+				} ];
+				var links = [ {
+					target : nodes[0],
+					source : node,
+					distance : distance
+				}, {
+					target : nodes[1],
+					source : node,
+					distance : distance
+				}, {
+					target : nodes[2],
+					source : node,
+					distance : distance
+				}, {
+					target : nodes[3],
+					source : node,
+					distance : distance
+				}, {
+					target : nodes[4],
+					source : node,
+					distance : distance
+				} ];
+				this.addNodesAndLinks(nodes, links);
+			}
+
 			Graph.prototype.onDblClick = function(event) {
+				if (this.compass.onDblClick(event)) {
+					this.render();
+					return;
+				}
 				var item = this.findNode(event.offsetX, event.offsetY);
 				if (item == null) {
 					this.canvas.fire("dblclickgraph", {
@@ -370,26 +457,58 @@ define(
 			}
 
 			Graph.prototype.onMouseMove = function(event) {
+				if (this.compass.onMouseMove(event)) {
+					this.render();
+					return true;
+				}
+				if (this.relationNode.onMouseMove(event)) {
+					return true;
+				}
 				var item = this.findNode(event.offsetX, event.offsetY);
-				if (item == null) {
-					if (this.mouseovered) {
-						this.mouseovered = null;
+				if (!item) {
+					if (this.currentNode) {
+						this.currentNode.mouseovered = false;
+						this.currentNode = null;
 						return true;
 					}
 					return false;
 				}
-				if (this.mouseovered == item.id) {
+				if (item.mouseovered) {
 					return false;
 				}
-				this.mouseovered = item.id;
+				item.mouseovered = true;
+				this.currentNode = item;
 				return true;
 			}
 
 			Graph.prototype.render = function() {
+				this.renderLinks();
+				this.renderNodes();
+				this.compass.render();
+				this.relationNode.render();
+			}
+
+			Graph.prototype.renderLinks = function() {
 				for (var i = 0, link, n = this.links.length; i < n; i++) {
 					link = this.links[i];
 					this.renderLink(link);
 				}
+			}
+
+			Graph.prototype.renderLink = function(link) {
+				this.context.save();
+				this.context.beginPath();
+				this.context.moveTo(link.source.x + this.graph.x, link.source.y
+						+ this.graph.y);
+				this.context.lineTo(link.target.x + this.graph.x, link.target.y
+						+ this.graph.y);
+				this.context.lineWidth = 3;
+				this.context.strokeStyle = "#FFFFFF";
+				this.context.stroke();
+				this.context.restore();
+			}
+
+			Graph.prototype.renderNodes = function() {
 				for (var i = 0, node, n = this.nodes.length; i < n; ++i) {
 					node = this.nodes[i];
 					var type = node.type || 'node';
@@ -398,22 +517,14 @@ define(
 						this.renderNode(node);
 						continue;
 					}
-					case 'relation': {
-						if (!this.relation) {
-							var RelationDialog = require("onyx/canvas/relationdialog");
-							this.relation = new RelationDialog(this.canvas);
-						}
-						this.relation.show(node)
-						continue;
-					}
 					}
 				}
 			}
 
 			Graph.prototype.renderNode = function(node) {
-				var dragged = this.isDragged(node);
-				var selected = this.isSelected(node);
-				var mouseovered = this.isMouseOvered(node);
+				var dragged = node.dragged;
+				var selected = node.selected;
+				var mouseovered = node.mouseovered;
 				var nodex = node.x + this.graph.x;
 				var nodey = node.y + this.graph.y;
 				var radius = node.radius || RADIUS;
@@ -459,47 +570,41 @@ define(
 				this.context.restore();
 			}
 
-			Graph.prototype.renderLink = function(link) {
-				this.context.save();
-				this.context.beginPath();
-				this.context.moveTo(link.source.x + this.graph.x, link.source.y
-						+ this.graph.y);
-				this.context.lineTo(link.target.x + this.graph.x, link.target.y
-						+ this.graph.y);
-				this.context.lineWidth = 3;
-				this.context.strokeStyle = "#FFFFFF";
-				this.context.stroke();
-				this.context.restore();
+			Graph.prototype.addNodesAndLinks = function(nodes, links) {
+				this.nodes = this.nodes.concat(nodes);
+				this.links = this.links.concat(links);
+				this.initSimulations();
 			}
 
 			Graph.prototype.addNode = function(node) {
 				this.nodes.push(node);
-				this.bindEvents();
-				this.doTicks();
+				this.initSimulations();
 			}
 
 			Graph.prototype.addLink = function(link) {
 				this.links.push(link);
-				this.bindEvents();
-				this.doTicks();
+				this.initSimulations();
 			}
 
 			Graph.prototype.showRelationNode = function(node) {
-				var relations = {
-					type : "relation",
-					id : 'relations',
-					x : node.x + 128,
-					y : node.y - 128,
-					radius : 128
-				};
-				this.nodes.push(relations);
-				this.links.push({
-					source : relations,
-					target : node,
-					distance : Math.sqrt(128 * 128 + 128 * 128)
-				});
-				this.bindEvents();
-				this.doTicks();
+				this.relationNode.show(node);
+				this.initSimulations();
+			}
+
+			Graph.prototype.getCompass = function() {
+				return this.compass;
+			}
+
+			Graph.prototype.showCompass = function(node) {
+				this.hideTools();
+				this.compass.show(node);
+			}
+
+			Graph.prototype.hideTools = function() {
+				this.compass.hide();
+				if (this.relationNode.hide()) {
+					this.initSimulations();
+				}
 			}
 
 			Graph.prototype.getX = function() {
@@ -516,6 +621,30 @@ define(
 
 			Graph.prototype.getHeight = function() {
 				return this.graph.height;
+			}
+
+			Graph.prototype.toScreenX = function(x) {
+				return x + this.graph.x;
+			}
+
+			Graph.prototype.toScreenY = function(y) {
+				return y + this.graph.y;
+			}
+
+			Graph.prototype.toScreenWidth = function(width) {
+				return width;
+			}
+
+			Graph.prototype.toScreenHeight = function(height) {
+				return height;
+			}
+
+			Graph.prototype.toStandardX = function(x) {
+				return x - this.graph.x;
+			}
+
+			Graph.prototype.toStandardY = function(y) {
+				return y - this.graph.y;
 			}
 			return Graph;
 		});
@@ -615,131 +744,237 @@ define("onyx/canvas/node", [ "jquery", "require" ],
 /**
  * Onyx Canvas Relation Dialog
  */
-define(
-		"onyx/canvas/relationdialog",
-		[ "jquery", "require", "d3/d3" ],
-		function($, require) {
+define("onyx/canvas/relationnode", [ "jquery", "require", "d3/d3" ], function(
+		$, require) {
 
-			var d3 = require("d3/d3");
+	var d3 = require("d3/d3");
 
-			var RelationDialog = function(canvas) {
-				this.canvas = canvas;
-				this.context = canvas.getContext();
-				this.build(canvas.dom);
-			}
+	var RelationNode = function(canvas, graph) {
+		this.canvas = canvas;
+		this.context = canvas.getContext();
+		this.graph = graph;
+	}
 
-			RelationDialog.prototype.build = function(pdom) {
-				this.dom = $("<div class='onyx-canvas-relationdialog'></div>");
-				this.dom.appendTo(pdom);
-				this.center = $("<ul class='onyx-canvas-relationdialog-center'></ul>");
-				this.center.appendTo(this.dom);
-			}
+	RelationNode.prototype.initSimulationNode = function() {
+		if (!this.node) {
+			return null;
+		}
+		this.simulationNode = {
+			id : "relation",
+			x : this.node.x + 128,
+			y : this.node.y - 128,
+			radius : 128
+		};
+		return this.simulationNode;
+	}
 
-			RelationDialog.prototype.show = function(node) {
-				this.render(node);
-				this.renderRelations(node);
-			}
+	RelationNode.prototype.initSimulationLink = function() {
+		if (!this.node) {
+			return null;
+		}
+		this.simulationLink = {
+			source : this.node.id,
+			target : "relation",
+			distance : Math.sqrt(128 * 128 + 128 * 128)
+		};
+		return this.simulationLink;
+	}
 
-			RelationDialog.prototype.render = function(node) {
-				// draw node
-				var nodex = node.x;
-				var nodey = node.y;
-				this.context.save();
-				this.context.globalAlpha = 0.2;
-				this.context.beginPath();
-				this.context.moveTo(nodex, nodey);
-				this.context.arc(nodex, nodey, 128, 0, 2 * Math.PI);
-				this.context.fillStyle = "#5381B2";
-				this.context.fill();
-				// draw circle
-				this.context.beginPath();
-				this.context.arc(nodex, nodey, 128 + 5, 0, 2 * Math.PI);
-				this.context.strokeStyle = "#FFFFFF";
-				this.context.setLineDash([ 3, 3 ]);
-				this.context.lineWidth = 3;
-				this.context.stroke();
-				this.context.restore();
-			}
+	RelationNode.prototype.getX = function() {
+		return this.simulationNode.x;
+	}
 
-			RelationDialog.prototype.renderRelations = function(node) {
-				var pack = d3.pack().size([ 256, 256 ]).padding(3);
-				var data = {
-					name : "root",
-					children : [ {
-						name : "电影"
-					}, {
-						name : "导演"
-					}, {
-						name : "父母"
-					}, {
-						name : "子女"
-					}, {
-						name : "亲戚"
-					} , {
-						name : "公司"
-					}, {
-						name : "广告"
-					} , {
-						name : "综艺节目"
-					} , {
-						name : "房产"
-					} , {
-						name : "兄弟"
-					} , {
-						name : "朋友"
-					} , {
-						name : "情敌"
-					} , {
-						name : "丈夫"
-					} , {
-						name : "绯闻"
-					} , {
-						name : "酒庄"
-					}  ]
-				};
-				var root = d3.hierarchy(data).sum(function(d) { return d.name.length; }).sort(function(a, b) { return 1; });
-				pack(root);
-				var self = this;
-				$.each(root.children, function(index, item) {
-					self.renderRelation(node, item);
-				});
-			}
+	RelationNode.prototype.getY = function() {
+		return this.simulationNode.y;
+	}
 
-			RelationDialog.prototype.renderRelation = function(node, item) {
-				// draw node
-				var nodex = node.x + item.x - 128;
-				var nodey = node.y + item.y - 128;
-				var noder = item.r;
-				this.context.save();
-				this.context.globalAlpha = 0.8;
-				this.context.beginPath();
-				this.context.moveTo(nodex, nodey);
-				this.context.arc(nodex, nodey, noder, 0, 2 * Math.PI);
-				this.context.fillStyle = "red";
-				this.context.fill();
-				
-				this.context.font = "12px 微软雅黑";
-				this.context.textAlign = "center"
-				this.context.fillStyle = "#FFFFFF";
-				
-				this.context.fillText(item.data.name, nodex, nodey+4);
-
-				this.context.restore();
-			}
-			
-			RelationDialog.prototype.onClick = function(event) {
-			}
-
-			RelationDialog.prototype.onMouseOver = function(event) {
-				this.dom.addClass("onyx-canvas-relationdialog-over");
-			}
-
-			RelationDialog.prototype.onMouseOut = function(event) {
-				this.dom.removeClass("onyx-canvas-relationdialog-over");
-			}
-
-			return RelationDialog;
+	RelationNode.prototype.show = function(node) {
+		this.node = node;
+		var pack = d3.pack().size([ 256, 256 ]).padding(3);
+		var data = {
+			name : "root",
+			children : [ {
+				name : "电影"
+			}, {
+				name : "导演"
+			}, {
+				name : "父母"
+			}, {
+				name : "子女"
+			}, {
+				name : "亲戚"
+			}, {
+				name : "公司"
+			}, {
+				name : "广告"
+			}, {
+				name : "综艺节目"
+			}, {
+				name : "房产"
+			}, {
+				name : "兄弟"
+			}, {
+				name : "朋友"
+			}, {
+				name : "情敌"
+			}, {
+				name : "丈夫"
+			}, {
+				name : "绯闻"
+			}, {
+				name : "酒庄"
+			} ]
+		};
+		this.root = d3.hierarchy(data).sum(function(d) {
+			return d.name.length;
+		}).sort(function(a, b) {
+			return 1;
 		});
+		pack(this.root);
+	}
+
+	RelationNode.prototype.hide = function() {
+		var hasNode = this.node != null;
+		this.node = null;
+		this.simulationNode = null;
+		this.simulationLink = null;
+		return hasNode;
+	}
+
+	RelationNode.prototype.render = function() {
+		if (!this.node) {
+			return;
+		}
+		this.renderLink(this.simulationLink);
+		var node = this.simulationNode;
+		this.renderNode(node);
+		this.renderRelations(node);
+	}
+
+	RelationNode.prototype.renderLink = function(link) {
+		this.context.save();
+		this.context.beginPath();
+		this.context.moveTo(this.graph.toScreenX(link.source.x), this.graph
+				.toScreenY(link.source.y));
+		this.context.lineTo(this.graph.toScreenX(link.target.x), this.graph
+				.toScreenY(link.target.y));
+		this.context.globalAlpha = 0.2;
+		this.context.setLineDash([ 3, 3 ]);
+		this.context.lineWidth = 3;
+		this.context.strokeStyle = "#FFFFFF";
+		this.context.stroke();
+		this.context.restore();
+	}
+
+	RelationNode.prototype.renderNode = function(node) {
+		var nodex = this.graph.toScreenX(node.x);
+		var nodey = this.graph.toScreenY(node.y);
+		// draw node
+		this.context.save();
+		this.context.globalAlpha = 0.2;
+		this.context.beginPath();
+		this.context.moveTo(nodex, nodey);
+		this.context.arc(nodex, nodey, 128, 0, 2 * Math.PI);
+		this.context.fillStyle = this.active ? "#FFFFFF" : "#5381B2";
+		this.context.fill();
+		// draw circle
+		this.context.beginPath();
+		this.context.arc(nodex, nodey, 128 + 5, 0, 2 * Math.PI);
+		this.context.strokeStyle = "#FFFFFF";
+		this.context.setLineDash([ 3, 3 ]);
+		this.context.lineWidth = 3;
+		this.context.stroke();
+		this.context.restore();
+	}
+
+	RelationNode.prototype.renderRelations = function(node) {
+		var self = this;
+		$.each(this.root.children, function(index, item) {
+			self.renderRelation(node, item);
+		});
+	}
+
+	RelationNode.prototype.renderRelation = function(node, item) {
+		// draw node
+		var nodex = this.graph.toScreenX(node.x + item.x - 128);
+		var nodey = this.graph.toScreenY(node.y + item.y - 128);
+		var noder = item.r;
+		this.context.save();
+		this.context.globalAlpha = 0.8;
+		this.context.beginPath();
+		this.context.moveTo(nodex, nodey);
+		this.context.arc(nodex, nodey, noder, 0, 2 * Math.PI);
+		this.context.fillStyle = item.active ? "orange" : "red";
+		this.context.fill();
+
+		this.context.font = "12px 微软雅黑";
+		this.context.textAlign = "center"
+		this.context.fillStyle = "#FFFFFF";
+		this.context.fillText(item.data.name, nodex, nodey + 4);
+		this.context.restore();
+	}
+
+	RelationNode.prototype.onClick = function(event) {
+		if (this.current) {
+			this.canvas.fire("clickrelation", {
+				relation : this.current,
+				node : this.node
+			});
+			return true;
+		}
+		if (this.active) {
+			return true;
+		}
+		return false;
+	}
+
+	RelationNode.prototype.onMouseMove = function(event) {
+		if (!this.node) {
+			this.clearMouseMove();
+			return false;
+		}
+		var x = this.graph.toStandardX(event.offsetX);
+		var y = this.graph.toStandardY(event.offsetY);
+		var nodex = this.getX();
+		var nodey = this.getY();
+		// check if inside the node
+		var distance = Math.sqrt((nodex - x) * (nodex - x) + (nodey - y)
+				* (nodey - y));
+		var active = distance <= 128;
+		var changed = active === this.active;
+		if (!active) {
+			this.clearMouseMove();
+			return changed;
+		}
+		this.active = true;
+		// check if inside the relation bubble
+		var children = this.root.children;
+		var current = null;
+		for (var i = 0; i < children.length; i++) {
+			var child = children[i];
+			var childx = child.x + this.simulationNode.x - 128;
+			var childy = child.y + this.simulationNode.y - 128;
+			var childdistance = Math.sqrt((childx - x) * (childx - x)
+					+ (childy - y) * (childy - y));
+			var childactive = childdistance <= child.r;
+			child.active = childactive;
+			if (childactive) {
+				current = child;
+			}
+		}
+		this.current = current;
+		return changed;
+	}
+
+	RelationNode.prototype.clearMouseMove = function(event) {
+		if (this.current) {
+			this.current.active = false;
+		}
+		this.current = null;
+		this.active = false;
+	}
+	return RelationNode;
+});
 
 /**
  * Onyx Canvas Compass Controller Class
