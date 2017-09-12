@@ -180,7 +180,7 @@ define("onyx/canvas/graph",
 				this.simulation.force("link", d3
 						.forceLink(this.simulationLinks).id(function(d) {
 							return d.id;
-						}).iterations(1).strength(1).distance(function(link) {
+						}).iterations(1).strength(0).distance(function(link) {
 							return link.distance;
 						}));
 				this.simulation.restart();
@@ -291,11 +291,13 @@ define("onyx/canvas/graph",
 					var node = this.simulationNodes[i];
 					var nodex = node.x;
 					var nodey = node.y;
+					var screenX = this.toScreenX(nodex);
 					var radius = node.radius || RADIUS;
-					if (nodex <= -radius || nodex >= this.width + radius) {
+					if (screenX <= -radius || screenX >= this.width + radius) {
 						continue;
 					}
-					if (nodey <= -radius || nodey >= this.height + radius) {
+					var screenY = this.toScreenY(nodey);
+					if (screenY <= -radius || screenY >= this.height + radius) {
 						continue;
 					}
 					var distance = Math.sqrt((x - nodex) * (x - nodex)
