@@ -320,10 +320,15 @@ define("onyx/canvas/graph",
 
 			Graph.prototype.doTicks = function() {
 				var self = this;
-				while (this.simulation.alpha() >= 0.05) {
+				function drawFrame() {
+					if (self.simulation.alpha() < 0.05) {
+						return;
+					}
 					self.simulation.tick();
 					self.canvas.render();
+					requestAnimFrame(drawFrame);
 				}
+				requestAnimFrame(drawFrame);
 			}
 
 			Graph.prototype.onClick = function(event) {
@@ -597,28 +602,46 @@ define("onyx/canvas/graph",
 			Graph.prototype.addNodesAndLinks = function(nodes, links) {
 				if (nodes) {
 					for (var i = 0; i < nodes.length; i++) {
-						var node = nodes[i];
-						this.nodes.push(node);
-						this.nodeMap[node.id] = node;
+						this._addNode(nodes[i]);
 					}
 				}
 				if (links) {
 					for (var i = 0; i < links.length; i++) {
-						var link = links[i];
-						this.links.push(link);
+						this._addLink(links[i]);
 					}
 				}
 				this.initSimulations(links);
 			}
 
 			Graph.prototype.addNode = function(node) {
-				this.nodes.push(node);
-				this.nodeMap[node.id] = node;
+				this._addNode(node);
 				this.initSimulations();
 			}
 
+			Graph.prototype._addNode = function(node) {
+				this.nodes.push(node);
+				this.nodeMap[node.id] = node;
+			}
+
 			Graph.prototype.addLink = function(link) {
+				this._addLink(link);
+				this.initSimulations();
+			}
+
+			Graph.prototype._addLink = function(link) {
 				this.links.push(link);
+				var sources = this.linkSourceMap[link.source];
+				if (sources) {
+					sources.push(link);
+				} else {
+					this.linkSourceMap[link.source] = [ link ];
+				}
+				var targets = this.linkTargetMap[link.target];
+				if (targets) {
+					targets.push(link);
+				} else {
+					this.linkTargetMap[link.target] = [ link ];
+				}
 				this.initSimulations();
 			}
 
