@@ -152,7 +152,10 @@ define("onyx/canvas/graph",
 				this.canvas
 						.on("clickrelation", this.onClickRelation.bind(this));
 				this.nodes = [];
+				this.nodeMap = {};
 				this.links = [];
+				this.linkSourceMap = {};
+				this.linkTargetMap = {};
 				this.width = this.canvas.width;
 				this.height = this.canvas.height;
 				this.graph = {
@@ -163,72 +166,17 @@ define("onyx/canvas/graph",
 					height : this.height
 				};
 				this.index = this.nodes.length;
-				this.initSimulations();
+				// this.initSimulations();
+				this.initDrag();
 			}
 
-			Graph.prototype.initSimulations = function() {
-				var width = this.canvas.width;
-				var height = this.canvas.height;
-				this.simulationNodes = this.initSimulationNodes();
-				this.simulationLinks = this.initSimulationLinks();
-				this.simulation = d3.forceSimulation(this.simulationNodes);
-				this.simulation.force("collide", d3.forceCollide(
-						this.simulationNodes).radius(function(d) {
-					return (d.radius || RADIUS) + 12;
-				}).iterations(1).strength(1));
-				this.simulation.on("tick", this.onTick.bind(this));
-				this.simulation.force("link", d3
-						.forceLink(this.simulationLinks).id(function(d) {
-							return d.id;
-						}).iterations(1).strength(0).distance(function(link) {
-							return link.distance;
-						}));
-				this.simulation.restart();
+			Graph.prototype.initDrag = function() {
 				var d3Canvas = d3.select(this.canvas.getCanvas());
 				d3Canvas.call(d3.drag().container(this.canvas.getCanvas())
 						.subject(this.dragsubject.bind(this)).on("start",
 								this.dragstarted.bind(this)).on("drag",
 								this.dragging.bind(this)).on("end",
 								this.dragended.bind(this)));
-			}
-
-			Graph.prototype.initSimulationNodes = function() {
-				var nodes = [];
-				for (var i = 0; i < this.nodes.length; i++) {
-					var node = this.nodes[i];
-					nodes.push(node);
-				}
-				var node = this.relationNode.initSimulationNode();
-				if (node) {
-					nodes.push(node);
-				}
-				return nodes;
-			}
-
-			Graph.prototype.initSimulationLinks = function() {
-				var links = [];
-				for (var i = 0; i < this.links.length; i++) {
-					var l = this.links[i];
-					var source = l.source;
-					var target = l.target;
-					var distance = l.distance;
-					var link = {
-						source : source.id,
-						target : target.id,
-						distance : distance
-					};
-					links.push(link);
-					this.links[i] = link;
-				}
-				var link = this.relationNode.initSimulationLink();
-				if (link) {
-					links.push(link);
-				}
-				return links;
-			}
-
-			Graph.prototype.onTick = function() {
-				this.canvas.render();
 			}
 
 			Graph.prototype.dragsubject = function() {
@@ -246,9 +194,6 @@ define("onyx/canvas/graph",
 					subject.sx = d3.event.x;
 					subject.sy = d3.event.y;
 				} else {
-					if (!d3.event.active) {
-						this.simulation.alphaTarget(0.3).restart();
-					}
 					subject.fx = subject.x;
 					subject.fy = subject.y;
 					this.dragged = subject.id;
@@ -266,6 +211,8 @@ define("onyx/canvas/graph",
 				} else {
 					subject.fx = d3.event.x;
 					subject.fy = d3.event.y;
+					this.simulation.alpha(0);
+					this.simulation.tick();
 					this.canvas.render();
 				}
 			}
@@ -275,20 +222,83 @@ define("onyx/canvas/graph",
 				if (subject.id == "graph") {
 					this.canvas.render();
 				} else {
-					if (!d3.event.active) {
-						this.simulation.alphaTarget(0);
-					}
 					subject.fx = null;
 					subject.fy = null;
 					subject.dragged = false;
 				}
 			}
 
+			Graph.prototype.initSimulations = function(links) {
+				var width = this.canvas.width;
+				var height = this.canvas.height;
+				this.simulationNodes = this.initSimulationNodes();
+				this.simulation = d3.forceSimulation(this.simulationNodes);
+				this.simulation.force("collide", d3.forceCollide(
+						this.simulationNodes).radius(function(d) {
+					return (d.radius || RADIUS) + 18;
+				}).iterations(1).strength(1));
+				// this.simulation.on("tick", this.onTick.bind(this));
+				var simulationLinks = this.initSimulationLinks(links);
+				if (simulationLinks && simulationLinks.length > 0) {
+					this.simulation.force("link", d3.forceLink(simulationLinks)
+							.id(function(d) {
+								return d.id;
+							}).iterations(1).strength(1).distance(
+									function(link) {
+										return link.distance;
+									}));
+				}
+				this.simulation.stop();
+				this.doTicks();
+			}
+
+			Graph.prototype.initSimulationNodes = function() {
+				var nodes = [];
+				for (var i = 0; i < this.nodes.length; i++) {
+					var node = this.nodes[i];
+					nodes.push(node);
+				}
+				var node = this.relationNode.initSimulationNode();
+				if (node) {
+					nodes.push(node);
+				}
+				return nodes;
+			}
+
+			Graph.prototype.initSimulationLinks = function(links) {
+				var result = [];
+				var link = this.relationNode.initSimulationLink();
+				if (link) {
+					result.push(link);
+				}
+				if (!links) {
+					return result;
+				}
+				for (var i = 0; i < links.length; i++) {
+					var link = links[i];
+					var source = this.getNode(link.source);
+					var target = this.getNode(link.target);
+					var distance = Math.sqrt((source.x - target.x)
+							* (source.x - target.x) + (source.y - target.y)
+							* (source.y - target.y));
+					result.push($.extend({
+						distance : distance
+					}, link));
+				}
+				return result;
+			}
+
+			Graph.prototype.onTick = function() {
+				this.canvas.render();
+			}
+
 			Graph.prototype.findNode = function(eventX, eventY) {
 				var x = eventX - this.graph.x;
 				var y = eventY - this.graph.y;
-				for (var i = 0; i < this.simulationNodes.length; i++) {
-					var node = this.simulationNodes[i];
+				var nodes = this.simulationNodes ? this.simulationNodes
+						: this.nodes;
+				for (var i = 0; i < nodes.length; i++) {
+					var node = nodes[i];
 					var nodex = node.x;
 					var nodey = node.y;
 					var screenX = this.toScreenX(nodex);
@@ -307,33 +317,13 @@ define("onyx/canvas/graph",
 					}
 				}
 			}
-			//
-			// Graph.prototype.isMouseOvered = function(node) {
-			// return node.id === this.mouseovered;
-			// }
-			//
-			// Graph.prototype.isSelected = function(node) {
-			// return this.selected ? (this.selected[node.id] ? true : false)
-			// : false;
-			// }
-			//
-			// Graph.prototype.isDragged = function(node) {
-			// return this.dragged ? node.id === this.dragged : false;
-			// }
 
-			Graph.prototype.doTicks = function(event) {
+			Graph.prototype.doTicks = function() {
 				var self = this;
-				var count = 0;
-				function tick() {
-					count++;
-					if (count >= 10) {
-						return;
-					}
+				while (this.simulation.alpha() >= 0.05) {
 					self.simulation.tick();
 					self.canvas.render();
-					requestAnimFrame(tick);
 				}
-				requestAnimFrame(tick);
 			}
 
 			Graph.prototype.onClick = function(event) {
@@ -418,24 +408,24 @@ define("onyx/canvas/graph",
 					y : nodey
 				} ];
 				var links = [ {
-					target : nodes[0],
-					source : node,
+					target : nodes[0].id,
+					source : node.id,
 					distance : distance
 				}, {
-					target : nodes[1],
-					source : node,
+					target : nodes[1].id,
+					source : node.id,
 					distance : distance
 				}, {
-					target : nodes[2],
-					source : node,
+					target : nodes[2].id,
+					source : node.id,
 					distance : distance
 				}, {
-					target : nodes[3],
-					source : node,
+					target : nodes[3].id,
+					source : node.id,
 					distance : distance
 				}, {
-					target : nodes[4],
-					source : node,
+					target : nodes[4].id,
+					source : node.id,
 					distance : distance
 				} ];
 				this.addNodesAndLinks(nodes, links);
@@ -502,25 +492,25 @@ define("onyx/canvas/graph",
 				// render line;
 				this.context.beginPath();
 				this.context.globalAlpha = 0.5;
-				this.context.moveTo(this.toScreenX(link.source.x), this
-						.toScreenY(link.source.y));
-				this.context.lineTo(this.toScreenX(link.target.x), this
-						.toScreenY(link.target.y));
+				var source = this.getNode(link.source);
+				var target = this.getNode(link.target);
+				this.context.moveTo(this.toScreenX(source.x), this
+						.toScreenY(source.y));
+				this.context.lineTo(this.toScreenX(target.x), this
+						.toScreenY(target.y));
 				this.context.lineWidth = 3;
 				this.context.strokeStyle = "pink";
 				this.context.stroke();
 				// render text rectangle
-				var middlex = this
-						.toScreenX((link.target.x + link.source.x) / 2);
-				var middley = this
-						.toScreenY((link.target.y + link.source.y) / 2);
-				var angle = Math.atan2(link.target.y - link.source.y,
-						link.target.x - link.source.x);
+				var middlex = this.toScreenX((target.x + source.x) / 2);
+				var middley = this.toScreenY((target.y + source.y) / 2);
+				var angle = Math
+						.atan2(target.y - source.y, target.x - source.x);
 				this.context.translate(middlex, middley);
-				//this.context.rotate(angle);
+				this.context.rotate(angle);
 				this.context.globalAlpha = 1;
 				this.context.fillStyle = "pink";
-			    this.context.fillRect(-16,-8,32,16);
+				this.context.fillRect(-16, -8, 32, 16);
 
 				// render text
 				this.context.font = "12px 微软雅黑";
@@ -588,14 +578,42 @@ define("onyx/canvas/graph",
 				this.context.restore();
 			}
 
+			Graph.prototype.getNode = function(nodeid) {
+				return this.nodeMap[nodeid];
+			}
+
+			Graph.prototype.getLink = function(sourceid, targetid) {
+
+			}
+
+			Graph.prototype.getLinksBySource = function(sourceid) {
+				return this.linkSourceMap[nodeid];
+			}
+
+			Graph.prototype.getLinksByTarget = function(targetid) {
+				return this.linkTargetMap[nodeid];
+			}
+
 			Graph.prototype.addNodesAndLinks = function(nodes, links) {
-				this.nodes = this.nodes.concat(nodes);
-				this.links = this.links.concat(links);
-				this.initSimulations();
+				if (nodes) {
+					for (var i = 0; i < nodes.length; i++) {
+						var node = nodes[i];
+						this.nodes.push(node);
+						this.nodeMap[node.id] = node;
+					}
+				}
+				if (links) {
+					for (var i = 0; i < links.length; i++) {
+						var link = links[i];
+						this.links.push(link);
+					}
+				}
+				this.initSimulations(links);
 			}
 
 			Graph.prototype.addNode = function(node) {
 				this.nodes.push(node);
+				this.nodeMap[node.id] = node;
 				this.initSimulations();
 			}
 
@@ -773,7 +791,7 @@ define("onyx/canvas/relationnode", [ "jquery", "require", "d3/d3" ], function(
 		this.graph = graph;
 	}
 
-	RelationNode.prototype.initSimulationNode = function() {
+	RelationNode.prototype.initSimulationNode = function(node) {
 		if (!this.node) {
 			return null;
 		}
@@ -781,7 +799,7 @@ define("onyx/canvas/relationnode", [ "jquery", "require", "d3/d3" ], function(
 			id : "relation",
 			x : this.node.x + 128,
 			y : this.node.y - 128,
-			radius : 128
+			radius : -18
 		};
 		return this.simulationNode;
 	}
@@ -799,11 +817,11 @@ define("onyx/canvas/relationnode", [ "jquery", "require", "d3/d3" ], function(
 	}
 
 	RelationNode.prototype.getX = function() {
-		return this.simulationNode.x;
+		return this.node.x + 128;
 	}
 
 	RelationNode.prototype.getY = function() {
-		return this.simulationNode.y;
+		return this.node.y - 128;
 	}
 
 	RelationNode.prototype.show = function(node) {
@@ -863,7 +881,7 @@ define("onyx/canvas/relationnode", [ "jquery", "require", "d3/d3" ], function(
 		if (!this.node) {
 			return;
 		}
-		this.renderLink(this.simulationLink);
+		this.renderLink();
 		var node = this.simulationNode;
 		this.renderNode(node);
 		this.renderRelations(node);
@@ -872,10 +890,12 @@ define("onyx/canvas/relationnode", [ "jquery", "require", "d3/d3" ], function(
 	RelationNode.prototype.renderLink = function(link) {
 		this.context.save();
 		this.context.beginPath();
-		this.context.moveTo(this.graph.toScreenX(link.source.x), this.graph
-				.toScreenY(link.source.y));
-		this.context.lineTo(this.graph.toScreenX(link.target.x), this.graph
-				.toScreenY(link.target.y));
+		var source = this.node;
+		var target = this.simulationNode;
+		this.context.moveTo(this.graph.toScreenX(source.x), this.graph
+				.toScreenY(source.y));
+		this.context.lineTo(this.graph.toScreenX(target.x), this.graph
+				.toScreenY(target.y));
 		this.context.globalAlpha = 0.2;
 		this.context.setLineDash([ 3, 3 ]);
 		this.context.lineWidth = 3;
