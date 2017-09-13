@@ -393,27 +393,27 @@ define("onyx/canvas/graph",
 				var nodey = node.y - 128;
 				var nodes = [ {
 					id : Utils.guid(),
-					name:"节点1",
+					name : "节点1",
 					x : nodex,
 					y : nodey
 				}, {
 					id : Utils.guid(),
-					name:"节点2",
+					name : "节点2",
 					x : nodex,
 					y : nodey
 				}, {
 					id : Utils.guid(),
-					name:"节点3",
+					name : "节点3",
 					x : nodex,
 					y : nodey
 				}, {
 					id : Utils.guid(),
-					name:"节点4",
+					name : "节点4",
 					x : nodex,
 					y : nodey
 				}, {
 					id : Utils.guid(),
-					name:"节点5",
+					name : "节点5",
 					x : nodex,
 					y : nodey
 				} ];
@@ -499,14 +499,34 @@ define("onyx/canvas/graph",
 
 			Graph.prototype.renderLink = function(link) {
 				this.context.save();
+				// render line;
 				this.context.beginPath();
-				this.context.moveTo(link.source.x + this.graph.x, link.source.y
-						+ this.graph.y);
-				this.context.lineTo(link.target.x + this.graph.x, link.target.y
-						+ this.graph.y);
+				this.context.globalAlpha = 0.5;
+				this.context.moveTo(this.toScreenX(link.source.x), this
+						.toScreenY(link.source.y));
+				this.context.lineTo(this.toScreenX(link.target.x), this
+						.toScreenY(link.target.y));
 				this.context.lineWidth = 3;
-				this.context.strokeStyle = "#FFFFFF";
+				this.context.strokeStyle = "pink";
 				this.context.stroke();
+				// render text rectangle
+				var middlex = this
+						.toScreenX((link.target.x + link.source.x) / 2);
+				var middley = this
+						.toScreenY((link.target.y + link.source.y) / 2);
+				var angle = Math.atan2(link.target.y - link.source.y,
+						link.target.x - link.source.x);
+				this.context.translate(middlex, middley);
+				//this.context.rotate(angle);
+				this.context.globalAlpha = 1;
+				this.context.fillStyle = "pink";
+			    this.context.fillRect(-16,-8,32,16);
+
+				// render text
+				this.context.font = "12px 微软雅黑";
+				this.context.textAlign = "center"
+				this.context.fillStyle = "white";
+				this.context.fillText("关系", 0, 4);
 				this.context.restore();
 			}
 
@@ -557,15 +577,11 @@ define("onyx/canvas/graph",
 				// draw icon
 				this.context.font = "26px iconfont";
 				this.context.textAlign = "center"
-				if (mouseovered) {
-					this.context.fillStyle = "#FFFFFF";
-				} else {
-					this.context.fillStyle = "#000000";
-				}
+				this.context.fillStyle = mouseovered ? "#FFFFFF" : "#000000";
 				this.context.fillText("\ue60a", nodex, nodey + radius / 2);
 				// draw label
 				this.context.font = "14px 微软雅黑";
-				this.context.textAlign = "center"
+				this.context.textAlign = "center";
 				this.context.fillStyle = "#FFFFFF";
 				this.context.fillText(node.name || node.id, nodex, nodey
 						+ radius + 20);
