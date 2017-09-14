@@ -31,14 +31,7 @@ define(
 				this.canvasDom.attr("width", this.width);
 				this.canvasDom.attr("height", this.height);
 				this.canvasDom.appendTo(this.dom);
-				this.dom.on("dblclick", this.onDblClick.bind(this));
-				this.dom.on("click", this.onClick.bind(this));
-				this.dom.on("mousemove", this.onMouseMove.bind(this));
-				this.dom.on("clicknode", this.onClickNode.bind(this));
-				this.dom.on("dblclicknode", this.onDblClickNode.bind(this));
-				this.dom.on("clickgraph", this.onClickGraph.bind(this));
 				this.dom.on("dblclickgraph", this.onDblClickGraph.bind(this));
-				this.dom.on("clickmenu", this.onClickMenu.bind(this));
 				this.dom.on("contextmenu", this.onContextMenu.bind(this));
 				// init canvas
 				this.canvas = document.querySelector(".onyx-canvas-canvas");
@@ -56,50 +49,6 @@ define(
 
 			Canvas.prototype.getContext = function() {
 				return this.context;
-			}
-
-			Canvas.prototype.onDblClick = function(event) {
-				if (this.graph.onDblClick(event)) {
-					this.render();
-					return;
-				}
-			}
-
-			Canvas.prototype.onClick = function(event) {
-				event.stopPropagation();
-				if (this.graph.onClick(event)) {
-					this.render();
-					return;
-				}
-			}
-
-			Canvas.prototype.onMouseMove = function(event) {
-				event.stopPropagation();
-				if (this.graph.onMouseMove(event)) {
-					this.render();
-					return;
-				}
-			}
-
-			Canvas.prototype.onClickMenu = function(event, menu) {
-				if (menu.button.id == "add") {
-					this.searchPanel.show(menu.node);
-					return;
-				}
-				if (menu.button.id == "links") {
-					this.graph.showRelationNode(menu.node);
-					return;
-				}
-			}
-
-			Canvas.prototype.onClickNode = function(event, node) {
-			}
-
-			Canvas.prototype.onDblClickNode = function(event, node) {
-			}
-
-			Canvas.prototype.onClickGraph = function(event, pos) {
-				this.graph.hideTools();
 			}
 
 			Canvas.prototype.onDblClickGraph = function(event, pos) {
@@ -130,10 +79,11 @@ define(
 /**
  * Onyx Canvas Graph
  */
-define("onyx/canvas/graph",
+define(
+		"onyx/canvas/graph",
 		[ "jquery", "require", "d3/d3", "onyx/canvas/compass",
-				"onyx/canvas/node", "onyx/canvas/relationnode" ], function($,
-				require) {
+				"onyx/canvas/node", "onyx/canvas/relationnode" ],
+		function($, require) {
 
 			var d3 = require("d3/d3");
 
@@ -148,9 +98,12 @@ define("onyx/canvas/graph",
 				this.context = canvas.getContext();
 				this.compass = new Compass(this.canvas, this);
 				this.relationNode = new RelationNode(this.canvas, this);
+				this.canvas.on("dblclick", this.onDblClick.bind(this));
+				this.canvas.on("click", this.onClick.bind(this));
 				this.canvas.on("clickmenu", this.onClickMenu.bind(this));
 				this.canvas
 						.on("clickrelation", this.onClickRelation.bind(this));
+				this.canvas.on("mousemove", this.onMouseMove.bind(this));
 				this.nodes = [];
 				this.nodeMap = {};
 				this.links = [];
@@ -181,11 +134,19 @@ define("onyx/canvas/graph",
 
 			Graph.prototype.dragsubject = function() {
 				var node = this.findNode(d3.event.x, d3.event.y);
-				if (node) {
-					node.dragged = true;
-					return node;
+				if (!node) {
+					return this.graph;
 				}
-				return this.graph;
+				if (this.selects) {
+					if (this.selects.includes(node)) {
+						return {
+							id : "selects",
+							selects : this.selects
+						};
+					}
+				}
+				node.dragged = true;
+				return node;
 			}
 
 			Graph.prototype.dragstarted = function() {
@@ -193,10 +154,18 @@ define("onyx/canvas/graph",
 				if (subject.id == "graph") {
 					subject.sx = d3.event.x;
 					subject.sy = d3.event.y;
+				} else if (subject.id == "selects") {
+					var selects = subject.selects;
+					selects.sx = d3.event.x;
+					selects.sy = d3.event.y;
+					for (var i = 0; i < selects.length; i++) {
+						var node = selects[i];
+						node.fx = node.x;
+						node.fy = node.y;
+					}
 				} else {
 					subject.fx = subject.x;
 					subject.fy = subject.y;
-					this.dragged = subject.id;
 				}
 			}
 
@@ -207,6 +176,20 @@ define("onyx/canvas/graph",
 					subject.y += d3.event.y - subject.sy;
 					subject.sx = d3.event.x;
 					subject.sy = d3.event.y;
+					this.canvas.render();
+				} else if (subject.id == "selects") {
+					var selects = subject.selects;
+					var offsetX = d3.event.x - selects.sx;
+					var offsetY = d3.event.y - selects.sy;
+					for (var i = 0; i < selects.length; i++) {
+						var node = selects[i];
+						node.fx += offsetX;
+						node.fy += offsetY;
+					}
+					selects.sx = d3.event.x;
+					selects.sy = d3.event.y;
+					this.simulation.alpha(0);
+					this.simulation.tick();
 					this.canvas.render();
 				} else {
 					subject.fx = d3.event.x;
@@ -332,12 +315,21 @@ define("onyx/canvas/graph",
 			}
 
 			Graph.prototype.onClick = function(event) {
+				clearTimeout(this.intervalTimer);
+				var self = this;
+				this.intervalTimer = setTimeout(function() {
+					self._onClick(event);
+				}, 100);
+			}
+
+			Graph.prototype._onClick = function(event) {
+				event.stopPropagation();
 				if (this.compass.onClick(event)) {
-					this.render();
+					this.canvas.render();
 					return;
 				}
 				if (this.relationNode.onClick(event)) {
-					this.render();
+					this.canvas.render();
 					return;
 				}
 				var item = this.findNode(event.offsetX, event.offsetY);
@@ -345,38 +337,61 @@ define("onyx/canvas/graph",
 					if (this.selected || this.lastselected) {
 						this.lastselected = null;
 						this.selected = null;
+						this.onClickGraph(event);
 						this.canvas.fire("clickgraph");
-						return true;
+						this.canvas.render();
+						return;
 					}
 					this.canvas.fire("clickgraph");
-					return false;
+					this.canvas.render();
+					return;
 				}
 				if (this.selected) {
 					var sel = this.selected[item.id];
 					if (sel) {
 						this.selected[item.id] = false;
 						this.lastselected = null;
+						this.onClickGraph(event);
 						this.canvas.fire("clickgraph");
-						return true;
+						this.canvas.render();
+						return;
 					} else {
 						this.selected[item.id] = true;
 						this.lastselected = item.id;
+						this.onClickNode(event, item);
 						this.canvas.fire("clicknode", item);
-						this.showCompass(item);
-						return true;
+						this.canvas.render();
+						return;
 					}
 				} else {
 					this.selected = {};
 					this.selected[item.id] = true;
 					this.lastselected = item.id;
+					this.onClickNode(event, item);
 					this.canvas.fire("clicknode", item);
-					this.showCompass(item);
-					return true;
+					this.canvas.render();
+					return;
 				}
+			}
+
+			Graph.prototype.onClickNode = function(event, node) {
+				this.compass.show(node);
+			}
+
+			Graph.prototype.onClickGraph = function(event, node) {
+				this.hideTools();
 			}
 
 			Graph.prototype.onClickMenu = function(event, menu) {
 				this.hideTools();
+				if (menu.button.id == "add") {
+					this.searchPanel.show(menu.node);
+					return;
+				}
+				if (menu.button.id == "links") {
+					this.showRelationNode(menu.node);
+					return;
+				}
 			}
 
 			Graph.prototype.onClickRelation = function(event, options) {
@@ -437,8 +452,10 @@ define("onyx/canvas/graph",
 			}
 
 			Graph.prototype.onDblClick = function(event) {
+				clearTimeout(this.intervalTimer);
+				event.stopPropagation();
 				if (this.compass.onDblClick(event)) {
-					this.render();
+					this.canvas.render();
 					return;
 				}
 				var item = this.findNode(event.offsetX, event.offsetY);
@@ -447,35 +464,48 @@ define("onyx/canvas/graph",
 						x : event.offsetX - this.graph.x,
 						y : event.offsetY - this.graph.y
 					});
-					return true;
+					this.canvas.render();
+					return;
 				}
+				this.onDblClickNode(event, item);
 				this.canvas.fire("dblclicknode", item);
-				return true;
+				this.canvas.render();
+				return;
+			}
+
+			Graph.prototype.onDblClickNode = function(event, node) {
+				var selects = [ node ];
+				var targets = this.getTargetNodes(node.id, true);
+				this.selectNodes(selects.concat(targets));
 			}
 
 			Graph.prototype.onMouseMove = function(event) {
+				event.stopPropagation();
 				if (this.compass.onMouseMove(event)) {
-					this.render();
-					return true;
+					this.canvas.render();
+					return;
 				}
 				if (this.relationNode.onMouseMove(event)) {
-					return true;
+					this.canvas.render();
+					return;
 				}
 				var item = this.findNode(event.offsetX, event.offsetY);
 				if (!item) {
 					if (this.currentNode) {
 						this.currentNode.mouseovered = false;
 						this.currentNode = null;
-						return true;
+						this.canvas.render();
+						return;
 					}
-					return false;
+					return;
 				}
 				if (item.mouseovered) {
-					return false;
+					return;
 				}
 				item.mouseovered = true;
 				this.currentNode = item;
-				return true;
+				this.canvas.render();
+				return;
 			}
 
 			Graph.prototype.render = function() {
@@ -563,7 +593,8 @@ define("onyx/canvas/graph",
 					this.context.strokeStyle = "#C5DBF0";
 					this.context.setLineDash([ 3, 3 ]);
 				} else if (selected) {
-					this.context.strokeStyle = "#C5DBF0";
+					this.context.setLineDash([ 3, 3 ]);
+					this.context.strokeStyle = "orange";
 				} else {
 					this.context.strokeStyle = "#C5DBF0";
 				}
@@ -583,8 +614,117 @@ define("onyx/canvas/graph",
 				this.context.restore();
 			}
 
+			/**
+			 * get node by id
+			 * 
+			 * @param nodeid
+			 */
 			Graph.prototype.getNode = function(nodeid) {
 				return this.nodeMap[nodeid];
+			}
+
+			/**
+			 * get target node by links
+			 * 
+			 * @param sourceid
+			 * @param recurse
+			 */
+			Graph.prototype.getTargetNodes = function(sourceid, recurse) {
+				if (!recurse) {
+					return this.getTargetNodesDirect(sourceid);
+				}
+				return this.getTargetNodesRecurse(sourceid);
+			}
+
+			/**
+			 * get direct target nodes
+			 * 
+			 * @param sourceid
+			 */
+			Graph.prototype.getTargetNodesDirect = function(sourceid) {
+				var links = this.getLinksBySource(sourceid);
+				if (!links) {
+					return [];
+				}
+				var result = [];
+				for (var i = 0; i < links.length; i++) {
+					var link = links[i];
+					var target = this.getNode(link.target);
+					result.push(target);
+				}
+				return result;
+			}
+
+			/**
+			 * get target nodes recurse
+			 * 
+			 * @param soruceid
+			 */
+			Graph.prototype.getTargetNodesRecurse = function(sourceid) {
+				var result = [];
+				this._getTargetNodesRecurse(sourceid, result);
+				return result;
+			}
+
+			Graph.prototype._getTargetNodesRecurse = function(sourceid, result) {
+				var targets = this.getTargetNodesDirect(sourceid);
+				for (var i = 0; i < targets.length; i++) {
+					var target = targets[i];
+					result.push(target);
+					this._getTargetNodesRecurse(target.id, result);
+				}
+			}
+
+			/**
+			 * get source nodes by links
+			 * 
+			 * @param targetid
+			 * @param recurse
+			 */
+			Graph.prototype.getSourceNodes = function(targetid, recurse) {
+				if (!recurse) {
+					return this.getSourceNodesDirect(targetid);
+				}
+				return this.getSourceNodesRecurse(targetid);
+			}
+
+			/**
+			 * get direct source nodes
+			 * 
+			 * @param targetid
+			 */
+			Graph.prototype.getSourceNodesDirect = function(targetid) {
+				var links = this.getLinksByTarget(targetid);
+				if (!links) {
+					return [];
+				}
+				var result = [];
+				for (var i = 0; i < links.length; i++) {
+					var link = links[i];
+					var source = this.getNode(link.source);
+					result.push(source);
+				}
+				return result;
+			}
+
+			/**
+			 * get source nodes recurse
+			 * 
+			 * @param targetid
+			 */
+			Graph.prototype.getSourceNodesRecurse = function(targetid) {
+				var result = [];
+				this._getSourceNodesRecurse(targetid, result);
+				return result;
+			}
+
+			Graph.prototype._getSourceNodesRecurse = function(targetid, result) {
+				var sources = this.getSourceNodesDirect(targetid);
+				for (var i = 0; i < sources.length; i++) {
+					var source = sources[i];
+					result.push(source);
+					this._getSourceNodesRecurse(source.id, result);
+				}
 			}
 
 			Graph.prototype.getLink = function(sourceid, targetid) {
@@ -592,11 +732,11 @@ define("onyx/canvas/graph",
 			}
 
 			Graph.prototype.getLinksBySource = function(sourceid) {
-				return this.linkSourceMap[nodeid];
+				return this.linkSourceMap[sourceid];
 			}
 
 			Graph.prototype.getLinksByTarget = function(targetid) {
-				return this.linkTargetMap[nodeid];
+				return this.linkTargetMap[targetid];
 			}
 
 			Graph.prototype.addNodesAndLinks = function(nodes, links) {
@@ -645,6 +785,24 @@ define("onyx/canvas/graph",
 				this.initSimulations();
 			}
 
+			Graph.prototype.selectNodes = function(nodes) {
+				this.unselectNodes();
+				this.selects = nodes;
+				for (var i = 0; i < this.selects.length; i++) {
+					this.selects[i].selected = true;
+				}
+			}
+
+			Graph.prototype.unselectNodes = function() {
+				if (!this.selects) {
+					return;
+				}
+				for (var i = 0; i < this.selects.length; i++) {
+					this.selects[i].selected = false;
+				}
+				this.selects = null;
+			}
+
 			Graph.prototype.showRelationNode = function(node) {
 				this.relationNode.show(node);
 				this.initSimulations();
@@ -663,6 +821,9 @@ define("onyx/canvas/graph",
 				this.compass.hide();
 				if (this.relationNode.hide()) {
 					this.initSimulations();
+				}
+				if (this.selects) {
+					this.unselectNodes();
 				}
 			}
 
@@ -1114,6 +1275,23 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 			icon : '\ue6b2',
 			length : 1,
 			name : "选择",
+			children : [ {
+				id : "all",
+				length : 1,
+				name : "全选"
+			}, {
+				id : "others",
+				length : 1,
+				name : "反选"
+			}, {
+				id : "sources",
+				length : 1,
+				name : "连入"
+			}, {
+				id : "targets",
+				length : 1,
+				name : "连出"
+			} ]
 		}, {
 			id : "expand",
 			icon : '\ue6b0',
