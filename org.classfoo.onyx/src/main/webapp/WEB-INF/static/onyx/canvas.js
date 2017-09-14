@@ -319,7 +319,7 @@ define(
 				var self = this;
 				this.intervalTimer = setTimeout(function() {
 					self._onClick(event);
-				}, 100);
+				}, 300);
 			}
 
 			Graph.prototype._onClick = function(event) {
@@ -342,6 +342,7 @@ define(
 						this.canvas.render();
 						return;
 					}
+					this.onClickGraph(event);
 					this.canvas.fire("clickgraph");
 					this.canvas.render();
 					return;
@@ -476,7 +477,9 @@ define(
 			Graph.prototype.onDblClickNode = function(event, node) {
 				var selects = [ node ];
 				var targets = this.getTargetNodes(node.id, true);
-				this.selectNodes(selects.concat(targets));
+				selects = selects.concat(targets)
+				this.selectNodes(selects);
+				this.compass.showSelectsMenu(node, selects);
 			}
 
 			Graph.prototype.onMouseMove = function(event) {
@@ -1210,99 +1213,178 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 
 	var INNERRADIUS = 40;
 
+	var nodeMenu = [ {
+		id : "raida",
+		icon : '\ue6b4',
+		length : 1,
+		name : "雷达"
+	}, {
+		id : "links",
+		icon : '\ue6b6',
+		length : 1,
+		name : "关系"
+	}, {
+		id : "properties",
+		icon : '\ue6ae',
+		length : 1,
+		name : "查看"
+	}, {
+		id : "search",
+		icon : '\ue6b3',
+		length : 1,
+		name : "搜索",
+		children : [ {
+			id : "all",
+			length : 1,
+			name : "所有"
+		}, {
+			id : "entities",
+			length : 1,
+			name : "实体"
+		}, {
+			id : "properties",
+			length : 1,
+			name : "属性"
+		}, {
+			id : "labels",
+			length : 1,
+			name : "标签"
+		}, {
+			id : "sources",
+			length : 1,
+			name : "来源"
+		}, {
+			id : "reference",
+			length : 1,
+			name : "引用"
+		} ]
+	}, {
+		id : "add",
+		icon : '\ue6b5',
+		length : 1,
+		name : "添加"
+	}, {
+		id : "remove",
+		icon : '\ue6b1',
+		length : 1,
+		name : "移除"
+	}, {
+		id : "select",
+		icon : '\ue6b2',
+		length : 1,
+		name : "选择",
+		children : [ {
+			id : "all",
+			length : 1,
+			name : "全选"
+		}, {
+			id : "others",
+			length : 1,
+			name : "反选"
+		}, {
+			id : "sources",
+			length : 1,
+			name : "连入"
+		}, {
+			id : "targets",
+			length : 1,
+			name : "连出"
+		} ]
+	}, {
+		id : "expand",
+		icon : '\ue6b0',
+		length : 1,
+		name : "展开"
+	} ];
+
+	var selectsMenu = [ {
+		id : "raida",
+		icon : '\ue6b4',
+		length : 1,
+		name : "多选"
+	}, {
+		id : "layout",
+		icon : '\ue6b6',
+		length : 1,
+		name : "布局",
+		children : [ {
+			id : "layout-line",
+			length : 1,
+			name : "直线布局"
+		}, {
+			id : "layout-rectangle",
+			length : 1,
+			name : "矩阵布局"
+		}, {
+			id : "layout-round",
+			length : 1,
+			name : "圆形布局"
+		}, {
+			id : "layout-ball",
+			length : 1,
+			name : "球状布局"
+		} ]
+	}, {
+		id : "analysis",
+		icon : '\ue6ae',
+		length : 1,
+		name : "分析"
+	}, {
+		id : "mark",
+		icon : '\ue6b3',
+		length : 1,
+		name : "标记"
+	}, {
+		id : "cancel",
+		icon : '\ue6b5',
+		length : 1,
+		name : "取消"
+	}, {
+		id : "remove",
+		icon : '\ue6b1',
+		length : 1,
+		name : "移除"
+	}, {
+		id : "group",
+		icon : '\ue6b2',
+		length : 1,
+		name : "分组"
+	}, {
+		id : "expand",
+		icon : '\ue6b0',
+		length : 1,
+		name : "展开"
+	} ];
+
+	var lineMenu = [];
+
 	var Compass = function(canvas, graph) {
 		this.graph = graph;
 		this.canvas = canvas;
 		this.context = canvas.getContext();
 		this.active = -1;
-		this.buttons = [ {
-			id : "raida",
-			icon : '\ue6b4',
-			length : 1,
-			name : "雷达"
-		}, {
-			id : "links",
-			icon : '\ue6b6',
-			length : 1,
-			name : "关系"
-		}, {
-			id : "properties",
-			icon : '\ue6ae',
-			length : 1,
-			name : "查看"
-		}, {
-			id : "search",
-			icon : '\ue6b3',
-			length : 1,
-			name : "搜索",
-			children : [ {
-				id : "all",
-				length : 1,
-				name : "所有"
-			}, {
-				id : "entities",
-				length : 1,
-				name : "实体"
-			}, {
-				id : "properties",
-				length : 1,
-				name : "属性"
-			}, {
-				id : "labels",
-				length : 1,
-				name : "标签"
-			}, {
-				id : "sources",
-				length : 1,
-				name : "来源"
-			}, {
-				id : "reference",
-				length : 1,
-				name : "引用"
-			} ]
-		}, {
-			id : "add",
-			icon : '\ue6b5',
-			length : 1,
-			name : "添加"
-		}, {
-			id : "remove",
-			icon : '\ue6b1',
-			length : 1,
-			name : "移除"
-		}, {
-			id : "select",
-			icon : '\ue6b2',
-			length : 1,
-			name : "选择",
-			children : [ {
-				id : "all",
-				length : 1,
-				name : "全选"
-			}, {
-				id : "others",
-				length : 1,
-				name : "反选"
-			}, {
-				id : "sources",
-				length : 1,
-				name : "连入"
-			}, {
-				id : "targets",
-				length : 1,
-				name : "连出"
-			} ]
-		}, {
-			id : "expand",
-			icon : '\ue6b0',
-			length : 1,
-			name : "展开"
-		} ];
 	}
 
 	Compass.prototype.show = function(node) {
+		this.hide();
 		this.node = node;
 		this.arcs = null;
+		this.type = "node";
+	}
+
+	Compass.prototype.showLineMenu = function(line) {
+		this.hide();
+		this.node = line;
+		this.arcs = null;
+		this.type = "link";
+	}
+
+	Compass.prototype.showSelectsMenu = function(node, selects) {
+		this.hide();
+		this.node = node;
+		this.selectNodes = selects;
+		this.arcs = null;
+		this.type = "selects";
 	}
 
 	Compass.prototype.hide = function() {
@@ -1328,7 +1410,7 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 		this.arcs = d3.pie().startAngle(-Math.PI / 8).endAngle(
 				Math.PI * 2 - Math.PI / 8).value(function(d) {
 			return d.length;
-		})(this.buttons);
+		})(this.getButtons());
 		this.context.translate(this.x, this.y);
 		this.context.globalAlpha = 0.8;
 		this.arcs.forEach(this.renderArc.bind(this, arc));
@@ -1366,8 +1448,8 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 		this.context.beginPath();
 		arc.cornerRadius(button.id === this.active ? 2 : 4);
 		arc(d);
-		this.context.fillStyle = button.id === this.active ? "#FFFFFF"
-				: "#000000";
+		this.context.fillStyle = button.id === this.active ? "#FFFFFF" : this
+				.getColor();
 		this.context.fill();
 		var c = arc.centroid(d);
 		var angle = (d.startAngle + d.endAngle) / 2;
@@ -1445,6 +1527,7 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 			return;
 		}
 		var angle = this.getAngle(x, y);
+		var buttons = this.getButtons();
 		var self = this;
 		$.each(this.arcs, function(index, arc) {
 			var startAngle = arc.startAngle;
@@ -1458,7 +1541,7 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 					return;
 				}
 			}
-			var button = self.buttons[index];
+			var button = buttons[index];
 			if (self.active == button.id) {
 				return;
 			}
@@ -1467,15 +1550,44 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 		})
 	}
 
+	Compass.prototype.getButtons = function(id) {
+		switch (this.type) {
+		case "node": {
+			return nodeMenu;
+		}
+		case "selects": {
+			return selectsMenu;
+		}
+		case "line": {
+			return lineMenu;
+		}
+		}
+		return nodeMenu;
+	}
+
 	Compass.prototype.getButton = function(id) {
-		for (var i = 0; i < this.buttons.length; i++) {
-			if (this.buttons[i].id == id) {
-				return this.buttons[i];
+		var buttons = this.getButtons();
+		for (var i = 0; i < buttons.length; i++) {
+			if (buttons[i].id == id) {
+				return buttons[i];
 			}
 		}
 		return null;
 	}
 
+	Compass.prototype.getColor = function(id) {
+		switch (this.type) {
+		case "node": {
+			return "#000000";
+		}
+		case "selects": {
+			return "orange";
+		}
+		case "link": {
+			return "red";
+		}
+		}
+	}
 	Compass.prototype.getAngle = function(x, y) {
 		if (x == 0 && y <= 0) {
 			return 0;
