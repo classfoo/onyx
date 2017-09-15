@@ -593,9 +593,8 @@ define(
 					this.context.closePath();
 				} else {
 					this.context.font = "26px iconfont";
-					this.context.textAlign = "center"
-					this.context.fillStyle = mouseovered ? "#FFFFFF"
-							: "#000000";
+					this.context.textAlign = "center";
+					this.context.fillStyle = "#C5DBF0";
 					this.context.fillText("\ue60a", nodex, nodey + radius / 2);
 					this.context.fill();
 					this.context.closePath();
