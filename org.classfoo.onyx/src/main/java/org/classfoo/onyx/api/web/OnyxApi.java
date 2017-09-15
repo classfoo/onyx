@@ -23,20 +23,20 @@ public interface OnyxApi {
 
 	String getResource();
 
-	public Object delete(Map<String, Object> args);
+	public Object delete(Map<String, Object> args) throws Exception;
 
-	public Object get(Map<String, Object> args);
+	public Object get(Map<String, Object> args) throws Exception;
 
-	public Object head(Map<String, Object> args);
+	public Object head(Map<String, Object> args) throws Exception;
 
-	public Object options(Map<String, Object> args);
+	public Object options(Map<String, Object> args) throws Exception;
 
-	public Object patch(Map<String, Object> args);
+	public Object patch(Map<String, Object> args) throws Exception;
 
-	public Object post(Map<String, Object> args);
+	public Object post(Map<String, Object> args) throws Exception;
 
-	public Object trace(Map<String, Object> args);
+	public Object trace(Map<String, Object> args) throws Exception;
 
-	public Object put(Map<String, Object> args);
+	public Object put(Map<String, Object> args) throws Exception;
 
 }

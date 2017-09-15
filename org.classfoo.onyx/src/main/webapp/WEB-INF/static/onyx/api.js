@@ -3,7 +3,8 @@
  */
 define("onyx/api", [ "jquery", "require", "onyx/api/label", "onyx/api/entity",
 		"onyx/api/recommend", "onyx/api/base", "onyx/api/timeline",
-		"onyx/api/material", "onyx/api/file" ], function($, require) {
+		"onyx/api/material", "onyx/api/file", "onyx/api/image" ], function($,
+		require) {
 
 	var labels = {};
 
@@ -113,6 +114,18 @@ define("onyx/api", [ "jquery", "require", "onyx/api/label", "onyx/api/entity",
 	Api.file = function() {
 		var File = require("onyx/api/file");
 		return new File();
+	}
+
+	/**
+	 * Api Image for canvas drawing
+	 */
+	Api.image = function() {
+		if (this.imageApi) {
+			return this.imageApi;
+		}
+		var OnyxImage = require("onyx/api/image");
+		this.imageApi = new OnyxImage();
+		return this.imageApi;
 	}
 
 	Api.getResource = function(resource) {
@@ -431,4 +444,35 @@ define("onyx/api/file", [ "jquery", "require" ], function($, require) {
 	}
 
 	return File;
+});
+
+/**
+ * API Image
+ */
+define("onyx/api/image", [ "jquery", "require" ], function($, require) {
+
+	function ImageApi() {
+		this.images = {};
+	}
+
+	/**
+	 * upload a file to server
+	 */
+	ImageApi.prototype.get = function(id) {
+		var image = this.images[id];
+		if (image) {
+			return $.dfd(image);
+		}
+		var dfd = $.Deferred();
+		var image = new Image(); // 创建img元素
+		var self = this;
+		image.onload = function() {
+			self.images[id] = image;
+			dfd.resolve(image);
+		}
+		image.src = "/onyxapi/v1/image/" + id;
+		return dfd.promise();
+	}
+
+	return ImageApi;
 });

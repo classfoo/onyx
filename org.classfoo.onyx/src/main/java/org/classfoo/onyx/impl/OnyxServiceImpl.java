@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.classfoo.onyx.api.OnyxService;
 import org.classfoo.onyx.api.cache.OnyxCacheService;
 import org.classfoo.onyx.api.file.OnyxFileService;
@@ -71,25 +72,34 @@ public class OnyxServiceImpl implements OnyxService, InitializingBean {
 	public Object service(RequestMethod method, Map<String, Object> args) {
 		String resource = MapUtils.getString(args, "resource");
 		OnyxApi api = this.onyxApiMap.get(resource);
-		switch (method) {
-			case DELETE:
-				return api.delete(args);
-			case GET:
-				return api.get(args);
-			case HEAD:
-				return api.head(args);
-			case OPTIONS:
-				return api.options(args);
-			case PATCH:
-				return api.patch(args);
-			case POST:
-				return api.post(args);
-			case PUT:
-				return api.put(args);
-			case TRACE:
-				return api.trace(args);
+		try {
+			switch (method) {
+				case DELETE:
+					return api.delete(args);
+				case GET:
+					return api.get(args);
+				case HEAD:
+					return api.head(args);
+				case OPTIONS:
+					return api.options(args);
+				case PATCH:
+					return api.patch(args);
+				case POST:
+					return api.post(args);
+				case PUT:
+					return api.put(args);
+				case TRACE:
+					return api.trace(args);
+			}
+			return api.get(args);
 		}
-		return api.get(args);
+		catch (Exception e) {
+			HashMap<String, Object> error = new HashMap<String, Object>(3);
+			error.put("type", "error");
+			error.put("message", ExceptionUtils.getMessage(e));
+			error.put("details", ExceptionUtils.getFullStackTrace(e));
+			return error;
+		}
 	}
 
 	@Override

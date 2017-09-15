@@ -578,17 +578,30 @@ define(
 				var nodex = node.x + this.graph.x;
 				var nodey = node.y + this.graph.y;
 				var radius = node.radius || RADIUS;
+				radius = mouseovered||selected ? (radius + 5) : radius;
 				// draw node
+				// draw image or icon
 				this.context.save();
 				this.context.beginPath();
 				this.context.moveTo(nodex + radius, nodey);
 				this.context.arc(nodex, nodey, radius, 0, 2 * Math.PI);
-				if (mouseovered) {
-					this.context.fillStyle = "#000000";
+				var image = this.getImage(node.id);
+				if (image) {
+					this.context.clip();
+					this.context.drawImage(image, nodex - radius, nodey
+							- radius, radius * 2, radius * 2);
+					this.context.closePath();
 				} else {
-					this.context.fillStyle = "#FFFFFF";
+					this.context.font = "26px iconfont";
+					this.context.textAlign = "center"
+					this.context.fillStyle = mouseovered ? "#FFFFFF"
+							: "#000000";
+					this.context.fillText("\ue60a", nodex, nodey + radius / 2);
+					this.context.fill();
+					this.context.closePath();
 				}
-				this.context.fill();
+				this.context.restore();
+				this.context.save();
 				// draw circle
 				this.context.beginPath();
 				this.context.arc(nodex, nodey, radius + 5, 0, 2 * Math.PI);
@@ -597,17 +610,14 @@ define(
 					this.context.setLineDash([ 3, 3 ]);
 				} else if (selected) {
 					this.context.setLineDash([ 3, 3 ]);
-					this.context.strokeStyle = "orange";
+					this.context.strokeStyle = "pink";
+				} else if(mouseovered){
+					this.context.strokeStyle = "pink";
 				} else {
 					this.context.strokeStyle = "#C5DBF0";
 				}
 				this.context.lineWidth = 3;
 				this.context.stroke();
-				// draw icon
-				this.context.font = "26px iconfont";
-				this.context.textAlign = "center"
-				this.context.fillStyle = mouseovered ? "#FFFFFF" : "#000000";
-				this.context.fillText("\ue60a", nodex, nodey + radius / 2);
 				// draw label
 				this.context.font = "14px 微软雅黑";
 				this.context.textAlign = "center";
@@ -615,6 +625,30 @@ define(
 				this.context.fillText(node.name || node.id, nodex, nodey
 						+ radius + 20);
 				this.context.restore();
+			}
+
+			Graph.prototype.getImage = function(id) {
+				if (!this.images) {
+					this.images = {};
+				}
+				var image = this.images[id];
+				if (image) {
+					return image;
+				}
+				if (!this.imageRequesting) {
+					this.imageRequesting = {};
+				}
+				var request = this.imageRequesting[id];
+				if (request) {// still in request
+					return null;
+				}
+				this.imageRequesting[id] = true;
+				// draw icon
+				var self = this;
+				Api.image().get(id).done(function(image) {
+					self.images[id] = image;
+					self.imageRequesting[id] = false;
+				});
 			}
 
 			/**
@@ -1370,6 +1404,7 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 		this.node = node;
 		this.arcs = null;
 		this.type = "node";
+		this.center = null;
 	}
 
 	Compass.prototype.showLineMenu = function(line) {
@@ -1385,6 +1420,7 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 		this.selectNodes = selects;
 		this.arcs = null;
 		this.type = "selects";
+		this.center = "选中" + selects.length + "项";
 	}
 
 	Compass.prototype.hide = function() {
@@ -1398,11 +1434,34 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 		}
 		this.x = this.node.x + this.graph.getX();
 		this.y = this.node.y + this.graph.getY();
+		this.renderCenter();
 		this.renderInner();
 		if (this.active) {
 			this.renderOutter();
 		}
 	}
+
+	Compass.prototype.renderCenter = function() {
+		if (!this.center) {
+			return;
+		}
+		this.context.save();
+		this.context.beginPath();
+		this.context.globalAlpha = 0.8;
+		this.context.moveTo(this.x + 40, this.y);
+		this.context.arc(this.x, this.y, 35, 0, 2 * Math.PI);
+		var color = this.getColor();
+		this.context.fillStyle = color;
+		this.context.fill();
+
+		this.context.font = "14px 微软雅黑";
+		this.context.textAlign = "center"
+		this.context.fillStyle = "#FFFFFF";
+		this.context.fillText(this.center, this.x, this.y + 4);
+
+		this.context.restore();
+	}
+
 	Compass.prototype.renderInner = function() {
 		this.context.save();
 		var arc = d3.arc().outerRadius(OUTERRADIUS).innerRadius(INNERRADIUS)
@@ -1581,7 +1640,7 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 			return "#000000";
 		}
 		case "selects": {
-			return "orange";
+			return "#162E3F";
 		}
 		case "link": {
 			return "red";
