@@ -220,7 +220,6 @@ define(
 						this.simulationNodes).radius(function(d) {
 					return (d.radius || RADIUS) + 18;
 				}).iterations(1).strength(1));
-				// this.simulation.on("tick", this.onTick.bind(this));
 				var simulationLinks = this.initSimulationLinks(links);
 				if (simulationLinks && simulationLinks.length > 0) {
 					this.simulation.force("link", d3.forceLink(simulationLinks)
@@ -271,10 +270,9 @@ define(
 				return result;
 			}
 
-			Graph.prototype.onTick = function() {
-				this.canvas.render();
-			}
-
+			/**
+			 * find node by event position
+			 */
 			Graph.prototype.findNode = function(eventX, eventY) {
 				var x = eventX - this.graph.x;
 				var y = eventY - this.graph.y;
@@ -376,7 +374,7 @@ define(
 			}
 
 			Graph.prototype.onClickNode = function(event, node) {
-				this.compass.show(node);
+				this.compass.showNodeMenu(node);
 			}
 
 			Graph.prototype.onClickGraph = function(event, node) {
@@ -548,8 +546,13 @@ define(
 				this.context.rotate(angle);
 				this.context.globalAlpha = 1;
 				this.context.fillStyle = "pink";
-				this.context.fillRect(-16, -8, 32, 16);
-
+				this.context.moveTo(-16, -8);
+				this.context.lineTo(-16, 8);
+				this.context.lineTo(16, 8);
+				this.context.lineTo(20, 0);
+				this.context.lineTo(16, -8);
+				//this.context.fillRect(-16, -8, 32, 16);
+				this.context.fill();
 				// render text
 				this.context.font = "12px 微软雅黑";
 				this.context.textAlign = "center"
@@ -578,7 +581,7 @@ define(
 				var nodex = node.x + this.graph.x;
 				var nodey = node.y + this.graph.y;
 				var radius = node.radius || RADIUS;
-				radius = mouseovered||selected ? (radius + 5) : radius;
+				radius = mouseovered || selected ? (radius + 5) : radius;
 				// draw node
 				// draw image or icon
 				this.context.save();
@@ -610,7 +613,7 @@ define(
 				} else if (selected) {
 					this.context.setLineDash([ 3, 3 ]);
 					this.context.strokeStyle = "pink";
-				} else if(mouseovered){
+				} else if (mouseovered) {
 					this.context.strokeStyle = "pink";
 				} else {
 					this.context.strokeStyle = "#C5DBF0";
@@ -850,7 +853,7 @@ define(
 
 			Graph.prototype.showCompass = function(node) {
 				this.hideTools();
-				this.compass.show(node);
+				this.compass.showNodeMenu(node);
 			}
 
 			Graph.prototype.hideTools = function() {
@@ -1242,7 +1245,9 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 
 	var d3 = require("d3/d3");
 
-	var OUTERRADIUS = 100;
+	var OUTERRADIUS = 160;
+
+	var MIDDLERADIUS = 100;
 
 	var INNERRADIUS = 40;
 
@@ -1395,15 +1400,15 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 		this.graph = graph;
 		this.canvas = canvas;
 		this.context = canvas.getContext();
-		this.active = -1;
 	}
 
-	Compass.prototype.show = function(node) {
+	Compass.prototype.showNodeMenu = function(node) {
 		this.hide();
 		this.node = node;
 		this.arcs = null;
 		this.type = "node";
 		this.center = null;
+		this.show = true;
 	}
 
 	Compass.prototype.showLineMenu = function(line) {
@@ -1411,6 +1416,8 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 		this.node = line;
 		this.arcs = null;
 		this.type = "link";
+		this.center = null;
+		this.show = true;
 	}
 
 	Compass.prototype.showSelectsMenu = function(node, selects) {
@@ -1420,11 +1427,17 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 		this.arcs = null;
 		this.type = "selects";
 		this.center = "选中" + selects.length + "项";
+		this.show = true;
 	}
 
 	Compass.prototype.hide = function() {
 		this.node = null;
 		this.arcs = null;
+		this.center = null;
+		this.show = false;
+		this.innerActive = null;
+		this.outerActive = null;
+		this.showOuter = false;
 	}
 
 	Compass.prototype.render = function() {
@@ -1435,9 +1448,7 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 		this.y = this.node.y + this.graph.getY();
 		this.renderCenter();
 		this.renderInner();
-		if (this.active) {
-			this.renderOutter();
-		}
+		this.renderOuter();
 	}
 
 	Compass.prototype.renderCenter = function() {
@@ -1447,7 +1458,7 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 		this.context.save();
 		this.context.beginPath();
 		this.context.globalAlpha = 0.8;
-		this.context.moveTo(this.x + 40, this.y);
+		// this.context.moveTo(this.x + 40, this.y);
 		this.context.arc(this.x, this.y, 35, 0, 2 * Math.PI);
 		var color = this.getColor();
 		this.context.fillStyle = color;
@@ -1457,57 +1468,59 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 		this.context.textAlign = "center"
 		this.context.fillStyle = "#FFFFFF";
 		this.context.fillText(this.center, this.x, this.y + 4);
-
 		this.context.restore();
 	}
 
 	Compass.prototype.renderInner = function() {
 		this.context.save();
-		var arc = d3.arc().outerRadius(OUTERRADIUS).innerRadius(INNERRADIUS)
+		var arc = d3.arc().outerRadius(MIDDLERADIUS).innerRadius(INNERRADIUS)
 				.padAngle(0.01).context(this.context);
-		this.arcs = d3.pie().startAngle(-Math.PI / 8).endAngle(
+		this.innerArcs = d3.pie().startAngle(-Math.PI / 8).endAngle(
 				Math.PI * 2 - Math.PI / 8).value(function(d) {
 			return d.length;
 		})(this.getButtons());
 		this.context.translate(this.x, this.y);
 		this.context.globalAlpha = 0.8;
-		this.arcs.forEach(this.renderArc.bind(this, arc));
+		this.innerArcs
+				.forEach(this.renderArc.bind(this, this.innerActive, arc));
 		this.context.restore();
 	}
 
-	Compass.prototype.renderOutter = function() {
-		if (!this.active) {
+	Compass.prototype.renderOuter = function() {
+		if (!this.innerActive) {
+			this.showOuter = false;
 			return;
 		}
-		var button = this.getButton(this.active);
-		;
-		if (!button) {
-			return;
-		}
-		var children = button.children;
+		var children = this.innerActive.button.children;
 		if (!children) {
+			this.showOuter = false;
 			return;
 		}
+		this.showOuter = true;
+		var arc = this.innerActive.arc;
+		var middleAngle = (arc.startAngle + arc.endAngle) / 2;
+		var halfAngle = (children.length * Math.PI / 6) / 2;
 		this.context.save();
-		var arc = d3.arc().outerRadius(OUTERRADIUS + 3).innerRadius(
-				OUTERRADIUS + 63).padAngle(0.01).context(this.context);
-		var arcs = d3.pie().startAngle(-Math.PI / 8).endAngle(
-				Math.PI - Math.PI / 8).value(function(d) {
+		var arc = d3.arc().outerRadius(OUTERRADIUS).innerRadius(
+				MIDDLERADIUS + 3).padAngle(0.01).context(this.context);
+		this.outerArcs = d3.pie().startAngle(middleAngle - halfAngle).endAngle(
+				middleAngle + halfAngle).value(function(d) {
 			return d.length;
 		})(children);
 		this.context.translate(this.x, this.y);
 		this.context.globalAlpha = 0.8;
-		arcs.forEach(this.renderArc.bind(this, arc));
+		this.outerArcs
+				.forEach(this.renderArc.bind(this, this.outerActive, arc));
 		this.context.restore();
 	}
 
-	Compass.prototype.renderArc = function(arc, d, i) {
+	Compass.prototype.renderArc = function(active, arc, d, i) {
 		var button = d.data;
 		this.context.beginPath();
-		arc.cornerRadius(button.id === this.active ? 2 : 4);
+		var isActive = active && button.id === active.id;
+		arc.cornerRadius(isActive ? 2 : 4);
 		arc(d);
-		this.context.fillStyle = button.id === this.active ? "#FFFFFF" : this
-				.getColor();
+		this.context.fillStyle = isActive ? "#FFFFFF" : this.getColor();
 		this.context.fill();
 		var c = arc.centroid(d);
 		var angle = (d.startAngle + d.endAngle) / 2;
@@ -1518,8 +1531,7 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 			// draw text
 			this.context.font = "12px iconfont";
 			this.context.textAlign = "center"
-			this.context.fillStyle = button.id === this.active ? "#000000"
-					: "#FFFFFF";
+			this.context.fillStyle = isActive ? "#000000" : "#FFFFFF";
 			this.context.fillText(button.icon, 0, -4);
 			this.context.font = "16px 微软雅黑";
 			this.context.textAlign = "center"
@@ -1531,8 +1543,7 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 			this.context.rotate(angle);
 			this.context.font = "12px iconfont";
 			this.context.textAlign = "center"
-			this.context.fillStyle = button.id === this.active ? "#000000"
-					: "#FFFFFF";
+			this.context.fillStyle = isActive ? "#000000" : "#FFFFFF";
 			this.context.fillText(button.icon, 0, 10);
 			// draw text
 			this.context.font = "16px 微软雅黑";
@@ -1540,7 +1551,6 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 			this.context.fillText(button.name, 0, -10);
 			this.context.restore();
 		}
-
 	}
 
 	Compass.prototype.onDblClick = function(event) {
@@ -1548,16 +1558,13 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 	}
 
 	Compass.prototype.onClick = function(event) {
-		if (!this.node) {
+		if (!this.show) {
 			return false;
 		}
-		if (!this.active) {
+		var button = this.outerActive ? this.outerActive.button
+				: (this.innerActive ? this.innerActive.button : null);
+		if (!button) {
 			return false;
-		}
-		var button = this.getButton(this.active);
-		if (button.children) {
-			this.showOutterMenu(button);
-			return true;
 		}
 		this.canvas.fire("clickmenu", {
 			button : button,
@@ -1567,27 +1574,42 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 	}
 
 	Compass.prototype.onMouseMove = function(event) {
-		if (!this.arcs) {
-			if (this.active) {
-				this.active = null;
-				this.canvas.render();
-			}
+		if (!this.show) {
+			this.onMouseMoveOutside(event);
 			return;
 		}
 		var x = event.offsetX - this.x;
 		var y = event.offsetY - this.y;
 		var radius = Math.sqrt(x * x + y * y);
-		if (radius < INNERRADIUS || radius > OUTERRADIUS) {
-			if (this.active != null) {
-				this.active = null;
-				this.canvas.render();
-			}
-			return;
+		if (this.showOuter && radius > MIDDLERADIUS && radius < OUTERRADIUS) {
+			this.onMouseMoveOuter(x, y, event);
+		} else if (radius > INNERRADIUS & radius < MIDDLERADIUS) {
+			this.onMouseMoveInner(x, y, event);
+		} else {
+			this.onMouseMoveOutside(event);
 		}
+	}
+
+	/**
+	 * on mouse outside the compass
+	 */
+	Compass.prototype.onMouseMoveOutside = function(event) {
+		if(this.innerActive||this.outerActive){
+			this.innerActive = null;
+			this.outerActive = null;
+			this.canvas.render();
+		}
+	}
+
+	/**
+	 * on mouse over the inner ring
+	 */
+	Compass.prototype.onMouseMoveInner = function(x, y, event) {
 		var angle = this.getAngle(x, y);
 		var buttons = this.getButtons();
 		var self = this;
-		$.each(this.arcs, function(index, arc) {
+		this.outerActive = null;
+		$.each(this.innerArcs, function(index, arc) {
 			var startAngle = arc.startAngle;
 			var endAngle = arc.endAngle;
 			if (startAngle < 0) {
@@ -1600,15 +1622,51 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 				}
 			}
 			var button = buttons[index];
-			if (self.active == button.id) {
+			if (self.innerActive && self.innerActive.id == button.id) {
 				return;
 			}
-			self.active = button.id;
+			self.innerActive = {
+				id : button.id,
+				button : button,
+				arc : arc
+			};
 			self.canvas.render();
 		})
 	}
 
-	Compass.prototype.getButtons = function(id) {
+	/**
+	 * on mouse over the outer ring
+	 */
+	Compass.prototype.onMouseMoveOuter = function(x, y, event) {
+		var angle = this.getAngle(x, y);
+		var buttons = this.getOuterButtons(this.innerActive.id);
+		var self = this;
+		$.each(this.outerArcs, function(index, arc) {
+			var startAngle = arc.startAngle;
+			var endAngle = arc.endAngle;
+			if (startAngle < 0) {
+				if (angle < Math.PI * 2 + startAngle && angle > endAngle) {
+					return;
+				}
+			} else {
+				if (angle < startAngle || angle > endAngle) {
+					return;
+				}
+			}
+			var button = buttons[index];
+			if (self.outerActive && self.outerActive.id == button.id) {
+				return;
+			}
+			self.outerActive = {
+				id : button.id,
+				button : button,
+				arc : arc
+			};
+			self.canvas.render();
+		})
+	}
+
+	Compass.prototype.getButtons = function() {
 		switch (this.type) {
 		case "node": {
 			return nodeMenu;
@@ -1621,6 +1679,14 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 		}
 		}
 		return nodeMenu;
+	}
+
+	Compass.prototype.getOuterButtons = function(id) {
+		var button = this.getButton(id);
+		if (!button) {
+			return null;
+		}
+		return button.children;
 	}
 
 	Compass.prototype.getButton = function(id) {
@@ -1772,11 +1838,9 @@ define(
 				this.dom.appendTo(pdom);
 				this.icon = $("<span class='onyx-canvas-cornerbutton-icon iconfont icon-search'></span>");
 				this.icon.appendTo(this.dom);
-				// this.dom.on("mouseover", this.onMouseOver.bind(this));
 				this.dom.on("click", this.onClick.bind(this));
 				this.dom.on("mouseover", this.onMouseOver.bind(this));
 				this.dom.on("mouseout", this.onMouseOut.bind(this));
-
 			}
 
 			CornerButton.prototype.onClick = function(event) {
@@ -1793,105 +1857,3 @@ define(
 
 			return CornerButton;
 		});
-
-//
-// Canvas.prototype.buildBackGround = function(dom, w, h) {
-// var background = $("<canvas
-// style='z-index:-10000;position:absolute;top:0;left:0;background-image:radial-gradient(circle
-// at 50% 50%, #356E8E, #315B85);'></canvas>");
-// background.appendTo(dom);
-// var canvas = background[0];
-// var ctx = canvas.getContext("2d");
-// // 设置画布宽高与窗口宽高一样
-// canvas.width = w;
-// canvas.height = h;
-// // 随机数函数
-// function fnRandom(min, max) {
-// return parseInt((max - min) * Math.random() + min + 1)
-// }
-// function Round() {
-// this.r = fnRandom(10, 30);
-// this.diam = this.r * 2;
-// // 随机位置
-// var x = fnRandom(0, canvas.width - this.r);
-// this.x = x < this.r ? this.r : x;
-// var y = fnRandom(0, canvas.height - this.r);
-// this.y = y < this.r ? this.r : y
-// // 随机速度
-// var speed = fnRandom(2, 4) / 10;
-// this.speedX = fnRandom(0, 4) > 2 ? speed : -speed;
-// this.speedY = fnRandom(0, 4) > 2 ? speed : -speed;
-// // 颜色
-// this.color = "#F2F2F2";
-// }
-// Round.prototype.draw = function() {
-// // 绘制函数
-// ctx.fillStyle = this.color;
-// ctx.beginPath();
-// ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2, true);
-// ctx.closePath();
-// ctx.fill();
-// }
-// Round.prototype.move = function() {
-// this.x += this.speedX;
-// if (this.x > canvas.width - this.r) {
-// this.speedX *= -1;
-// this.x = this.r2;
-// } else if (this.x < this.r) {
-// this.x = canvas.width - this.r;
-// }
-// this.y += this.speedY;
-// if (this.y > canvas.height - this.r) {
-// this.speedY *= -1;
-// this.y = this.r;
-// } else if (this.y < this.r) {
-// this.y = canvas.height - this.r;
-// }
-// }
-// // 使用Round
-// var allRound = [];
-// function initRound() {
-// // 初始化30个圆形对象,放到数组中
-// for (var i = 0; i < 10; i++) {
-// var obj = new Round();
-// obj.draw();
-// obj.move();
-// allRound.push(obj);
-// }
-// }
-// initRound();
-// var dxdy = [];
-// function roundMove() {
-// ctx.clearRect(0, 0, canvas.width, canvas.height);
-// // 遍历所有的圆形对象,让对象自己重绘,移动
-// for (var i = 0; i < allRound.length; i++) {
-// var round = allRound[i];
-// round.draw();
-// round.move();
-// dxdy[i] = {
-// dx : round.x,
-// dy : round.y
-// };
-// var dx = dxdy[i].dx;
-// var dy = dxdy[i].dy;
-// for (var j = 0; j < i; j++) {
-// var sx = dxdy[j].dx;
-// var sy = dxdy[j].dy;
-// l = Math.sqrt((dx - sx) * (dx - sx) + (dy - sy)
-// * (dy - sy));
-// var C = 1 / l * 7 - 0.009;
-// var o = C > 0.03 ? 0.03 : C;
-// ctx.strokeStyle = 'rgba(255,255,255,' + o + ')';
-// ctx.beginPath();
-// ctx.lineWidth = 5;
-// ctx.moveTo(dxdy[i].dx, dxdy[i].dy);
-// ctx.lineTo(dxdy[j].dx, dxdy[j].dy);
-// ctx.closePath();
-// ctx.stroke();
-// }
-// }
-// window.requestAnimationFrame(roundMove)
-// }
-//
-// roundMove();
-// }
