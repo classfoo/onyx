@@ -1756,7 +1756,7 @@ define("onyx/canvas/searchpanel", [ "jquery", "require", "d3/d3" ], function($,
 	}
 
 	SearchPanel.prototype.build = function(pdom) {
-		this.dom = $("<div class='onyx-canvas-searchpanel'></div>");
+		this.dom = $("<div class='onyx-canvas-searchpanel unselectable'></div>");
 		this.dom.appendTo(pdom);
 		this.layout = UI.createLayout({
 			clazz : "onyx-canvas-searchpanel-layout",

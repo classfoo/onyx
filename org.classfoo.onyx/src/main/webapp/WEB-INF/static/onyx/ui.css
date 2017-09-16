@@ -1411,30 +1411,21 @@ textarea {
 	height: 96px;
 	margin: 16px;
 	cursor: pointer;
-	text-align: center;
-	padding:4px;
+	padding: 4px;
 }
 
 .onyx-ui-slideboard-item-over {
-	border-radius:5px;
-	background-color:rgba(255,255,255,0.1);
+	border-radius: 5px;
+	background-color: rgba(255, 255, 255, 0.1);
 }
 
 .onyx-ui-slideboard-item-icon {
 	position: relative;
 	dispaly: block;
-	width: 56px;
-	height: 56px;
-	left: 50%;
-	margin-left: -32px;
-	border-radius: 64px;
-	background-color: #66ccff;
-	color: white;
 	width: 64px;
 	height: 64px;
 	left: 50%;
 	margin-left: -32px;
-	border-radius: 64px;
 	background-color: #66ccff;
 	color: white;
 	cursor: pointer;
@@ -1445,8 +1436,8 @@ textarea {
 
 .onyx-ui-slideboard-item-text {
 	position: relative;
-	dispaly: block;
-	width: 64px;
+	text-align: center;
+	width: 100%;
 	color: white;
 	cursor: pointer;
 	font-size: 16px;

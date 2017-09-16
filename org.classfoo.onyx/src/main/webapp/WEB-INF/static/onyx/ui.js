@@ -2941,9 +2941,8 @@ define("onyx/ui/editboard/item", [ "jquery", "require", "onyx/ui/widget",
 /**
  * Onyx UI Framework SlideBoard
  */
-define(
-		"onyx/ui/slideboard",
-		[ "jquery", "require", "onyx/ui/widget", "onyx/utils" ],
+define("onyx/ui/slideboard", [ "jquery", "require", "onyx/ui/widget",
+		"onyx/utils" ],
 		function($, require) {
 
 			var Widget = require("onyx/ui/widget");
@@ -2987,25 +2986,20 @@ define(
 
 			SlideBoard.prototype.buildData = function(datas) {
 				var self = this;
-				$
-						.each(
-								datas,
-								function(index, data) {
-									var item = $("<div></div>");
-									self.addClass(item, "onyx-ui-slideboard",
-											"item");
-									item.appendTo(self.container);
-									var icon = $("<div class='iconfont icon-user-circle'></div>");
-									self.addClass(icon, "onyx-ui-slideboard",
-											"item", "icon");
-									icon.appendTo(item);
-									var text = $("<span></span>");
-									self.addClass(text, "onyx-ui-slideboard",
-											"item", "text");
-									text.text(data.name);
-									text.appendTo(item);
-									item.data(data);
-								});
+				$.each(datas, function(index, data) {
+					var item = $("<div></div>");
+					self.addClass(item, "onyx-ui-slideboard", "item");
+					item.appendTo(self.container);
+					var icon = $("<img></img>");
+					icon.attr("src", "/onyxapi/v1/image/" + data.id + ".png");
+					self.addClass(icon, "onyx-ui-slideboard", "item", "icon");
+					icon.appendTo(item);
+					var text = $("<span></span>");
+					self.addClass(text, "onyx-ui-slideboard", "item", "text");
+					text.text(data.name);
+					text.appendTo(item);
+					item.data(data);
+				});
 			}
 
 			SlideBoard.prototype.onMouseOver = function(event) {
