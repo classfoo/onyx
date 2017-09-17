@@ -77,6 +77,9 @@ define(
 				case "view": {
 					return this.docmd_view(options);
 				}
+				case "add": {
+					return this.docmd_add(options);
+				}
 				}
 				return null;
 			}
@@ -85,6 +88,9 @@ define(
 				this.rightPanel.show(options);
 			}
 
+			Canvas.prototype.docmd_add = function(options) {
+				this.searchPanel.show(options);
+			}
 			return Canvas;
 		});
 
@@ -344,45 +350,14 @@ define(
 				}
 				var item = this.findNode(event.offsetX, event.offsetY);
 				if (item == null) {
-					if (this.selected || this.lastselected) {
-						this.lastselected = null;
-						this.selected = null;
-						this.onClickGraph(event);
-						this.canvas.fire("clickgraph");
-						this.canvas.render();
-						return;
-					}
 					this.onClickGraph(event);
 					this.canvas.fire("clickgraph");
 					this.canvas.render();
 					return;
 				}
-				if (this.selected) {
-					var sel = this.selected[item.id];
-					if (sel) {
-						this.selected[item.id] = false;
-						this.lastselected = null;
-						this.onClickGraph(event);
-						this.canvas.fire("clickgraph");
-						this.canvas.render();
-						return;
-					} else {
-						this.selected[item.id] = true;
-						this.lastselected = item.id;
-						this.onClickNode(event, item);
-						this.canvas.fire("clicknode", item);
-						this.canvas.render();
-						return;
-					}
-				} else {
-					this.selected = {};
-					this.selected[item.id] = true;
-					this.lastselected = item.id;
-					this.onClickNode(event, item);
-					this.canvas.fire("clicknode", item);
-					this.canvas.render();
-					return;
-				}
+				this.onClickNode(event, item);
+				this.canvas.fire("clicknode", item);
+				this.canvas.render();
 			}
 
 			Graph.prototype.onClickNode = function(event, node) {
@@ -395,10 +370,6 @@ define(
 
 			Graph.prototype.onClickMenu = function(event, menu) {
 				this.hideTools();
-				if (menu.button.id === "add") {
-					this.searchPanel.show(menu.node);
-					return;
-				}
 				if (menu.button.id === "links") {
 					this.showRelationNode(menu.node);
 					return;
