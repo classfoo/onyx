@@ -34,7 +34,6 @@ define(
 				this.canvasDom.attr("width", this.width);
 				this.canvasDom.attr("height", this.height);
 				this.canvasDom.appendTo(this.dom);
-				this.dom.on("dblclickgraph", this.onDblClickGraph.bind(this));
 				this.dom.on("contextmenu", this.onContextMenu.bind(this));
 				// init canvas
 				this.canvas = document.querySelector(".onyx-canvas-canvas");
@@ -53,10 +52,6 @@ define(
 
 			Canvas.prototype.getContext = function() {
 				return this.context;
-			}
-
-			Canvas.prototype.onDblClickGraph = function(event, pos) {
-				this.searchPanel.show(pos);
 			}
 
 			Canvas.prototype.onContextMenu = function(event) {
@@ -485,10 +480,12 @@ define(
 				}
 				var item = this.findNode(event.offsetX, event.offsetY);
 				if (item == null) {
-					this.canvas.fire("dblclickgraph", {
+					var pos = {
 						x : event.offsetX - this.graph.x,
 						y : event.offsetY - this.graph.y
-					});
+					};
+					this.onDblClickGraph(event, pos);
+					this.canvas.fire("dblclickgraph", pos);
 					this.canvas.render();
 					return;
 				}
@@ -504,6 +501,13 @@ define(
 				selects = selects.concat(targets)
 				this.selectNodes(selects);
 				this.compass.showSelectsMenu(node, selects);
+			}
+
+			Graph.prototype.onDblClickGraph = function(event, graph) {
+				this.compass.showGraphMenu({
+					x : this.toStandardX(event.offsetX),
+					y : this.toStandardY(event.offsetY)
+				});
 			}
 
 			Graph.prototype.onMouseMove = function(event) {
@@ -1278,31 +1282,37 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 		name : "查看"
 	}, {
 		id : "search",
-		icon : '\ue6b3',
+		icon : '\ue6b2',
 		length : 1,
 		name : "搜索",
 		children : [ {
 			id : "all",
+			icon : '\ue685',
 			length : 1,
 			name : "所有"
 		}, {
 			id : "entities",
+			icon : '\ue622',
 			length : 1,
 			name : "实体"
 		}, {
 			id : "properties",
 			length : 1,
+			icon : '\ue620',
 			name : "属性"
 		}, {
 			id : "labels",
+			icon : '\ue66a',
 			length : 1,
 			name : "标签"
 		}, {
 			id : "sources",
+			icon : '\ue668',
 			length : 1,
 			name : "来源"
 		}, {
 			id : "reference",
+			icon : '\ue680',
 			length : 1,
 			name : "引用"
 		} ]
@@ -1323,18 +1333,22 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 		name : "选择",
 		children : [ {
 			id : "all",
+			icon : '\ue6aa',
 			length : 1,
 			name : "全选"
 		}, {
 			id : "others",
+			icon : '\ue677',
 			length : 1,
 			name : "反选"
 		}, {
 			id : "sources",
+			icon : '\ue675',
 			length : 1,
 			name : "连入"
 		}, {
 			id : "targets",
+			icon : '\ue649',
 			length : 1,
 			name : "连出"
 		} ]
@@ -1346,65 +1360,111 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 	} ];
 
 	var selectsMenu = [ {
-		id : "raida",
-		icon : '\ue6b4',
+		id : "multiselect",
+		icon : '\ue646',
 		length : 1,
 		name : "多选"
 	}, {
 		id : "layout",
-		icon : '\ue6b6',
+		icon : '\ue653',
 		length : 1,
 		name : "布局",
 		children : [ {
 			id : "layout-line",
+			icon : '\ue617',
 			length : 1,
 			name : "直线布局"
 		}, {
 			id : "layout-rectangle",
+			icon : '\ue648',
 			length : 1,
 			name : "矩阵布局"
 		}, {
 			id : "layout-round",
+			icon : '\ue646',
 			length : 1,
 			name : "圆形布局"
 		}, {
 			id : "layout-ball",
+			icon : '\ue6ad',
 			length : 1,
 			name : "球状布局"
 		} ]
 	}, {
 		id : "analysis",
-		icon : '\ue6ae',
+		icon : '\ue62d',
 		length : 1,
 		name : "分析"
 	}, {
 		id : "mark",
-		icon : '\ue6b3',
+		icon : '\ue62a',
 		length : 1,
 		name : "标记"
 	}, {
 		id : "cancel",
-		icon : '\ue6b5',
+		icon : '\ue63c',
 		length : 1,
 		name : "取消"
 	}, {
 		id : "remove",
-		icon : '\ue6b1',
+		icon : '\ue602',
 		length : 1,
 		name : "移除"
 	}, {
 		id : "group",
-		icon : '\ue6b2',
+		icon : '\ue6aa',
 		length : 1,
 		name : "分组"
 	}, {
 		id : "expand",
-		icon : '\ue6b0',
+		icon : '\ue686',
 		length : 1,
 		name : "展开"
 	} ];
 
 	var lineMenu = [];
+
+	var graphMenu = [ {
+		id : "search",
+		icon : "\ue63f",
+		length : 1,
+		name : "搜索"
+	}, {
+		id : "cleargraph",
+		icon : "\ue63c",
+		length : 1,
+		name : "清空"
+	}, {
+		id : "enlarge",
+		icon : "\ue63a",
+		length : 1,
+		name : "放大"
+	}, {
+		id : "smaller",
+		icon : "\ue63b",
+		length : 1,
+		name : "缩小"
+	}, {
+		id : "add",
+		icon : "\ue601",
+		length : 1,
+		name : "添加"
+	}, {
+		id : "save",
+		icon : "\ue61d",
+		length : 1,
+		name : "保存"
+	}, {
+		id : "selection",
+		icon : "\ue6ad",
+		length : 1,
+		name : "框选"
+	}, {
+		id : "close",
+		icon : "\ue674",
+		length : 1,
+		name : "关闭"
+	} ];
 
 	var Compass = function(canvas, graph) {
 		this.graph = graph;
@@ -1437,6 +1497,21 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 		this.arcs = null;
 		this.type = "selects";
 		this.center = "选中" + selects.length + "项";
+		this.show = true;
+	}
+
+	/**
+	 * show graph compass
+	 * 
+	 * @param node
+	 *            click position
+	 */
+	Compass.prototype.showGraphMenu = function(node) {
+		this.hide();
+		this.node = node;
+		this.arcs = null;
+		this.type = "graph";
+		this.center = "画布";
 		this.show = true;
 	}
 
@@ -1539,22 +1614,22 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 			this.context.translate(c[0], c[1]);
 			this.context.rotate(angle + Math.PI);
 			// draw text
-			this.context.font = "12px iconfont";
+			this.context.font = "18px iconfont";
 			this.context.textAlign = "center"
 			this.context.fillStyle = isActive ? "#000000" : "#FFFFFF";
-			this.context.fillText(button.icon, 0, -4);
+			this.context.fillText(button.icon, 0, -2);
 			this.context.font = "16px 微软雅黑";
 			this.context.textAlign = "center"
-			this.context.fillText(button.name, 0, 18);
+			this.context.fillText(button.name, 0, 20);
 			this.context.restore();
 		} else {// upside
 			this.context.save();
 			this.context.translate(c[0], c[1]);
 			this.context.rotate(angle);
-			this.context.font = "12px iconfont";
+			this.context.font = "18px iconfont";
 			this.context.textAlign = "center"
 			this.context.fillStyle = isActive ? "#000000" : "#FFFFFF";
-			this.context.fillText(button.icon, 0, 10);
+			this.context.fillText(button.icon, 0, 14);
 			// draw text
 			this.context.font = "16px 微软雅黑";
 			this.context.textAlign = "center"
@@ -1687,6 +1762,9 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 		case "line": {
 			return lineMenu;
 		}
+		case "graph": {
+			return graphMenu;
+		}
 		}
 		return nodeMenu;
 	}
@@ -1719,6 +1797,9 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 		}
 		case "link": {
 			return "red";
+		}
+		case "graph": {
+			return "#162E3F";
 		}
 		}
 	}
