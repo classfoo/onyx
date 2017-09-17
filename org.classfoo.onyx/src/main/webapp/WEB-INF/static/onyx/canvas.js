@@ -5,7 +5,7 @@ define(
 		"onyx/canvas",
 		[ "jquery", "require", "css!./canvas.css", "d3/d3", ,
 				"onyx/canvas/graph", "onyx/canvas/searchpanel",
-				"onyx/canvas/cornerbutton" ],
+				"onyx/canvas/rightpanel", "onyx/canvas/cornerbutton" ],
 		function($, require) {
 
 			var d3 = require("d3/d3");
@@ -15,6 +15,8 @@ define(
 			var SearchPanel = require("onyx/canvas/searchpanel");
 
 			var CornerButton = require("onyx/canvas/cornerbutton");
+
+			var RightPanel = require("onyx/canvas/rightpanel");
 
 			function Canvas(resource) {
 				this.resource = resource;
@@ -27,6 +29,7 @@ define(
 				this.height = pdom.innerHeight();
 				this.dom = $("<div class='onyx-canvas'></div>");
 				this.dom.appendTo(pdom);
+				this.progress = $("<div id='progress'></div>");
 				this.canvasDom = $("<canvas class='onyx-canvas-canvas'></canvas>");
 				this.canvasDom.attr("width", this.width);
 				this.canvasDom.attr("height", this.height);
@@ -37,6 +40,7 @@ define(
 				this.canvas = document.querySelector(".onyx-canvas-canvas");
 				this.context = this.canvas.getContext("2d");
 				this.graph = new Graph(this);
+				this.rightPanel = new RightPanel(this);
 				this.searchPanel = new SearchPanel(this, this.graph);
 				this.connerButton = new CornerButton(this, this.graph,
 						this.searchPanel);
@@ -73,6 +77,19 @@ define(
 				console.log("render");
 			}
 
+			Canvas.prototype.docmd = function(cmd, options) {
+				switch (cmd) {
+				case "view": {
+					return this.docmd_view(options);
+				}
+				}
+				return null;
+			}
+
+			Canvas.prototype.docmd_view = function(options) {
+				this.rightPanel.show(options);
+			}
+
 			return Canvas;
 		});
 
@@ -82,7 +99,7 @@ define(
 define(
 		"onyx/canvas/graph",
 		[ "jquery", "require", "d3/d3", "onyx/canvas/compass",
-				"onyx/canvas/node", "onyx/canvas/relationnode" ],
+				"onyx/canvas/relationnode" ],
 		function($, require) {
 
 			var d3 = require("d3/d3");
@@ -383,14 +400,23 @@ define(
 
 			Graph.prototype.onClickMenu = function(event, menu) {
 				this.hideTools();
-				if (menu.button.id == "add") {
+				if (menu.button.id === "add") {
 					this.searchPanel.show(menu.node);
 					return;
 				}
-				if (menu.button.id == "links") {
+				if (menu.button.id === "links") {
 					this.showRelationNode(menu.node);
 					return;
 				}
+				if (menu.button.id === "radar") {
+					this.showRadar(menu.node);
+					return;
+				}
+				if (menu.button.id === "remove") {
+					this.removeNode(menu.node);
+					return;
+				}
+				this.canvas.docmd(menu.button.id, menu.node);
 			}
 
 			Graph.prototype.onClickRelation = function(event, options) {
@@ -551,7 +577,7 @@ define(
 				this.context.lineTo(16, 8);
 				this.context.lineTo(20, 0);
 				this.context.lineTo(16, -8);
-				//this.context.fillRect(-16, -8, 32, 16);
+				// this.context.fillRect(-16, -8, 32, 16);
 				this.context.fill();
 				// render text
 				this.context.font = "12px 微软雅黑";
@@ -795,11 +821,29 @@ define(
 			Graph.prototype.addNode = function(node) {
 				this._addNode(node);
 				this.initSimulations();
+				this.canvas.docmd("view", node);
 			}
 
 			Graph.prototype._addNode = function(node) {
 				this.nodes.push(node);
 				this.nodeMap[node.id] = node;
+			}
+
+			/**
+			 * remove node
+			 */
+			Graph.prototype.removeNode = function(node) {
+				this._removeNode(node);
+				this._removeLinksByNode(node);
+				this.initSimulations();
+			}
+
+			Graph.prototype._removeNode = function(node) {
+				var index = this.nodes.indexOf(node);
+				if (index != -1) {
+					this.nodes.splice(index, 1);
+				}
+				this.nodeMap[node.id] = null;
 			}
 
 			Graph.prototype.addLink = function(link) {
@@ -821,7 +865,47 @@ define(
 				} else {
 					this.linkTargetMap[link.target] = [ link ];
 				}
+			}
+
+			Graph.prototype.removeLink = function(link) {
+				this._removeLink(link);
 				this.initSimulations();
+			}
+
+			Graph.prototype._removeLink = function(link) {
+				var index = this.links.indexOf(link);
+				this._removeLinkByIndex(index);
+			}
+
+			Graph.prototype.removeLinksByNode = function(node) {
+				this._removeLinkByNode(node);
+				this.initSimulations();
+			}
+
+			Graph.prototype._removeLinksByNode = function(node) {
+				for (var i = this.links.length - 1; i >= 0; i--) {
+					var link = this.links[i];
+					if (node.id != link.source && node.id != link.target) {
+						continue;
+					}
+					this._removeLinksByIndex(i);
+				}
+			}
+
+			Graph.prototype.removeLinksByIndex = function(index) {
+				this.removeLinksByIndex(index);
+				this.initSimulations();
+			}
+
+			Graph.prototype._removeLinksByIndex = function(index) {
+				if (index == -1) {
+					return;
+				}
+				var link = this.links.splice(index, 1);
+				if (link && link.length == 1) {
+					this.linkTargetMap[link[0].target] = null;
+					this.linkSourceMap[link[0].source] = null;
+				}
 			}
 
 			Graph.prototype.selectNodes = function(nodes) {
@@ -854,6 +938,25 @@ define(
 			Graph.prototype.showCompass = function(node) {
 				this.hideTools();
 				this.compass.showNodeMenu(node);
+			}
+
+			Graph.prototype.showRadar = function(node) {
+				var self = this;
+				var count = 0;
+				var t = d3.timer(function(gap) {
+					self.context.save();
+					self.context.beginPath();
+					var radius = 40 + count++ * 20;
+					self.context.arc(node.x, node.y, radius, 0, 2 * Math.PI);
+					self.context.strokeStyle = "#C5DBF0";
+					self.context.setLineDash([ 3, 3 ]);
+					self.context.lineWidth = 1;
+					self.context.stroke();
+					self.context.restore();
+					if (radius > self.width) {
+						t.stop();
+					}
+				});
 			}
 
 			Graph.prototype.hideTools = function() {
@@ -906,99 +1009,6 @@ define(
 				return y - this.graph.y;
 			}
 			return Graph;
-		});
-
-/**
- * Onyx Canvas Relation Dialog
- */
-define("onyx/canvas/node", [ "jquery", "require" ],
-		function($, require) {
-
-			var Node = function(canvas, node) {
-				this.canvas = canvas;
-				this.context = canvas.getContext();
-				this.node = node;
-				this.x = node.x;
-				this.y = node.y;
-				this.radius = 20;
-			}
-
-			Node.prototype.render = function() {
-				var dragged = this.isDragged(node);
-				var selected = this.isSelected(node);
-				var mouseovered = this.isMouseOvered(node);
-				var nodex = node.x + this.graph.x;
-				var nodey = node.y + this.graph.y;
-				// draw node
-				this.context.save();
-				this.context.beginPath();
-				this.context.moveTo(nodex + radius, nodey);
-				this.context.arc(nodex, nodey, radius, 0, 2 * Math.PI);
-				if (mouseovered) {
-					this.context.fillStyle = "#000000";
-				} else {
-					this.context.fillStyle = "#FFFFFF";
-				}
-				this.context.fill();
-				// draw circle
-				this.context.beginPath();
-				this.context.arc(nodex, nodey, radius + 5, 0, 2 * Math.PI);
-				if (dragged) {
-					this.context.strokeStyle = "#C5DBF0";
-					this.context.setLineDash([ 3, 3 ]);
-				} else if (selected) {
-					this.context.strokeStyle = "#C5DBF0";
-				} else {
-					this.context.strokeStyle = "#C5DBF0";
-				}
-				this.context.lineWidth = 3;
-				this.context.stroke();
-				// draw icon
-				this.context.font = "26px iconfont";
-				this.context.textAlign = "center"
-				if (mouseovered) {
-					this.context.fillStyle = "#FFFFFF";
-				} else {
-					this.context.fillStyle = "#000000";
-				}
-				this.context.fillText("\ue60a", nodex, nodey + radius / 2);
-				// draw label
-				this.context.font = "14px 微软雅黑";
-				this.context.textAlign = "center"
-				this.context.fillStyle = "#FFFFFF";
-				this.context.fillText(node.name || node.id, nodex, nodey
-						+ radius + 20);
-				this.context.restore();
-			}
-
-			Node.prototype.setX = function(x) {
-				this.x = x;
-				return this;
-			}
-
-			Node.prototype.getX = function() {
-				return this.x;
-			}
-
-			Node.prototype.setY = function(y) {
-				this.y = y;
-				return this;
-			}
-
-			Node.prototype.getY = function() {
-				return this.y;
-			}
-
-			Node.prototype.setRadius = function(radius) {
-				this.radius = radius;
-				return this;
-			}
-
-			Node.prototype.getRadius = function() {
-				return this.radius;
-			}
-
-			return Node;
 		});
 /**
  * Onyx Canvas Relation Dialog
@@ -1252,7 +1262,7 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 	var INNERRADIUS = 40;
 
 	var nodeMenu = [ {
-		id : "raida",
+		id : "radar",
 		icon : '\ue6b4',
 		length : 1,
 		name : "雷达"
@@ -1262,7 +1272,7 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 		length : 1,
 		name : "关系"
 	}, {
-		id : "properties",
+		id : "view",
 		icon : '\ue6ae',
 		length : 1,
 		name : "查看"
@@ -1594,7 +1604,7 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 	 * on mouse outside the compass
 	 */
 	Compass.prototype.onMouseMoveOutside = function(event) {
-		if(this.innerActive||this.outerActive){
+		if (this.innerActive || this.outerActive) {
 			this.innerActive = null;
 			this.outerActive = null;
 			this.canvas.render();
@@ -1744,79 +1754,81 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 /**
  * Onyx Canvas Search Bar
  */
-define("onyx/canvas/searchpanel", [ "jquery", "require", "d3/d3" ], function($,
-		require) {
+define(
+		"onyx/canvas/searchpanel",
+		[ "jquery", "require", "d3/d3" ],
+		function($, require) {
 
-	var d3 = require("d3/d3");
+			var d3 = require("d3/d3");
 
-	var SearchPanel = function(canvas, graph) {
-		this.canvas = canvas;
-		this.graph = graph;
-		this.build(canvas.dom);
-	}
+			var SearchPanel = function(canvas, graph) {
+				this.canvas = canvas;
+				this.graph = graph;
+				this.build(canvas.dom);
+			}
 
-	SearchPanel.prototype.build = function(pdom) {
-		this.dom = $("<div class='onyx-canvas-searchpanel unselectable'></div>");
-		this.dom.appendTo(pdom);
-		this.layout = UI.createLayout({
-			clazz : "onyx-canvas-searchpanel-layout",
-			header : {
-				height : 46
-			},
-			body : {
+			SearchPanel.prototype.build = function(pdom) {
+				this.dom = $("<div class='onyx-canvas-searchpanel unselectable'></div>");
+				this.dom.appendTo(pdom);
+				this.layout = UI.createLayout({
+					clazz : "onyx-canvas-searchpanel-layout",
+					header : {
+						height : 46
+					},
+					body : {
 
-			},
-			pdom : this.dom
+					},
+					pdom : this.dom
+				});
+				this.layout.on("click", this.onClickBlank.bind(this));
+				this.searchbox = UI.createSearchBox({
+					clazz : "onyx-canvas-searchpanel-search",
+					pdom : this.layout.getHeader()
+				});
+				this.slideboard = UI.createSlideBoard({
+					type : "entity",
+					datas : this.queryEntities.bind(this),
+					pdom : this.layout.getBody()
+				});
+				this.slideboard.on("clickblank", this.onClickBlank.bind(this));
+				this.slideboard.on("clickitem", this.onClickItem.bind(this));
+			}
+
+			SearchPanel.prototype.onClickBlank = function(event) {
+				this.hide();
+			}
+
+			SearchPanel.prototype.onClickItem = function(event, item) {
+				var node = $(item).data();
+				var nodex = (this.pos && this.pos.x) || this.graph.getWidth()
+						/ 2 - this.graph.getX();
+				var nodey = (this.pos && this.pos.y) || this.graph.getHeight()
+						/ 2 - this.graph.getY();
+				this.graph.addNode($.extend({
+					x : nodex,
+					y : nodey
+				}, node));
+				this.hide();
+			}
+
+			SearchPanel.prototype.queryEntities = function() {
+				return Api.entity(this.canvas.kid).list();
+			}
+
+			SearchPanel.prototype.show = function(pos) {
+				this.pos = pos;
+				this.dom.css("display", "block");
+			}
+
+			SearchPanel.prototype.hide = function() {
+				this.dom.css("display", "none");
+			}
+
+			SearchPanel.prototype.render = function() {
+
+			}
+			return SearchPanel;
 		});
-		this.layout.on("click", this.onClickBlank.bind(this));
-		this.searchbox = UI.createSearchBox({
-			clazz : "onyx-canvas-searchpanel-search",
-			pdom : this.layout.getHeader()
-		});
-		this.slideboard = UI.createSlideBoard({
-			type : "entity",
-			datas : this.queryEntities.bind(this),
-			pdom : this.layout.getBody()
-		});
-		this.slideboard.on("clickblank", this.onClickBlank.bind(this));
-		this.slideboard.on("clickitem", this.onClickItem.bind(this));
-	}
-
-	SearchPanel.prototype.onClickBlank = function(event) {
-		this.hide();
-	}
-
-	SearchPanel.prototype.onClickItem = function(event, item) {
-		var node = $(item).data();
-		var nodex = (this.pos && this.pos.x) || this.graph.getWidth() / 2
-				- this.graph.getX();
-		var nodey = (this.pos && this.pos.y) || this.graph.getHeight() / 2
-				- this.graph.getY();
-		this.graph.addNode($.extend({
-			x : nodex,
-			y : nodey
-		}, node));
-		this.hide();
-	}
-
-	SearchPanel.prototype.queryEntities = function() {
-		return Api.entity(this.canvas.kid).list();
-	}
-
-	SearchPanel.prototype.show = function(pos) {
-		this.pos = pos;
-		this.dom.css("display", "block");
-	}
-
-	SearchPanel.prototype.hide = function() {
-		this.dom.css("display", "none");
-	}
-
-	SearchPanel.prototype.render = function() {
-
-	}
-	return SearchPanel;
-});
 
 /**
  * Onyx Canvas Search Bar
@@ -1856,4 +1868,65 @@ define(
 			}
 
 			return CornerButton;
+		});
+
+/**
+ * Onyx Canvas Right Panel
+ */
+define(
+		"onyx/canvas/rightpanel",
+		[ "jquery", "require" ],
+		function($, require) {
+
+			var RightPanel = function(canvas) {
+				this.canvas = canvas;
+				this.build(canvas.dom);
+			}
+
+			RightPanel.prototype.build = function(pdom) {
+				this.dom = $("<div class='onyx-canvas-rightpanel unselectable'></div>");
+				this.dom.appendTo(pdom);
+				this.handler = $("<div class='onyx-canvas-rightpanel-handler iconfont icon-close'></div>");
+				this.handler.appendTo(this.dom);
+				this.handler.on("click", this.onClick.bind(this));
+				this.container = $("<div class='onyx-canvas-rightpanel-container'></div>");
+				this.container.appendTo(this.dom);
+			}
+
+			RightPanel.prototype.buildNode = function(node) {
+				this.container.children().remove();
+				var layout = UI.createLayout({
+					clazz : "onyx-canvas-rightpanel-layout",
+					header : {
+						height : 128
+					},
+					body : {
+
+					},
+					pdom : this.container
+				});
+				var icon = $("<img class='onyx-canvas-rightpanel-icon'></img>");
+				icon.attr("src", "/onyxapi/v1/image/" + node.id);
+				icon.appendTo(layout.getHeader());
+				var details = $("<div class='onyx-canvas-rightpanel-details'></div>");
+				details.appendTo(layout.getHeader());
+				var title = $("<p class='onyx-canvas-rightpanel-title'></p>");
+				title.text(node.name);
+				title.appendTo(details);
+			}
+
+			RightPanel.prototype.show = function(node) {
+				this.dom.css("display", "block");
+				this.buildNode(node);
+			}
+
+			RightPanel.prototype.hide = function() {
+				this.dom.css("display", "none");
+			}
+
+			RightPanel.prototype.onClick = function(event) {
+				this.hide();
+			}
+
+			return RightPanel;
 		});

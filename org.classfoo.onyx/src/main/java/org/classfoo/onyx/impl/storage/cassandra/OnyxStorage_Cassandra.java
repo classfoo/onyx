@@ -7,8 +7,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.classfoo.onyx.api.storage.OnyxStorage;
 import org.classfoo.onyx.impl.OnyxUtils;
 import org.slf4j.Logger;
@@ -17,8 +15,6 @@ import org.slf4j.LoggerFactory;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ColumnDefinitions;
 import com.datastax.driver.core.ColumnDefinitions.Definition;
-import com.datastax.driver.core.DataType;
-import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
@@ -54,7 +50,8 @@ public class OnyxStorage_Cassandra implements OnyxStorage {
 	}
 
 	private void init(Cluster cluster) {
-		try (Session session = cluster.connect("onyx")) {
+		Session session = cluster.connect("onyx");
+		try  {
 			logger.info("start initialize cassandra tables...");
 			try {
 				session.execute("drop table bases");
@@ -94,6 +91,8 @@ public class OnyxStorage_Cassandra implements OnyxStorage {
 		}
 		catch (Exception e) {
 			logger.error("Error while initialize cassandra tables!", e);
+		}finally{
+			session.close();
 		}
 	}
 
@@ -119,15 +118,23 @@ public class OnyxStorage_Cassandra implements OnyxStorage {
 
 	@Override
 	public List<Map<String, Object>> queryBases() {
-		try (Session session = this.getCluster().connect("onyx")) {
+		Session session = this.getCluster().connect("onyx");
+		try {
 			ResultSet value = session.execute("select * from bases");
 			return convertToList(value);
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		finally {
+			session.close();
 		}
 	}
 
 	@Override
 	public Map<String, Object> queryBase(String id) {
-		try (Session session = this.getCluster().connect("onyx")) {
+		Session session = this.getCluster().connect("onyx");
+		try {
 			ResultSet value = session.execute("select * from bases where id_=?", id);
 			return convertToMap(value);
 		}
@@ -135,19 +142,27 @@ public class OnyxStorage_Cassandra implements OnyxStorage {
 			logger.error("Error while query knowledge base!", e);
 			return null;
 		}
+		finally {
+			session.close();
+		}
 	}
 
 	@Override
 	public List<Map<String, Object>> queryBaseEntities(String kid) {
-		try (Session session = this.getCluster().connect("onyx")) {
+		Session session = this.getCluster().connect("onyx");
+		try {
 			ResultSet value = session.execute("select * from base_entity where kid_=?", kid);
 			return convertToList(value);
+		}
+		finally {
+			session.close();
 		}
 	}
 
 	@Override
 	public List<Map<String, Object>> queryEntityModifies(String eid) {
-		try (Session session = this.getCluster().connect("onyx")) {
+		Session session = this.getCluster().connect("onyx");
+		try {
 			ResultSet value = session.execute("select * from entities where id_=?", eid);
 			return convertToList(value);
 		}
@@ -155,25 +170,36 @@ public class OnyxStorage_Cassandra implements OnyxStorage {
 			logger.error("Error while query knowledge base!", e);
 			return null;
 		}
+		finally {
+			session.close();
+		}
 	}
 
 	@Override
 	public List<Map<String, Object>> queryBaseLabels(String kid) {
-		try (Session session = this.getCluster().connect("onyx")) {
+		Session session = this.getCluster().connect("onyx");
+		try {
 			ResultSet value = session.execute("select * from base_label where kid_=?", kid);
 			return convertToList(value);
+		}
+		finally {
+			session.close();
 		}
 	}
 
 	@Override
 	public List<Map<String, Object>> queryLabelModifies(String lid) {
-		try (Session session = this.getCluster().connect("onyx")) {
+		Session session = this.getCluster().connect("onyx");
+		try {
 			ResultSet value = session.execute("select * from labels where id_=? ALLOW FILTERING", lid);
 			return this.convertToList(value);
 		}
 		catch (Exception e) {
 			logger.error("Error while query knowledge base label!", e);
 			return null;
+		}
+		finally {
+			session.close();
 		}
 	}
 
@@ -236,7 +262,8 @@ public class OnyxStorage_Cassandra implements OnyxStorage {
 	@Override
 	public Map<String, Object> createLabel(String kid, String labelName, List<String> parents, List<String> links,
 			List<String> properties) {
-		try (Session session = this.getCluster().connect("onyx")) {
+		Session session = this.getCluster().connect("onyx");
+		try {
 			String lid = OnyxUtils.getRandomUUID("l");
 			ResultSet value = session.execute(
 					"insert into labels (id,kid,name,parents,links,properties) values (?,?,?,?,?,?)", lid, kid,
@@ -247,12 +274,16 @@ public class OnyxStorage_Cassandra implements OnyxStorage {
 			logger.error("Error while create knowledge base label!", e);
 			return null;
 		}
+		finally {
+			session.close();
+		}
 	}
 
 	@Override
 	public Map<String, Object> updateLabel(String kid, String lid, String labelName, List<String> parents,
 			List<String> links, List<String> properties) {
-		try (Session session = this.getCluster().connect("onyx")) {
+		Session session = this.getCluster().connect("onyx");
+		try {
 			ResultSet value = session.execute(
 					"update labels set name=?,parents=?,links=?,properties=? where kid=? and id=?", labelName, parents,
 					links, properties, kid, lid);
@@ -261,6 +292,9 @@ public class OnyxStorage_Cassandra implements OnyxStorage {
 		catch (Exception e) {
 			logger.error("Error while update knowledge base label!", e);
 			return null;
+		}
+		finally {
+			session.close();
 		}
 	}
 
@@ -272,7 +306,8 @@ public class OnyxStorage_Cassandra implements OnyxStorage {
 	@Override
 	public Map<String, Object> saveLabelModifies(String kid, String lid, String labelName,
 			List<Map<String, Object>> modifies) {
-		try (Session session = this.getCluster().connect("onyx")) {
+		Session session = this.getCluster().connect("onyx");
+		try {
 			int i = 1;
 			for (Map<String, Object> modify : modifies) {
 				String key = OnyxUtils.readJson(modify, "key", String.class);
@@ -291,12 +326,15 @@ public class OnyxStorage_Cassandra implements OnyxStorage {
 		catch (Exception e) {
 			logger.error("Error while update knowledge base label!", e);
 			return null;
+		}finally{
+			session.close();
 		}
 	}
 
 	@Override
 	public Map<String, Object> addMaterial(String name, String desc, String kid, Map<String, Object> properties) {
-		try (Session session = this.getCluster().connect("onyx")) {
+		Session session = this.getCluster().connect("onyx");
+		try {
 			String mid = OnyxUtils.getRandomUUID("m");
 			ResultSet value = session.execute(
 					"insert into materials (id_,kid_,name_,desc_,properties_) values (?,?,?,?,?)", mid, kid, name, desc,
@@ -311,26 +349,34 @@ public class OnyxStorage_Cassandra implements OnyxStorage {
 		catch (Exception e) {
 			logger.error("Error while create knowledge base label!", e);
 			return null;
+		}finally{
+			session.close();
 		}
 	}
 
 	@Override
 	public Map<String, Object> queryMaterial(String mid) {
-		try (Session session = this.getCluster().connect("onyx")) {
+		Session session = this.getCluster().connect("onyx");
+		try  {
 			ResultSet value = session.execute("select * from materials where id_=?", mid);
 			return convertToMap(value);
 		}
 		catch (Exception e) {
 			logger.error("Error while query materials!", e);
 			return null;
+		}finally{
+			session.close();
 		}
 	}
 
 	@Override
 	public List<Map<String, Object>> queryMaterials(String kid) {
-		try (Session session = this.getCluster().connect("onyx")) {
+		Session session = this.getCluster().connect("onyx");
+		try  {
 			ResultSet value = session.execute("select * from materials");
 			return convertToList(value);
+		}finally{
+			session.close();
 		}
 	}
 }
