@@ -13,6 +13,7 @@ import org.classfoo.onyx.api.cache.OnyxCacheService;
 import org.classfoo.onyx.api.query.OnyxQueryLabel;
 import org.classfoo.onyx.api.storage.OnyxStorage;
 import org.classfoo.onyx.api.storage.OnyxStorageService;
+import org.classfoo.onyx.api.storage.OnyxStorageSession;
 
 public class OnyxQueryLabelImpl extends OnyxQuerySingleImpl<Map<String, Object>> implements OnyxQueryLabel {
 
@@ -52,10 +53,15 @@ public class OnyxQueryLabelImpl extends OnyxQuerySingleImpl<Map<String, Object>>
 			public Map<String, Object> query() {
 				OnyxStorageService storageService = onyxService.getStorageService();
 				OnyxStorage storage = storageService.getStorage();
-				List<Map<String, Object>> modifies = storage.queryLabelModifies(lid);
-				return convertToLabel(modifies);
+				OnyxStorageSession session = storage.openSession();
+				try {
+					List<Map<String, Object>> modifies = session.queryLabelModifies(lid);
+					return convertToLabel(modifies);
+				}
+				finally {
+					session.close();
+				}
 			}
-
 		});
 		return result;
 	}

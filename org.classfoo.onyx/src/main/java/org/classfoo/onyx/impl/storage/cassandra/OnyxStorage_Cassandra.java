@@ -1,22 +1,14 @@
 package org.classfoo.onyx.impl.storage.cassandra;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
+import org.classfoo.onyx.api.OnyxService;
 import org.classfoo.onyx.api.storage.OnyxStorage;
+import org.classfoo.onyx.api.storage.OnyxStorageSession;
 import org.classfoo.onyx.impl.OnyxUtils;
+import org.classfoo.onyx.impl.storage.datas.neeq.NEEQData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.ColumnDefinitions;
-import com.datastax.driver.core.ColumnDefinitions.Definition;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 
 /**
@@ -29,10 +21,12 @@ public class OnyxStorage_Cassandra implements OnyxStorage {
 
 	private static final Logger logger = LoggerFactory.getLogger(OnyxStorage_Cassandra.class);
 
+	private OnyxService onyxService;
+
 	private volatile Cluster cluster;
 
-	public OnyxStorage_Cassandra() {
-
+	public OnyxStorage_Cassandra(OnyxService onyxService) {
+		this.onyxService = onyxService;
 	}
 
 	private Cluster getCluster() {
@@ -51,7 +45,7 @@ public class OnyxStorage_Cassandra implements OnyxStorage {
 
 	private void init(Cluster cluster) {
 		Session session = cluster.connect("onyx");
-		try  {
+		try {
 			logger.info("start initialize cassandra tables...");
 			try {
 				session.execute("drop table bases");
@@ -86,17 +80,19 @@ public class OnyxStorage_Cassandra implements OnyxStorage {
 					"create table if not exists material_file(mid_ text,id_ text,fname_ text, primary key (mid_,id_))");
 			session.execute(
 					"create table if not exists timeline(id_ text,time_ text,kid_ text,user_ text, type_ text, relate_ text, content_ text,properties_ map<text,text>, primary key (id_,time_,kid_)) WITH CLUSTERING ORDER BY (time_ desc,kid_ asc)");
-			this.initTestDatas(session);
+			//this.initBaseData_YLQ(session);
+			this.initBaseData_NEEQ(session);
 			logger.info("finish initialize cassandra tables！");
 		}
 		catch (Exception e) {
 			logger.error("Error while initialize cassandra tables!", e);
-		}finally{
+		}
+		finally {
 			session.close();
 		}
 	}
 
-	private void initTestDatas(Session session) {
+	private void initBaseData_YLQ(Session session) {
 		String kid = OnyxUtils.getRandomUUID("k");
 		session.execute("insert into bases (id_,name_,desc_) values(?,?,?)", kid, "娱乐圈知识库",
 				"娱乐圈知识库，明星档案，绯闻事件，演艺公司，娱乐圈周边");
@@ -116,267 +112,18 @@ public class OnyxStorage_Cassandra implements OnyxStorage {
 		}
 	}
 
+	private void initBaseData_NEEQ(Session session) {
+		String kid = OnyxUtils.getRandomUUID("k");
+		session.execute("insert into bases (id_,name_,desc_) values(?,?,?)", kid, "新三板知识库",
+				"新三板知识库，新三板公司档案，投资人信息，股权关系，交易意向");
+		NEEQData data = new NEEQData(this.onyxService);
+		data.initTestData(kid);
+	}
+
 	@Override
-	public List<Map<String, Object>> queryBases() {
+	public OnyxStorageSession openSession() {
 		Session session = this.getCluster().connect("onyx");
-		try {
-			ResultSet value = session.execute("select * from bases");
-			return convertToList(value);
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-		finally {
-			session.close();
-		}
+		return new OnyxStorageSession_Cassandra(session);
 	}
 
-	@Override
-	public Map<String, Object> queryBase(String id) {
-		Session session = this.getCluster().connect("onyx");
-		try {
-			ResultSet value = session.execute("select * from bases where id_=?", id);
-			return convertToMap(value);
-		}
-		catch (Exception e) {
-			logger.error("Error while query knowledge base!", e);
-			return null;
-		}
-		finally {
-			session.close();
-		}
-	}
-
-	@Override
-	public List<Map<String, Object>> queryBaseEntities(String kid) {
-		Session session = this.getCluster().connect("onyx");
-		try {
-			ResultSet value = session.execute("select * from base_entity where kid_=?", kid);
-			return convertToList(value);
-		}
-		finally {
-			session.close();
-		}
-	}
-
-	@Override
-	public List<Map<String, Object>> queryEntityModifies(String eid) {
-		Session session = this.getCluster().connect("onyx");
-		try {
-			ResultSet value = session.execute("select * from entities where id_=?", eid);
-			return convertToList(value);
-		}
-		catch (Exception e) {
-			logger.error("Error while query knowledge base!", e);
-			return null;
-		}
-		finally {
-			session.close();
-		}
-	}
-
-	@Override
-	public List<Map<String, Object>> queryBaseLabels(String kid) {
-		Session session = this.getCluster().connect("onyx");
-		try {
-			ResultSet value = session.execute("select * from base_label where kid_=?", kid);
-			return convertToList(value);
-		}
-		finally {
-			session.close();
-		}
-	}
-
-	@Override
-	public List<Map<String, Object>> queryLabelModifies(String lid) {
-		Session session = this.getCluster().connect("onyx");
-		try {
-			ResultSet value = session.execute("select * from labels where id_=? ALLOW FILTERING", lid);
-			return this.convertToList(value);
-		}
-		catch (Exception e) {
-			logger.error("Error while query knowledge base label!", e);
-			return null;
-		}
-		finally {
-			session.close();
-		}
-	}
-
-	private List<Map<String, Object>> convertToList(ResultSet value) {
-		List<Row> results = value.all();
-		ArrayList<Map<String, Object>> list = new ArrayList<Map<String, Object>>(results.size());
-		for (Row result : results) {
-			Map<String, Object> item = this.convertToMap(result);
-			list.add(item);
-		}
-		return list;
-	}
-
-	private Map<String, Object> convertToMap(ResultSet value) {
-		Row row = value.one();
-		return this.convertToMap(row);
-	}
-
-	private Map<String, Object> convertToMap(Row result) {
-		if (result == null) {
-			return Collections.emptyMap();
-		}
-		ColumnDefinitions columns = result.getColumnDefinitions();
-		Iterator<Definition> iterator = columns.iterator();
-		HashMap<String, Object> item = new HashMap<String, Object>(columns.size());
-		while (iterator.hasNext()) {
-			Definition next = iterator.next();
-			String name = next.getName();
-			Object value = result.getObject(name);
-			if (name.charAt(name.length() - 1) == '_') {
-				item.put(name.substring(0, name.length() - 1), value);
-			}
-			else {
-				item.put(name, value);
-			}
-		}
-		return item;
-	}
-
-	@Override
-	public void createKnowledgeBase(Map<String, Object> base) {
-
-	}
-
-	@Override
-	public void updateKnowledgeBaseName(String id, String newname) {
-
-	}
-
-	@Override
-	public void updateKnowledgeBaseCaption(String id, String newcaption) {
-
-	}
-
-	@Override
-	public void updateKnowledgeBaseProperties(String id, Map<String, Object> newproperties) {
-
-	}
-
-	@Override
-	public Map<String, Object> createLabel(String kid, String labelName, List<String> parents, List<String> links,
-			List<String> properties) {
-		Session session = this.getCluster().connect("onyx");
-		try {
-			String lid = OnyxUtils.getRandomUUID("l");
-			ResultSet value = session.execute(
-					"insert into labels (id,kid,name,parents,links,properties) values (?,?,?,?,?,?)", lid, kid,
-					labelName, parents, links, properties);
-			return convertToMap(value);
-		}
-		catch (Exception e) {
-			logger.error("Error while create knowledge base label!", e);
-			return null;
-		}
-		finally {
-			session.close();
-		}
-	}
-
-	@Override
-	public Map<String, Object> updateLabel(String kid, String lid, String labelName, List<String> parents,
-			List<String> links, List<String> properties) {
-		Session session = this.getCluster().connect("onyx");
-		try {
-			ResultSet value = session.execute(
-					"update labels set name=?,parents=?,links=?,properties=? where kid=? and id=?", labelName, parents,
-					links, properties, kid, lid);
-			return convertToMap(value);
-		}
-		catch (Exception e) {
-			logger.error("Error while update knowledge base label!", e);
-			return null;
-		}
-		finally {
-			session.close();
-		}
-	}
-
-	@Override
-	public Map<String, Object> updateEntity(String kid, String eid, List<Map<String, Object>> modifies) {
-		return null;
-	}
-
-	@Override
-	public Map<String, Object> saveLabelModifies(String kid, String lid, String labelName,
-			List<Map<String, Object>> modifies) {
-		Session session = this.getCluster().connect("onyx");
-		try {
-			int i = 1;
-			for (Map<String, Object> modify : modifies) {
-				String key = OnyxUtils.readJson(modify, "key", String.class);
-				String operate = OnyxUtils.readJson(modify, "operate", String.class);
-				String name = OnyxUtils.readJson(modify, "name", String.class);
-				String parent = OnyxUtils.readJson(modify, "parent", String.class);
-				String ptype = OnyxUtils.readJson(modify, "ptype", String.class);
-				String pname = OnyxUtils.readJson(modify, "pname", String.class);
-				String poptions = OnyxUtils.readJson(modify, "poptions", String.class);
-				session.execute(
-						"insert into labels (id_,event_,order_,key_,operate_,name_,parent_,ptype_,pname_,poptions_,kid_,user_) values (?,now(),?,?,?,?,?,?,?,?,?,?)",
-						lid, i, key, operate, name, parent, ptype, pname, poptions, kid, "admin");
-			}
-			return null;
-		}
-		catch (Exception e) {
-			logger.error("Error while update knowledge base label!", e);
-			return null;
-		}finally{
-			session.close();
-		}
-	}
-
-	@Override
-	public Map<String, Object> addMaterial(String name, String desc, String kid, Map<String, Object> properties) {
-		Session session = this.getCluster().connect("onyx");
-		try {
-			String mid = OnyxUtils.getRandomUUID("m");
-			ResultSet value = session.execute(
-					"insert into materials (id_,kid_,name_,desc_,properties_) values (?,?,?,?,?)", mid, kid, name, desc,
-					properties);
-			HashMap<String, Object> result = new HashMap<String, Object>(1);
-			result.put("id", mid);
-			result.put("name", name);
-			result.put("desc", desc);
-			result.put("kid", kid);
-			return result;
-		}
-		catch (Exception e) {
-			logger.error("Error while create knowledge base label!", e);
-			return null;
-		}finally{
-			session.close();
-		}
-	}
-
-	@Override
-	public Map<String, Object> queryMaterial(String mid) {
-		Session session = this.getCluster().connect("onyx");
-		try  {
-			ResultSet value = session.execute("select * from materials where id_=?", mid);
-			return convertToMap(value);
-		}
-		catch (Exception e) {
-			logger.error("Error while query materials!", e);
-			return null;
-		}finally{
-			session.close();
-		}
-	}
-
-	@Override
-	public List<Map<String, Object>> queryMaterials(String kid) {
-		Session session = this.getCluster().connect("onyx");
-		try  {
-			ResultSet value = session.execute("select * from materials");
-			return convertToList(value);
-		}finally{
-			session.close();
-		}
-	}
 }

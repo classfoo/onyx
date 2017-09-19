@@ -11,6 +11,7 @@ import org.classfoo.onyx.api.query.OnyxQueryLabels;
 import org.classfoo.onyx.api.query.OnyxQueryMaterials;
 import org.classfoo.onyx.api.storage.OnyxStorage;
 import org.classfoo.onyx.api.storage.OnyxStorageService;
+import org.classfoo.onyx.api.storage.OnyxStorageSession;
 
 public class OnyxQueryMaterialsImpl extends OnyxQueryListImpl<Map<String, Object>> implements OnyxQueryMaterials {
 
@@ -46,8 +47,14 @@ public class OnyxQueryMaterialsImpl extends OnyxQueryListImpl<Map<String, Object
 			public List<Map<String, Object>> query() {
 				OnyxStorageService storageService = onyxService.getStorageService();
 				OnyxStorage storage = storageService.getStorage();
-				List<Map<String, Object>> labels = storage.queryMaterials(kid);
-				return labels;
+				OnyxStorageSession session = storage.openSession();
+				try {
+					List<Map<String, Object>> labels = session.queryMaterials(kid);
+					return labels;
+				}
+				finally {
+					session.close();
+				}
 			}
 		});
 		return values;

@@ -7,6 +7,7 @@ import org.classfoo.onyx.api.OnyxService;
 import org.classfoo.onyx.api.operate.OnyxOperateUpdateLabel;
 import org.classfoo.onyx.api.storage.OnyxStorage;
 import org.classfoo.onyx.api.storage.OnyxStorageService;
+import org.classfoo.onyx.api.storage.OnyxStorageSession;
 
 public class OnyxOperateUpdateLabelImpl extends OnyxOperateImpl implements OnyxOperateUpdateLabel {
 
@@ -57,10 +58,8 @@ public class OnyxOperateUpdateLabelImpl extends OnyxOperateImpl implements OnyxO
 	}
 
 	@Override
-	public Map<String, Object> commit() {
-		OnyxStorageService storageService = this.onyxService.getStorageService();
-		OnyxStorage storage = storageService.getStorage();
-		return storage.updateLabel(this.kid, this.lid, this.labelName, this.parents, this.links, this.properties);
+	public Map<String, Object> execute(OnyxStorageSession session) {
+		return session.updateLabel(this.kid, this.lid, this.labelName, this.parents, this.links, this.properties);
 	}
 
 }

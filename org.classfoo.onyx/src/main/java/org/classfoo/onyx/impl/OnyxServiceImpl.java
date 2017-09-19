@@ -13,6 +13,7 @@ import org.classfoo.onyx.api.operate.OnyxOperateService;
 import org.classfoo.onyx.api.query.OnyxQuery;
 import org.classfoo.onyx.api.query.OnyxQueryService;
 import org.classfoo.onyx.api.storage.OnyxStorageService;
+import org.classfoo.onyx.api.streaming.OnyxStreamingService;
 import org.classfoo.onyx.api.web.OnyxApi;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +45,9 @@ public class OnyxServiceImpl implements OnyxService, InitializingBean {
 
 	@Autowired
 	private OnyxFileService fileService;
+
+	@Autowired
+	private OnyxStreamingService streamingService;
 
 	private Map<String, OnyxApi> onyxApiMap;
 
@@ -115,5 +119,10 @@ public class OnyxServiceImpl implements OnyxService, InitializingBean {
 	@Override
 	public OnyxFileService getFileService() {
 		return this.fileService;
+	}
+
+	@Override
+	public OnyxStreamingService getStreamingService() {
+		return this.streamingService;
 	}
 }

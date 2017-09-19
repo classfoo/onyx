@@ -6,8 +6,10 @@ import java.util.Map;
 
 import org.classfoo.onyx.api.OnyxService;
 import org.classfoo.onyx.api.operate.OnyxOperate;
+import org.classfoo.onyx.api.operate.OnyxOperateAddEntity;
 import org.classfoo.onyx.api.operate.OnyxOperateAddLabel;
 import org.classfoo.onyx.api.operate.OnyxOperateAddMaterial;
+import org.classfoo.onyx.api.operate.OnyxOperateBatch;
 import org.classfoo.onyx.api.operate.OnyxOperateSaveLabel;
 import org.classfoo.onyx.api.operate.OnyxOperateService;
 import org.classfoo.onyx.api.operate.OnyxOperateUpdateEntity;
@@ -25,6 +27,8 @@ public class OnyxOperateServiceImpl implements OnyxOperateService {
 		map.put(OnyxOperateSaveLabel.class, OnyxOperateSaveLabelImpl.class);
 		map.put(OnyxOperateUpdateEntity.class, OnyxOperateUpdateEntityImpl.class);
 		map.put(OnyxOperateAddMaterial.class, OnyxOperateAddMaterialImpl.class);
+		map.put(OnyxOperateBatch.class, OnyxOperateBatchImpl.class);
+		map.put(OnyxOperateAddEntity.class, OnyxOperateAddEntityImpl.class);
 	}
 
 	@Override

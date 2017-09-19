@@ -9,6 +9,7 @@ import org.classfoo.onyx.api.OnyxService;
 import org.classfoo.onyx.api.query.OnyxQueryEntity;
 import org.classfoo.onyx.api.storage.OnyxStorage;
 import org.classfoo.onyx.api.storage.OnyxStorageService;
+import org.classfoo.onyx.api.storage.OnyxStorageSession;
 
 public class OnyxQueryEntityImpl extends OnyxQuerySingleImpl<Map<String, Object>> implements OnyxQueryEntity {
 
@@ -27,8 +28,14 @@ public class OnyxQueryEntityImpl extends OnyxQuerySingleImpl<Map<String, Object>
 	public Map<String, Object> querySingle() {
 		OnyxStorageService storageService = this.onyxService.getStorageService();
 		OnyxStorage storage = storageService.getStorage();
-		List<Map<String, Object>> modifies = storage.queryEntityModifies(this.eid);
-		return this.convertToEntity(modifies);
+		OnyxStorageSession session = storage.openSession();
+		try {
+			List<Map<String, Object>> modifies = session.queryEntityModifies(this.eid);
+			return this.convertToEntity(modifies);
+		}
+		finally {
+			session.close();
+		}
 	}
 
 	private Map<String, Object> convertToEntity(List<Map<String, Object>> modifies) {

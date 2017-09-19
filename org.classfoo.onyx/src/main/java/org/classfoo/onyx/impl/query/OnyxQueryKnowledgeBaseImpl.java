@@ -6,6 +6,7 @@ import org.classfoo.onyx.api.OnyxService;
 import org.classfoo.onyx.api.query.OnyxQueryKnowledgeBase;
 import org.classfoo.onyx.api.storage.OnyxStorage;
 import org.classfoo.onyx.api.storage.OnyxStorageService;
+import org.classfoo.onyx.api.storage.OnyxStorageSession;
 
 public class OnyxQueryKnowledgeBaseImpl extends OnyxQuerySingleImpl<Map<String, Object>> implements OnyxQueryKnowledgeBase {
 
@@ -24,7 +25,13 @@ public class OnyxQueryKnowledgeBaseImpl extends OnyxQuerySingleImpl<Map<String, 
 	public Map<String, Object> querySingle() {
 		OnyxStorageService storageService = this.onyxService.getStorageService();
 		OnyxStorage storage = storageService.getStorage();
-		return storage.queryBase(kid);
+		OnyxStorageSession session = storage.openSession();
+		try {
+			return session.queryBase(kid);
+		}
+		finally {
+			session.close();
+		}
 	}
 
 }

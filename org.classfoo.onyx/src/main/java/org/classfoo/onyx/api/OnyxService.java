@@ -7,6 +7,7 @@ import org.classfoo.onyx.api.file.OnyxFileService;
 import org.classfoo.onyx.api.operate.OnyxOperate;
 import org.classfoo.onyx.api.query.OnyxQuery;
 import org.classfoo.onyx.api.storage.OnyxStorageService;
+import org.classfoo.onyx.api.streaming.OnyxStreamingService;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 /**
@@ -56,4 +57,9 @@ public interface OnyxService {
 	 */
 	public OnyxFileService getFileService();
 
+	/**
+	 * get onyx streaming service
+	 * @return
+	 */
+	public OnyxStreamingService getStreamingService();
 }

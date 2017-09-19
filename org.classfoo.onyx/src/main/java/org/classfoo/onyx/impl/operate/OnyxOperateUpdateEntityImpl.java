@@ -7,6 +7,7 @@ import org.classfoo.onyx.api.OnyxService;
 import org.classfoo.onyx.api.operate.OnyxOperateUpdateEntity;
 import org.classfoo.onyx.api.storage.OnyxStorage;
 import org.classfoo.onyx.api.storage.OnyxStorageService;
+import org.classfoo.onyx.api.storage.OnyxStorageSession;
 
 public class OnyxOperateUpdateEntityImpl extends OnyxOperateImpl implements OnyxOperateUpdateEntity {
 
@@ -37,10 +38,8 @@ public class OnyxOperateUpdateEntityImpl extends OnyxOperateImpl implements Onyx
 	}
 
 	@Override
-	public Map<String, Object> commit() {
-		OnyxStorageService storageService = this.onyxService.getStorageService();
-		OnyxStorage storage = storageService.getStorage();
-		return storage.updateEntity(this.kid, this.eid, this.modifies);
+	public Map<String, Object> execute(OnyxStorageSession session) {
+		return session.updateEntity(this.kid, this.eid, this.modifies);
 	}
 
 }

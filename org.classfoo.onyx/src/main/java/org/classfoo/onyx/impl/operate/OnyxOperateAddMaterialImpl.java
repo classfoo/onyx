@@ -6,6 +6,7 @@ import org.classfoo.onyx.api.OnyxService;
 import org.classfoo.onyx.api.operate.OnyxOperateAddMaterial;
 import org.classfoo.onyx.api.storage.OnyxStorage;
 import org.classfoo.onyx.api.storage.OnyxStorageService;
+import org.classfoo.onyx.api.storage.OnyxStorageSession;
 
 public class OnyxOperateAddMaterialImpl extends OnyxOperateImpl implements OnyxOperateAddMaterial {
 
@@ -42,10 +43,8 @@ public class OnyxOperateAddMaterialImpl extends OnyxOperateImpl implements OnyxO
 	}
 
 	@Override
-	public Map<String, Object> commit() {
-		OnyxStorageService storageService = this.onyxService.getStorageService();
-		OnyxStorage storage = storageService.getStorage();
-		return storage.addMaterial(this.name, this.desc, this.kid, this.properties);
+	public Map<String, Object> execute(OnyxStorageSession session) {
+		return session.addMaterial(this.name, this.desc, this.kid, this.properties);
 	}
 
 }

@@ -8,6 +8,7 @@ import org.classfoo.onyx.api.OnyxService;
 import org.classfoo.onyx.api.operate.OnyxOperateSaveLabel;
 import org.classfoo.onyx.api.storage.OnyxStorage;
 import org.classfoo.onyx.api.storage.OnyxStorageService;
+import org.classfoo.onyx.api.storage.OnyxStorageSession;
 import org.classfoo.onyx.impl.OnyxUtils;
 
 public class OnyxOperateSaveLabelImpl extends OnyxOperateImpl implements OnyxOperateSaveLabel {
@@ -45,26 +46,22 @@ public class OnyxOperateSaveLabelImpl extends OnyxOperateImpl implements OnyxOpe
 	}
 
 	@Override
-	public Map<String, Object> commit() {
+	public Map<String, Object> execute(OnyxStorageSession session) {
 		if (StringUtils.isBlank(lid)) {
-			return this.commit_create();
+			return this.commit_create(session);
 		}
 		else {
-			return this.commit_save();
+			return this.commit_save(session);
 		}
 	}
 
-	private Map<String, Object> commit_save() {
-		OnyxStorageService storageService = this.onyxService.getStorageService();
-		OnyxStorage storage = storageService.getStorage();
-		return storage.saveLabelModifies(this.kid, this.lid, this.labelName, modifies);
+	private Map<String, Object> commit_save(OnyxStorageSession session) {
+		return session.saveLabelModifies(this.kid, this.lid, this.labelName, modifies);
 	}
 
-	private Map<String, Object> commit_create() {
-		OnyxStorageService storageService = this.onyxService.getStorageService();
-		OnyxStorage storage = storageService.getStorage();
+	private Map<String, Object> commit_create(OnyxStorageSession session) {
 		String lid = OnyxUtils.getRandomUUID("l");
-		return storage.saveLabelModifies(this.kid, lid, this.labelName, modifies);
+		return session.saveLabelModifies(this.kid, lid, this.labelName, modifies);
 	}
 
 }

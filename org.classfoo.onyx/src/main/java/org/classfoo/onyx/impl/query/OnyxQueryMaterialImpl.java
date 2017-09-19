@@ -1,11 +1,7 @@
 package org.classfoo.onyx.impl.query;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.classfoo.onyx.api.OnyxService;
 import org.classfoo.onyx.api.cache.OnyxCacheQuery;
@@ -13,6 +9,7 @@ import org.classfoo.onyx.api.cache.OnyxCacheService;
 import org.classfoo.onyx.api.query.OnyxQueryMaterial;
 import org.classfoo.onyx.api.storage.OnyxStorage;
 import org.classfoo.onyx.api.storage.OnyxStorageService;
+import org.classfoo.onyx.api.storage.OnyxStorageSession;
 
 public class OnyxQueryMaterialImpl extends OnyxQuerySingleImpl<Map<String, Object>> implements OnyxQueryMaterial {
 
@@ -52,9 +49,14 @@ public class OnyxQueryMaterialImpl extends OnyxQuerySingleImpl<Map<String, Objec
 			public Map<String, Object> query() {
 				OnyxStorageService storageService = onyxService.getStorageService();
 				OnyxStorage storage = storageService.getStorage();
-				return storage.queryMaterial(mid);
+				OnyxStorageSession session = storage.openSession();
+				try {
+					return session.queryMaterial(mid);
+				}
+				finally {
+					session.close();
+				}
 			}
-
 		});
 		return result;
 	}
