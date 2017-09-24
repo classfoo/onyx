@@ -113,11 +113,8 @@ public class OnyxStorage_Cassandra implements OnyxStorage {
 	}
 
 	private void initBaseData_NEEQ(Session session) {
-		String kid = OnyxUtils.getRandomUUID("k");
-		session.execute("insert into bases (id_,name_,desc_) values(?,?,?)", kid, "新三板知识库",
-				"新三板知识库，新三板公司档案，投资人信息，股权关系，交易意向");
 		NEEQData data = new NEEQData(this.onyxService);
-		data.initTestData(kid);
+		data.initTestData(session);
 	}
 
 	@Override

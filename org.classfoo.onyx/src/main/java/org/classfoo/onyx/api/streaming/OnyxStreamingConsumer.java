@@ -7,6 +7,25 @@ package org.classfoo.onyx.api.streaming;
  */
 public interface OnyxStreamingConsumer {
 
-	void consumer(String[] line);
+	/**
+	 * start the consumer thread
+	 */
+	public void start();
 
+	/**
+	 * consumer a message
+	 * @param message
+	 */
+	public void consumer(OnyxStreamingMessage message);
+
+	/**
+	 * regist a consumer message handler listener
+	 * @param listener
+	 */
+	public void registListener(OnyxStreamingMessageListener listener);
+
+	/**
+	 * shut down the consumer
+	 */
+	public void shutdown();
 }

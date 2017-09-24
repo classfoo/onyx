@@ -1,16 +1,19 @@
 package org.classfoo.onyx.impl.storage.datas.neeq;
 
 import org.classfoo.onyx.api.OnyxService;
-import org.classfoo.onyx.api.operate.OnyxOperateAddEntity;
-import org.classfoo.onyx.api.operate.OnyxOperateAddLabel;
-import org.classfoo.onyx.api.query.OnyxQueryKnowledgeBase;
+import org.classfoo.onyx.api.storage.OnyxStorage;
+import org.classfoo.onyx.api.storage.OnyxStorageSession;
 import org.classfoo.onyx.api.streaming.OnyxStreamingConsumer;
+import org.classfoo.onyx.api.streaming.OnyxStreamingMessage;
+import org.classfoo.onyx.api.streaming.OnyxStreamingMessageListener;
 
-public class NEEQDataConsumer_BaseInfo implements OnyxStreamingConsumer {
+public class NEEQDataConsumer_BaseInfo implements OnyxStreamingMessageListener {
 
 	private OnyxService onyxService;
 
 	private String kid;
+
+	private OnyxStorageSession session;
 
 	public NEEQDataConsumer_BaseInfo(OnyxService onyxService, String kid) {
 		this.onyxService = onyxService;
@@ -18,7 +21,14 @@ public class NEEQDataConsumer_BaseInfo implements OnyxStreamingConsumer {
 	}
 
 	@Override
-	public void consumer(String[] line) {
+	public void onStart(OnyxStreamingConsumer consumer) {
+		OnyxStorage storage = this.onyxService.getStorageService().getStorage();
+		this.session = storage.openSession();
+	}
+
+	@Override
+	public void onMessage(OnyxStreamingConsumer consumer, OnyxStreamingMessage message) {
+		String[] line = (String[]) message.getBody();
 		String address = line[0];
 		String area = line[1];
 		String broker = line[2];
@@ -37,10 +47,11 @@ public class NEEQDataConsumer_BaseInfo implements OnyxStreamingConsumer {
 		String totalStockEquity = line[15];
 		String transferMode = line[16];
 		String website = line[17];
-		OnyxOperateAddEntity addEntity = onyxService.createOperate(OnyxOperateAddEntity.class);
-		addEntity.setKnowledgeBase(kid);
-		addEntity.setName(name);
-		addEntity.commit();
+		session.addEntity(this.kid, shortname, null);
 	}
 
+	@Override
+	public void onShutdown(OnyxStreamingConsumer consumer) {
+		this.session.close();
+	}
 }

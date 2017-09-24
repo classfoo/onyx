@@ -1,17 +1,30 @@
 package org.classfoo.onyx.impl.streaming;
 
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.collections.MapUtils;
 import org.classfoo.onyx.api.OnyxService;
 import org.classfoo.onyx.api.operate.OnyxOperateService;
+import org.classfoo.onyx.api.storage.OnyxStorage;
 import org.classfoo.onyx.api.storage.OnyxStorageService;
+import org.classfoo.onyx.api.storage.OnyxStorageSession;
 import org.classfoo.onyx.api.streaming.OnyxStreamingConsumer;
+import org.classfoo.onyx.api.streaming.OnyxStreamingMessage;
 import org.classfoo.onyx.api.streaming.OnyxStreamingProducer;
 import org.classfoo.onyx.api.streaming.OnyxStreamingService;
+import org.eclipse.jetty.util.thread.ThreadPool;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -25,6 +38,8 @@ import au.com.bytecode.opencsv.CSVReader;
 @Component
 public class OnyxStreamingServiceImpl implements OnyxStreamingService {
 
+	private static final Logger logger = LoggerFactory.getLogger(OnyxStreamingServiceImpl.class);
+
 	@Autowired
 	private OnyxService onyxService;
 
@@ -34,61 +49,47 @@ public class OnyxStreamingServiceImpl implements OnyxStreamingService {
 	@Autowired
 	private OnyxOperateService operateService;
 
-	private Map<String, List<OnyxStreamingConsumer>> consumers = new HashMap<String, List<OnyxStreamingConsumer>>(100);
+	private Map<String, List<OnyxStreamingProducer>> producers = new HashMap<String, List<OnyxStreamingProducer>>(10);
+
+	private Map<String, List<OnyxStreamingConsumer>> consumers = new HashMap<String, List<OnyxStreamingConsumer>>(10);
 
 	@Override
-	public OnyxStreamingProducer createProducer() {
-		return null;
-	}
-
-	@Override
-	public <T extends OnyxStreamingConsumer> T createConsumer(String name, Class<T> clazz) {
-		try {
-			Constructor<T> constructor = clazz.getConstructor(OnyxService.class);
-			T instance = constructor.newInstance(this.onyxService);
-			this.addConsumer(name, instance);
-			return instance;
+	public OnyxStreamingProducer createProducer(String name) {
+		OnyxStreamingProducerImpl producer = new OnyxStreamingProducerImpl(this.onyxService, name);
+		List<OnyxStreamingProducer> producers = this.producers.get(name);
+		if (producers == null) {
+			producers = new ArrayList<OnyxStreamingProducer>(20);
+			this.producers.put(name, producers);
 		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+		producers.add(producer);
+		return producer;
 	}
 
 	@Override
-	public void addConsumer(String name, OnyxStreamingConsumer consumer) {
-		List<OnyxStreamingConsumer> list = this.consumers.get(name);
-		if (list == null) {
-			list = new ArrayList<OnyxStreamingConsumer>(10);
-			this.consumers.put(name, list);
-		}
-		list.add(consumer);
+	public List<OnyxStreamingProducer> getProducers(String name) {
+		return this.producers.get(name);
 	}
 
 	@Override
-	public OnyxStreamingProducer startCsvStreaming(String name, CSVReader csvReader) {
-		try {
-			String[] line = null;
-			while ((line = csvReader.readNext()) != null) {
-				this.pushLine(name, line);
-			}
-			return null;
+	public OnyxStreamingConsumer createConsumer(String name) {
+		OnyxStreamingConsumer consumer = new OnyxStreamingConsumerImpl(this.onyxService, name);
+		List<OnyxStreamingConsumer> consumers = this.consumers.get(name);
+		if (consumers == null) {
+			consumers = new ArrayList<OnyxStreamingConsumer>(20);
+			this.consumers.put(name, consumers);
 		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+		consumers.add(consumer);
+		return consumer;
 	}
 
-	private void pushLine(String name, String[] line) {
-		List<OnyxStreamingConsumer> consumers = this.getConsumers(name);
-		if (consumers == null || consumers.isEmpty()) {
-			return;
-		}
-		for (OnyxStreamingConsumer consumer : consumers) {
-			consumer.consumer(line);
-		}
+	@Override
+	public List<OnyxStreamingConsumer> getConsumers(String name) {
+		return this.consumers.get(name);
 	}
 
-	private List<OnyxStreamingConsumer> getConsumers(String name) {
-		return consumers.get(name);
+	@Override
+	public OnyxStreamingMessage createMessage(Object message) {
+		return new OnyxStreamingMessageImpl(message);
 	}
+
 }

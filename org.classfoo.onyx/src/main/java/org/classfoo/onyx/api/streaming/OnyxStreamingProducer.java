@@ -7,4 +7,21 @@ package org.classfoo.onyx.api.streaming;
  */
 public interface OnyxStreamingProducer {
 
+	/**
+	 * start a streaming producer
+	 */
+	public void start();
+
+	/**
+	 * sending message into the streaming
+	 * @param message
+	 */
+	public void send(OnyxStreamingMessage message);
+
+	public void send(OnyxStreamingMessage message, OnyxStreamingSendCallBack callback);
+
+	/**
+	 * shutdown a streaming producer
+	 */
+	public void shutdown();
 }

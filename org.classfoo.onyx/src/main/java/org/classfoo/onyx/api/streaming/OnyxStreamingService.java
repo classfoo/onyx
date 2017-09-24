@@ -1,8 +1,6 @@
 package org.classfoo.onyx.api.streaming;
 
-import org.classfoo.onyx.impl.storage.datas.neeq.NEEQDataConsumer_CompanyInfo;
-
-import au.com.bytecode.opencsv.CSVReader;
+import java.util.List;
 
 /**
  * Onyx Streaming Service
@@ -11,11 +9,39 @@ import au.com.bytecode.opencsv.CSVReader;
  */
 public interface OnyxStreamingService {
 
-	public OnyxStreamingProducer createProducer();
+	/**
+	 * create streaming producer
+	 * @param name
+	 * @return
+	 */
+	public OnyxStreamingProducer createProducer(String name);
 
-	public <T extends OnyxStreamingConsumer> T createConsumer(String name, Class<T> clazz);
+	/**
+	 * create streaming consumer
+	 * @param name
+	 * @return
+	 */
+	public OnyxStreamingConsumer createConsumer(String name);
 
-	public OnyxStreamingProducer startCsvStreaming(String name, CSVReader reader);
+	/**
+	 * create message
+	 * @param message
+	 * @return
+	 */
+	public OnyxStreamingMessage createMessage(Object message);
 
-	public void addConsumer(String name, OnyxStreamingConsumer consumer);
+	/**
+	 * get consumers by name
+	 * @param name
+	 * @return
+	 */
+	public List<OnyxStreamingConsumer> getConsumers(String name);
+
+	/**
+	 * get producers by name
+	 * @param name
+	 * @return
+	 */
+	public List<OnyxStreamingProducer> getProducers(String name);
+
 }

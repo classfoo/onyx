@@ -143,11 +143,11 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 	@Override
 	public Map<String, Object> addEntity(String kid, String name, Map<String, Object> properties) {
 		String eid = OnyxUtils.getRandomUUID("e");
-		ResultSet value = session.execute(
+		session.execute(
 				"insert into entities (kid_,id_,name_,event_,order_,property_,operate_,key_,value_,user_) values(?,?,?,now(),1,'name','add',?,?,?)",
 				kid, eid, name, name, null, "admin");
 		session.execute("insert into base_entity (kid_,id_,name_) values(?,?,?)", kid, eid, name);
-		return convertToMap(value);
+		return null;//convertToMap(value);
 	}
 
 	@Override

@@ -1083,7 +1083,6 @@ define(
 			}
 
 			NavBar.prototype.onDragOver = function(event) {
-				debugger;
 			}
 
 			NavBar.prototype.onMouseOut = function(event) {
@@ -2671,7 +2670,6 @@ define("onyx/ui/showboard/item/entity", [ "jquery", "require",
 	}
 
 	ShowBoardItem_Entity.prototype.show = function() {
-		debugger;
 		UI.redirect("/view/entity/" + this.options.id);
 	}
 
