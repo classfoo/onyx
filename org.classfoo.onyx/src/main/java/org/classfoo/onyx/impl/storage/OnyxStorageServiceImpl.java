@@ -3,6 +3,7 @@ package org.classfoo.onyx.impl.storage;
 import org.classfoo.onyx.api.OnyxService;
 import org.classfoo.onyx.api.storage.OnyxStorage;
 import org.classfoo.onyx.api.storage.OnyxStorageService;
+import org.classfoo.onyx.api.storage.conditions.OnyxEntityCondition;
 import org.classfoo.onyx.impl.storage.cassandra.OnyxStorage_Cassandra;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -27,5 +28,4 @@ public class OnyxStorageServiceImpl implements OnyxStorageService {
 		}
 		return storage;
 	}
-
 }

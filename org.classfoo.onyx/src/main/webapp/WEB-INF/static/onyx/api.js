@@ -14,6 +14,10 @@ define("onyx/api", [ "jquery", "require", "onyx/api/label", "onyx/api/entity",
 
 	var entity;
 
+	var links = {};
+
+	var link;
+
 	var timelines = {};
 
 	var timeline;
@@ -72,6 +76,23 @@ define("onyx/api", [ "jquery", "require", "onyx/api/label", "onyx/api/entity",
 		var Entity = require("onyx/api/entity");
 		entities[kid] = new Entity(kid);
 		return entities[kid];
+	}
+
+	Api.link = function(kid) {
+		if (!kid) {
+			if (link) {
+				return link;
+			}
+			var Link = require("onyx/api/link");
+			link = new Link();
+			return link;
+		}
+		if (links[kid]) {
+			return links[kid];
+		}
+		var Link = require("onyx/api/link");
+		links[kid] = new Link(kid);
+		return links[kid];
 	}
 
 	Api.timeline = function(kid) {
@@ -368,6 +389,29 @@ define("onyx/api/entity", [ "jquery", "require" ], function($, require) {
 		return Api.post("entity", options);
 	}
 	return Entity;
+});
+
+define("onyx/api/link", [ "jquery", "require" ], function($, require) {
+
+	function Link(kid) {
+		this.kid = kid;
+	}
+
+	/**
+	 * get link names by source
+	 * 
+	 * @param eid
+	 * @param offset
+	 * @param limit
+	 */
+	Link.prototype.names = function(eid, offset, limit) {
+		return Api.get("link", {
+			kid : this.kid,
+			eid : eid
+		});
+	}
+
+	return Link;
 });
 
 define("onyx/api/timeline", [ "jquery", "require" ], function($, require) {

@@ -1,5 +1,7 @@
 package org.classfoo.onyx.api.storage;
 
+import org.classfoo.onyx.api.storage.conditions.OnyxEntityCondition;
+
 /**
  * Onyx Storage Service
  * @author ClassFoo

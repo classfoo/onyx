@@ -1035,6 +1035,9 @@ define("onyx/canvas/relationnode", [ "jquery", "require", "d3/d3" ], function(
 	RelationNode.prototype.show = function(node) {
 		this.node = node;
 		var pack = d3.pack().size([ 256, 256 ]).padding(3);
+		Api.link().names({
+			sourceid : node.id
+		});
 		var data = {
 			name : "root",
 			children : [ {

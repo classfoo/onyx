@@ -82,6 +82,9 @@ public class NEEQData {
 				long count = 0;
 				while ((line = csvReader.readNext()) != null) {
 					count++;
+					if (count == 1) {
+						continue;
+					}
 					OnyxStreamingMessage message = streamingService.createMessage(line);
 					producer.send(message);
 					if (count % 1000 == 0) {

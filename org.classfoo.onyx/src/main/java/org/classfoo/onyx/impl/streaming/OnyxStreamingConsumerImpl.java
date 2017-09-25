@@ -63,6 +63,7 @@ public class OnyxStreamingConsumerImpl implements OnyxStreamingConsumer, Runnabl
 					continue;
 				}
 				this.onMessage(message);
+				logger.debug("流输入'{}'消费数据:{}", this.name, message);
 				if (queue.isEmpty()) {
 					this.stop();
 				}

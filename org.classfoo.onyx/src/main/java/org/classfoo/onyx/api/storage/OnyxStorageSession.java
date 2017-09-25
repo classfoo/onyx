@@ -77,6 +77,8 @@ public interface OnyxStorageSession {
 
 	public Map<String, Object> addEntity(String kid, String name, Map<String, Object> properties);
 
+	public void addLink(String name, String sourceid, String targetid, Map<String, Object> properties);
+
 	public Map<String, Object> commit();
 
 	public void close();

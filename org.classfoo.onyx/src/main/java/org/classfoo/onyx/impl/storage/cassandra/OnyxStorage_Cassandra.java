@@ -3,7 +3,9 @@ package org.classfoo.onyx.impl.storage.cassandra;
 import org.classfoo.onyx.api.OnyxService;
 import org.classfoo.onyx.api.storage.OnyxStorage;
 import org.classfoo.onyx.api.storage.OnyxStorageSession;
+import org.classfoo.onyx.api.storage.conditions.OnyxEntityCondition;
 import org.classfoo.onyx.impl.OnyxUtils;
+import org.classfoo.onyx.impl.storage.OnyxStorageImpl;
 import org.classfoo.onyx.impl.storage.datas.neeq.NEEQData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +19,7 @@ import com.datastax.driver.core.Session;
  * @author ClassFoo
  *
  */
-public class OnyxStorage_Cassandra implements OnyxStorage {
+public class OnyxStorage_Cassandra extends OnyxStorageImpl implements OnyxStorage {
 
 	private static final Logger logger = LoggerFactory.getLogger(OnyxStorage_Cassandra.class);
 
@@ -56,6 +58,9 @@ public class OnyxStorage_Cassandra implements OnyxStorage {
 				session.execute("drop table materials");
 				session.execute("drop table files");
 				session.execute("drop table timeline");
+				session.execute("drop table links");
+				session.execute("drop table links_source");
+				session.execute("drop table links_target");
 			}
 			catch (Exception e) {
 
@@ -80,6 +85,13 @@ public class OnyxStorage_Cassandra implements OnyxStorage {
 					"create table if not exists material_file(mid_ text,id_ text,fname_ text, primary key (mid_,id_))");
 			session.execute(
 					"create table if not exists timeline(id_ text,time_ text,kid_ text,user_ text, type_ text, relate_ text, content_ text,properties_ map<text,text>, primary key (id_,time_,kid_)) WITH CLUSTERING ORDER BY (time_ desc,kid_ asc)");
+			session.execute(
+					"create table if not exists links(id_ text, source_ text,target_ text,name_ text,properties_ map<text,text>, primary key (id_,source_,target_,name_))");
+			session.execute(
+					"create table if not exists links_source(source_ text,name_ text,target_ text,id_ text, properties_ map<text,text>, primary key (source_,name_,target_))");
+			session.execute(
+					"create table if not exists links_target(target_ text,name_ text,source_ text,id_ text, properties_ map<text,text>, primary key (target_,name_,source_))");
+
 			//this.initBaseData_YLQ(session);
 			this.initBaseData_NEEQ(session);
 			logger.info("finish initialize cassandra tables！");
@@ -120,7 +132,6 @@ public class OnyxStorage_Cassandra implements OnyxStorage {
 	@Override
 	public OnyxStorageSession openSession() {
 		Session session = this.getCluster().connect("onyx");
-		return new OnyxStorageSession_Cassandra(session);
+		return new OnyxStorageSession_Cassandra(this, session);
 	}
-
 }

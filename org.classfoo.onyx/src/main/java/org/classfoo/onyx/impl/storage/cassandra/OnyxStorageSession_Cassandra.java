@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.classfoo.onyx.api.storage.OnyxStorage;
 import org.classfoo.onyx.api.storage.OnyxStorageSession;
 import org.classfoo.onyx.impl.OnyxUtils;
 
@@ -25,7 +26,10 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 
 	private Session session;
 
-	public OnyxStorageSession_Cassandra(Session session) {
+	private OnyxStorage storage;
+
+	public OnyxStorageSession_Cassandra(OnyxStorage storage, Session session) {
+		this.storage = storage;
 		this.session = session;
 	}
 
@@ -147,7 +151,13 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 				"insert into entities (kid_,id_,name_,event_,order_,property_,operate_,key_,value_,user_) values(?,?,?,now(),1,'name','add',?,?,?)",
 				kid, eid, name, name, null, "admin");
 		session.execute("insert into base_entity (kid_,id_,name_) values(?,?,?)", kid, eid, name);
-		return null;//convertToMap(value);
+		HashMap<String, Object> entity = new HashMap<String, Object>();
+		entity.put("id", eid);
+		entity.put("kid", kid);
+		entity.put("name", name);
+		entity.putAll(properties);
+		this.storage.checkEntityConditions(entity, this);
+		return entity;
 	}
 
 	@Override
@@ -211,5 +221,16 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 	@Override
 	public void close() {
 		this.session.close();
+	}
+
+	@Override
+	public void addLink(String name, String sourceid, String targetid, Map<String, Object> properties) {
+		String linkid = OnyxUtils.getRandomUUID("r");
+		session.execute("insert into links (id_,source_,target_,name_,properties_) values (?,?,?,?,?)", linkid,
+				sourceid, targetid, name, properties);
+		session.execute("insert into links_source (id_,source_,target_,name_,properties_) values (?,?,?,?,?)", linkid,
+				sourceid, targetid, name, properties);
+		session.execute("insert into links_target (id_,source_,target_,name_,properties_) values (?,?,?,?,?)", linkid,
+				sourceid, targetid, name, properties);
 	}
 }
