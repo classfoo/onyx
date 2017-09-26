@@ -1,13 +1,15 @@
 package org.classfoo.onyx.impl.streaming;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.classfoo.onyx.api.OnyxService;
 import org.classfoo.onyx.api.streaming.OnyxStreamingConsumer;
+import org.classfoo.onyx.api.streaming.OnyxStreamingContext;
 import org.classfoo.onyx.api.streaming.OnyxStreamingMessage;
 import org.classfoo.onyx.api.streaming.OnyxStreamingMessageListener;
 import org.slf4j.Logger;
@@ -26,15 +28,22 @@ public class OnyxStreamingConsumerImpl implements OnyxStreamingConsumer, Runnabl
 
 	private OnyxService onyxService;
 
-	private List<OnyxStreamingMessageListener> listeners;
+	private Map<String, OnyxStreamingMessageListener> listeners;
 
-	private Queue<OnyxStreamingMessage> queue = new ConcurrentLinkedQueue<OnyxStreamingMessage>();
+	private Queue<OnyxStreamingMessage> queue = new LinkedBlockingQueue<OnyxStreamingMessage>();
 
 	private AtomicBoolean closed = new AtomicBoolean(true);
+
+	private long startTime;
+
+	private long messageCount;
+
+	private OnyxStreamingContextImpl context;
 
 	public OnyxStreamingConsumerImpl(OnyxService onyxService, String name) {
 		this.onyxService = onyxService;
 		this.name = name;
+		this.context = new OnyxStreamingContextImpl();
 	}
 
 	@Override
@@ -42,6 +51,8 @@ public class OnyxStreamingConsumerImpl implements OnyxStreamingConsumer, Runnabl
 		this.closed.set(false);
 		Thread thread = new Thread(this, "OnyxStreamingThread");
 		thread.start();
+		this.startTime = System.currentTimeMillis();
+		this.messageCount = 0;
 		this.onStart();
 	}
 
@@ -55,7 +66,13 @@ public class OnyxStreamingConsumerImpl implements OnyxStreamingConsumer, Runnabl
 	}
 
 	@Override
+	public OnyxStreamingContext getContext() {
+		return this.context;
+	}
+
+	@Override
 	public void run() {
+		long startTime = System.currentTimeMillis();
 		while (!closed.get()) {
 			try {
 				OnyxStreamingMessage message = removeFromQueue();
@@ -63,7 +80,14 @@ public class OnyxStreamingConsumerImpl implements OnyxStreamingConsumer, Runnabl
 					continue;
 				}
 				this.onMessage(message);
-				logger.debug("流输入'{}'消费数据:{}", this.name, message);
+				messageCount++;
+				if (messageCount % 1000 == 0) {
+					long current = System.currentTimeMillis();
+					long period = current - startTime;
+					logger.info("流‘{}’已消费{}行数据，耗时：{}秒，速度：{}行/秒...", message.getStreaming(), messageCount,
+							((double) period) / 1000, 1000 * 1000 / (period == 0 ? 1 : period));
+					startTime = current;
+				}
 				if (queue.isEmpty()) {
 					this.stop();
 				}
@@ -82,17 +106,17 @@ public class OnyxStreamingConsumerImpl implements OnyxStreamingConsumer, Runnabl
 			if (this.closed.get()) {
 				return null;
 			}
-			this.wait(3 * 1000);
+			this.wait(1000);
 		}
 		return queue.poll();
 	}
 
 	@Override
-	public void registListener(OnyxStreamingMessageListener listener) {
+	public void registListener(String streaming, OnyxStreamingMessageListener listener) {
 		if (this.listeners == null) {
-			this.listeners = new ArrayList<OnyxStreamingMessageListener>(10);
+			this.listeners = new HashMap<String, OnyxStreamingMessageListener>(10);
 		}
-		this.listeners.add(listener);
+		this.listeners.put(streaming, listener);
 	}
 
 	/**
@@ -113,7 +137,7 @@ public class OnyxStreamingConsumerImpl implements OnyxStreamingConsumer, Runnabl
 		if (this.listeners == null || this.listeners.isEmpty()) {
 			return;
 		}
-		for (OnyxStreamingMessageListener listener : this.listeners) {
+		for (OnyxStreamingMessageListener listener : this.listeners.values()) {
 			listener.onStart(this);
 		}
 	}
@@ -122,7 +146,9 @@ public class OnyxStreamingConsumerImpl implements OnyxStreamingConsumer, Runnabl
 		if (this.listeners == null || this.listeners.isEmpty()) {
 			return;
 		}
-		for (OnyxStreamingMessageListener listener : this.listeners) {
+		String streaming = message.getStreaming();
+		OnyxStreamingMessageListener listener = this.listeners.get(streaming);
+		if (listener != null) {
 			listener.onMessage(this, message);
 		}
 	}
@@ -131,7 +157,7 @@ public class OnyxStreamingConsumerImpl implements OnyxStreamingConsumer, Runnabl
 		if (this.listeners == null || this.listeners.isEmpty()) {
 			return;
 		}
-		for (OnyxStreamingMessageListener listener : this.listeners) {
+		for (OnyxStreamingMessageListener listener : this.listeners.values()) {
 			listener.onShutdown(this);
 		}
 	}

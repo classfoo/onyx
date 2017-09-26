@@ -1034,50 +1034,19 @@ define("onyx/canvas/relationnode", [ "jquery", "require", "d3/d3" ], function(
 
 	RelationNode.prototype.show = function(node) {
 		this.node = node;
-		var pack = d3.pack().size([ 256, 256 ]).padding(3);
-		Api.link().names({
-			sourceid : node.id
+		Api.linknames().list(node.id).done(function(names) {
+			var pack = d3.pack().size([ 256, 256 ]).padding(3);
+			var data = {
+				name : "root",
+				children : names
+			}
+			self.root = d3.hierarchy(data).sum(function(d) {
+				return d.name.length;
+			}).sort(function(a, b) {
+				return 1;
+			});
+			pack(this.root);
 		});
-		var data = {
-			name : "root",
-			children : [ {
-				name : "电影"
-			}, {
-				name : "导演"
-			}, {
-				name : "父母"
-			}, {
-				name : "子女"
-			}, {
-				name : "亲戚"
-			}, {
-				name : "公司"
-			}, {
-				name : "广告"
-			}, {
-				name : "综艺节目"
-			}, {
-				name : "房产"
-			}, {
-				name : "兄弟"
-			}, {
-				name : "朋友"
-			}, {
-				name : "情敌"
-			}, {
-				name : "丈夫"
-			}, {
-				name : "绯闻"
-			}, {
-				name : "酒庄"
-			} ]
-		};
-		this.root = d3.hierarchy(data).sum(function(d) {
-			return d.name.length;
-		}).sort(function(a, b) {
-			return 1;
-		});
-		pack(this.root);
 	}
 
 	RelationNode.prototype.hide = function() {

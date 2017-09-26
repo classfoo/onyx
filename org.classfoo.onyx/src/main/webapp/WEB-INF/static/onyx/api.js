@@ -3,8 +3,8 @@
  */
 define("onyx/api", [ "jquery", "require", "onyx/api/label", "onyx/api/entity",
 		"onyx/api/recommend", "onyx/api/base", "onyx/api/timeline",
-		"onyx/api/material", "onyx/api/file", "onyx/api/image" ], function($,
-		require) {
+		"onyx/api/material", "onyx/api/file", "onyx/api/image",
+		"onyx/api/link", "onyx/api/linknames" ], function($, require) {
 
 	var labels = {};
 
@@ -17,6 +17,10 @@ define("onyx/api", [ "jquery", "require", "onyx/api/label", "onyx/api/entity",
 	var links = {};
 
 	var link;
+
+	var linknames = {};
+
+	var linkname;
 
 	var timelines = {};
 
@@ -93,6 +97,23 @@ define("onyx/api", [ "jquery", "require", "onyx/api/label", "onyx/api/entity",
 		var Link = require("onyx/api/link");
 		links[kid] = new Link(kid);
 		return links[kid];
+	}
+
+	Api.linknames = function(kid) {
+		if (!kid) {
+			if (linkname) {
+				return linkname;
+			}
+			var LinkName = require("onyx/api/linknames");
+			linkname = new LinkName();
+			return linkname;
+		}
+		if (linknames[kid]) {
+			return linknames[kid];
+		}
+		var LinkName = require("onyx/api/linknames");
+		linknames[kid] = new LinkName(kid);
+		return linknames[kid];
 	}
 
 	Api.timeline = function(kid) {
@@ -414,6 +435,25 @@ define("onyx/api/link", [ "jquery", "require" ], function($, require) {
 	return Link;
 });
 
+define("onyx/api/linknames", [ "jquery", "require" ], function($, require) {
+
+	function LinkNames(kid) {
+		this.kid = kid;
+	}
+
+	/**
+	 * get link names by source
+	 * 
+	 * @param eid
+	 * @param offset
+	 * @param limit
+	 */
+	LinkNames.prototype.list = function(eid, offset, limit) {
+		return Api.get("linknames/" + eid);
+	}
+
+	return LinkNames;
+});
 define("onyx/api/timeline", [ "jquery", "require" ], function($, require) {
 
 	function TimeLine(kid) {

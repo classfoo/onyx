@@ -8,6 +8,12 @@ package org.classfoo.onyx.api.streaming;
 public interface OnyxStreamingMessage {
 
 	/**
+	 * get streaming name
+	 * @return
+	 */
+	public String getStreaming();
+
+	/**
 	 * get message body
 	 * @return
 	 */

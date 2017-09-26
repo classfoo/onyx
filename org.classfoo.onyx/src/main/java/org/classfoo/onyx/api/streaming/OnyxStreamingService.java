@@ -11,37 +11,38 @@ public interface OnyxStreamingService {
 
 	/**
 	 * create streaming producer
-	 * @param name
+	 * @param streaming
 	 * @return
 	 */
-	public OnyxStreamingProducer createProducer(String name);
+	public OnyxStreamingProducer createProducer(String streaming);
 
 	/**
 	 * create streaming consumer
-	 * @param name
+	 * @param streaming
 	 * @return
 	 */
-	public OnyxStreamingConsumer createConsumer(String name);
+	public OnyxStreamingConsumer createConsumer(String streaming);
 
 	/**
 	 * create message
+	 * @param streaming
 	 * @param message
 	 * @return
 	 */
-	public OnyxStreamingMessage createMessage(Object message);
+	public OnyxStreamingMessage createMessage(String streaming, Object message);
 
 	/**
-	 * get consumers by name
+	 * get consumers by streaming
 	 * @param name
 	 * @return
 	 */
-	public List<OnyxStreamingConsumer> getConsumers(String name);
+	public List<OnyxStreamingConsumer> getConsumers(String streaming);
 
 	/**
 	 * get producers by name
-	 * @param name
+	 * @param streaming
 	 * @return
 	 */
-	public List<OnyxStreamingProducer> getProducers(String name);
+	public List<OnyxStreamingProducer> getProducers(String streaming);
 
 }

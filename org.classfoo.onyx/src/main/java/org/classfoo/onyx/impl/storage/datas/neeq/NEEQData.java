@@ -40,42 +40,46 @@ public class NEEQData {
 		session.execute("insert into bases (id_,name_,desc_) values(?,?,?)", kid, "新三板知识库",
 				"新三板知识库，新三板公司档案，投资人信息，股权关系，交易意向");
 		// initialize consumers
-		OnyxStreamingConsumer consumer1 = this.streamingService.createConsumer("executives.csv");
-		consumer1.registListener(new NEEQDataConsumer_Executives(this.onyxService, kid));
-		consumer1.start();
-		OnyxStreamingConsumer consumer2 = this.streamingService.createConsumer("baseinfo.csv");
-		consumer2.registListener(new NEEQDataConsumer_BaseInfo(this.onyxService, kid));
-		consumer2.start();
-		OnyxStreamingConsumer consumer3 = this.streamingService.createConsumer("companyInfo.csv");
-		consumer3.registListener(new NEEQDataConsumer_CompanyInfo(this.onyxService, kid));
-		consumer3.start();
+		String uuid = OnyxUtils.getCompressedUUID();
+		OnyxStreamingConsumer consumer = this.streamingService.createConsumer(uuid);
+		consumer.registListener("executives.csv", new NEEQDataConsumer_Executives(this.onyxService, kid));
+		consumer.registListener("baseinfo.csv", new NEEQDataConsumer_BaseInfo(this.onyxService, kid));
+		consumer.registListener("companyInfo.csv", new NEEQDataConsumer_CompanyInfo(this.onyxService, kid));
+		consumer.start();
 		// initialize producer threads
-		ProducerThread thread1 = new ProducerThread("executives.csv", this.onyxService);
-		thread1.start();
-		ProducerThread thread2 = new ProducerThread("baseinfo.csv", this.onyxService);
-		thread2.start();
-		ProducerThread thread3 = new ProducerThread("companyInfo.csv", this.onyxService);
-		thread3.start();
+		ProducerThread thread = new ProducerThread(this.onyxService, uuid, "baseinfo.csv", "executives.csv",
+				"companyInfo.csv");
+		thread.setName("NEEQProducer");
+		thread.start();
 	}
 
 	private class ProducerThread extends Thread {
 
 		private OnyxService onyxService;
 
-		private String csv;
+		private String[] csvs;
 
-		public ProducerThread(String csv, OnyxService onyxService) {
-			this.csv = csv;
+		private String uuid;
+
+		public ProducerThread(OnyxService onyxService, String uuid, String... csvs) {
 			this.onyxService = onyxService;
+			this.uuid = uuid;
+			this.csvs = csvs;
 		}
 
 		@Override
 		public void run() {
 			OnyxStreamingService streamingService = this.onyxService.getStreamingService();
-			OnyxStreamingProducer producer = streamingService.createProducer(this.csv);
+			OnyxStreamingProducer producer = streamingService.createProducer(this.uuid);
+			for (String csv : this.csvs) {
+				this.runCsv(csv, producer);
+			}
+		}
+
+		private void runCsv(String csv, OnyxStreamingProducer producer) {
 			CSVReader csvReader = null;
 			try {
-				csvReader = new CSVReader(new InputStreamReader(NEEQData.class.getResourceAsStream(this.csv), "utf-8"));
+				csvReader = new CSVReader(new InputStreamReader(NEEQData.class.getResourceAsStream(csv), "utf-8"));
 				String[] line = null;
 				long start = System.currentTimeMillis();
 				long periodStart = System.currentTimeMillis();
@@ -85,18 +89,18 @@ public class NEEQData {
 					if (count == 1) {
 						continue;
 					}
-					OnyxStreamingMessage message = streamingService.createMessage(line);
+					OnyxStreamingMessage message = streamingService.createMessage(csv, line);
 					producer.send(message);
 					if (count % 1000 == 0) {
 						long current = System.currentTimeMillis();
 						long period = current - periodStart;
-						logger.info("流输入‘{}’已处理{}行数据，速度：{}行/秒...", csv, count,
-								1000 * 1000 / (period == 0 ? 1 : period));
+						//logger.info("流‘{}’已输入{}行数据，耗时：{}秒，速度：{}行/秒...", csv, count, ((double) period) / 1000,
+						//		1000 * 1000 / (period == 0 ? 1 : period));
 						periodStart = current;
 					}
 				}
 				long totalPeriod = System.currentTimeMillis() - start;
-				logger.info("完成流输入‘{}’处理，总共处理{}行数据，平均速度：{}行/秒...", csv, count,
+				logger.info("完成流‘{}’的输入处理，总共输入{}行数据，平均速度：{}行/秒...", csv, count,
 						count * 1000 / (totalPeriod == 0 ? 1 : totalPeriod));
 			}
 			catch (Exception e) {

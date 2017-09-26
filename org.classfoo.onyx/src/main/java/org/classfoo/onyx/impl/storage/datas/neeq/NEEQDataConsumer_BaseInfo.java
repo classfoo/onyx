@@ -3,6 +3,7 @@ package org.classfoo.onyx.impl.storage.datas.neeq;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.collections.MapUtils;
 import org.classfoo.onyx.api.OnyxService;
 import org.classfoo.onyx.api.storage.OnyxStorage;
 import org.classfoo.onyx.api.storage.OnyxStorageSession;
@@ -69,7 +70,9 @@ public class NEEQDataConsumer_BaseInfo implements OnyxStreamingMessageListener {
 		properties.put("transferMode", transferMode);
 		String website = line[17];
 		properties.put("website", website);
-		session.addEntity(this.kid, shortname, properties);
+		Map<String, Object> entity = session.addEntity(this.kid, shortname, properties);
+		String entityId = MapUtils.getString(entity, "id");
+		consumer.getContext().putEntityIdByProperty("code", code, entityId);
 	}
 
 	@Override

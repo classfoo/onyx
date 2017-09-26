@@ -11,6 +11,16 @@ import java.util.Map;
 public interface OnyxStorageSession {
 
 	/**
+	 * begin batch
+	 */
+	public void beginBatch();
+
+	/**
+	 * commit batch
+	 */
+	public Map<String, Object> commit();
+
+	/**
 	 * Query knowledge base by id
 	 * @param id
 	 * @return
@@ -79,8 +89,13 @@ public interface OnyxStorageSession {
 
 	public void addLink(String name, String sourceid, String targetid, Map<String, Object> properties);
 
-	public Map<String, Object> commit();
-
 	public void close();
+
+	/**
+	 * query all link names of entity
+	 * @param eid
+	 * @return
+	 */
+	public List<Map<String, Object>> queryLinkNames(String eid);
 
 }

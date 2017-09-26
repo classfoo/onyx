@@ -6,16 +6,24 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.classfoo.onyx.api.storage.OnyxStorage;
 import org.classfoo.onyx.api.storage.OnyxStorageSession;
 import org.classfoo.onyx.impl.OnyxUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.datastax.driver.core.BatchStatement;
+import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.ColumnDefinitions;
 import com.datastax.driver.core.ColumnDefinitions.Definition;
+import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.Statement;
 
 /**
  * @see OnyxStorageSession
@@ -24,9 +32,15 @@ import com.datastax.driver.core.Session;
  */
 public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 
+	private static final Logger logger = LoggerFactory.getLogger(OnyxStorageSession_Cassandra.class);
+
 	private Session session;
 
 	private OnyxStorage storage;
+
+	private Map<String, PreparedStatement> statements = new ConcurrentHashMap<String, PreparedStatement>();
+
+	private BatchStatement batch;
 
 	public OnyxStorageSession_Cassandra(OnyxStorage storage, Session session) {
 		this.storage = storage;
@@ -35,38 +49,60 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 
 	@Override
 	public List<Map<String, Object>> queryBases() {
-		ResultSet value = session.execute("select * from bases");
+		ResultSet value = this.executeQuery("select * from bases");
 		return convertToList(value);
 	}
 
 	@Override
 	public Map<String, Object> queryBase(String id) {
-		ResultSet value = session.execute("select * from bases where id_=?", id);
+		ResultSet value = this.executeQuery("select * from bases where id_=?", id);
 		return convertToMap(value);
 	}
 
 	@Override
 	public List<Map<String, Object>> queryBaseEntities(String kid) {
-		ResultSet value = session.execute("select * from base_entity where kid_=? LIMIT 500", kid);
+		ResultSet value = this.executeQuery("select * from base_entity where kid_=? LIMIT 500", kid);
 		return convertToList(value);
 	}
 
 	@Override
 	public List<Map<String, Object>> queryEntityModifies(String eid) {
-		ResultSet value = session.execute("select * from entities where id_=?", eid);
+		ResultSet value = this.executeQuery("select * from entities where id_=?", eid);
 		return convertToList(value);
 	}
 
 	@Override
 	public List<Map<String, Object>> queryBaseLabels(String kid) {
-		ResultSet value = session.execute("select * from base_label where kid_=?", kid);
+		ResultSet value = this.executeQuery("select * from base_label where kid_=?", kid);
 		return convertToList(value);
 	}
 
 	@Override
 	public List<Map<String, Object>> queryLabelModifies(String lid) {
-		ResultSet value = session.execute("select * from labels where id_=? ALLOW FILTERING", lid);
+		ResultSet value = this.executeQuery("select * from labels where id_=? ALLOW FILTERING", lid);
 		return this.convertToList(value);
+	}
+
+	@Override
+	public Map<String, Object> queryMaterial(String mid) {
+		ResultSet value = this.executeQuery("select * from materials where id_=?", mid);
+		return convertToMap(value);
+	}
+
+	@Override
+	public List<Map<String, Object>> queryMaterials(String kid) {
+		ResultSet value = this.executeQuery("select * from materials");
+		return convertToList(value);
+	}
+
+	@Override
+	public List<Map<String, Object>> queryLinkNames(String eid) {
+		ResultSet sourceValue = this.executeQuery("select name_ from links_source where source_=?", eid);
+		ArrayList<Map<String, Object>> linknames = new ArrayList<Map<String, Object>>(20);
+		addToList(sourceValue, linknames, "out");
+		ResultSet targetValue = this.executeQuery("select name_ from links_target where target_=?", eid);
+		addToList(targetValue, linknames, "in");
+		return linknames;
 	}
 
 	private List<Map<String, Object>> convertToList(ResultSet value) {
@@ -129,7 +165,7 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 	public Map<String, Object> createLabel(String kid, String labelName, List<String> parents, List<String> links,
 			List<String> properties) {
 		String lid = OnyxUtils.getRandomUUID("l");
-		ResultSet value = session.execute(
+		ResultSet value = this.executeUpdate(
 				"insert into labels (id,kid,name,parents,links,properties) values (?,?,?,?,?,?)", lid, kid, labelName,
 				parents, links, properties);
 		return convertToMap(value);
@@ -138,7 +174,7 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 	@Override
 	public Map<String, Object> updateLabel(String kid, String lid, String labelName, List<String> parents,
 			List<String> links, List<String> properties) {
-		ResultSet value = session.execute(
+		ResultSet value = this.executeUpdate(
 				"update labels set name=?,parents=?,links=?,properties=? where kid=? and id=?", labelName, parents,
 				links, properties, kid, lid);
 		return convertToMap(value);
@@ -147,23 +183,21 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 	@Override
 	public Map<String, Object> addEntity(String kid, String name, Map<String, Object> properties) {
 		String eid = OnyxUtils.getRandomUUID("e");
-		session.execute(
-				"insert into entities (kid_,id_,name_,event_,order_,property_,operate_,key_,value_,user_) values(?,?,?,now(),1,'name','add',?,?,?)",
-				kid, eid, name, name, null, "admin");
-		session.execute("insert into base_entity (kid_,id_,name_) values(?,?,?)", kid, eid, name);
+		this.executeUpdate("insert into entities (kid_,id_,name_,labels_, properties_) values(?,?,?,?,?)", kid, eid,
+				name, null, properties);
+		this.executeUpdate("insert into base_entity (kid_,id_,name_) values(?,?,?)", kid, eid, name);
 		HashMap<String, Object> entity = new HashMap<String, Object>();
 		entity.put("id", eid);
 		entity.put("kid", kid);
 		entity.put("name", name);
-		entity.putAll(properties);
-		this.storage.checkEntityConditions(entity, this);
+		entity.put("properties", properties);
 		return entity;
 	}
 
 	@Override
 	public Map<String, Object> updateEntity(String kid, String name, List<Map<String, Object>> modifies) {
 		String eid = OnyxUtils.getRandomUUID("e");
-		ResultSet value = session.execute(
+		ResultSet value = this.executeUpdate(
 				"insert into entities (kid_,id_,name_,event_,order_,property_,operate_,key_,value_,user_) values(?,?,?,now(),1,'name','add',?,?,?)",
 				kid, eid, name, name, null, "admin");
 		return convertToMap(value);
@@ -181,7 +215,7 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 			String ptype = OnyxUtils.readJson(modify, "ptype", String.class);
 			String pname = OnyxUtils.readJson(modify, "pname", String.class);
 			String poptions = OnyxUtils.readJson(modify, "poptions", String.class);
-			session.execute(
+			this.executeUpdate(
 					"insert into labels (id_,event_,order_,key_,operate_,name_,parent_,ptype_,pname_,poptions_,kid_,user_) values (?,now(),?,?,?,?,?,?,?,?,?,?)",
 					lid, i, key, operate, name, parent, ptype, pname, poptions, kid, "admin");
 		}
@@ -191,8 +225,9 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 	@Override
 	public Map<String, Object> addMaterial(String name, String desc, String kid, Map<String, Object> properties) {
 		String mid = OnyxUtils.getRandomUUID("m");
-		ResultSet value = session.execute("insert into materials (id_,kid_,name_,desc_,properties_) values (?,?,?,?,?)",
-				mid, kid, name, desc, properties);
+		ResultSet value = this.executeUpdate(
+				"insert into materials (id_,kid_,name_,desc_,properties_) values (?,?,?,?,?)", mid, kid, name, desc,
+				properties);
 		HashMap<String, Object> result = new HashMap<String, Object>(4);
 		result.put("id", mid);
 		result.put("name", name);
@@ -202,35 +237,72 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 	}
 
 	@Override
-	public Map<String, Object> queryMaterial(String mid) {
-		ResultSet value = session.execute("select * from materials where id_=?", mid);
-		return convertToMap(value);
+	public void addLink(String name, String sourceid, String targetid, Map<String, Object> properties) {
+		String linkid = OnyxUtils.getRandomUUID("r");
+		this.executeUpdate("insert into links (id_,source_,target_,name_,properties_) values (?,?,?,?,?)", linkid,
+				sourceid, targetid, name, properties);
+		this.executeUpdate("insert into links_source (id_,source_,target_,name_,properties_) values (?,?,?,?,?)",
+				linkid, sourceid, targetid, name, properties);
+		this.executeUpdate("insert into links_target (id_,source_,target_,name_,properties_) values (?,?,?,?,?)",
+				linkid, sourceid, targetid, name, properties);
 	}
 
 	@Override
-	public List<Map<String, Object>> queryMaterials(String kid) {
-		ResultSet value = session.execute("select * from materials");
-		return convertToList(value);
+	public void beginBatch() {
+		this.batch = new BatchStatement(BatchStatement.Type.UNLOGGED);
+	}
+
+	private ResultSet executeQuery(String sql, Object... params) {
+		return this.session.execute(sql, params);
+	}
+
+	private ResultSet executeUpdate(String sql, Object... params) {
+		//logger.info("SQL:{},params:{}", sql, params);
+		if (this.batch != null) {
+			PreparedStatement statement = this.prepareStatement(sql);
+			this.batch.add(statement.bind(params));
+			return null;
+		}
+		PreparedStatement statement = this.prepareStatement(sql);
+		this.session.executeAsync(statement.bind(params));
+		return null;
+	}
+
+	private PreparedStatement prepareStatement(String sql) {
+		PreparedStatement statement = this.statements.get(sql);
+		if (statement != null) {
+			return statement;
+		}
+		statement = this.session.prepare(sql);
+		this.statements.put(sql, statement);
+		return statement;
 	}
 
 	@Override
 	public Map<String, Object> commit() {
+		if (this.batch != null) {
+			this.session.executeAsync(this.batch);
+		}
+		this.batch = null;
 		return null;
 	}
 
 	@Override
 	public void close() {
+		this.batch = null;
 		this.session.close();
 	}
 
-	@Override
-	public void addLink(String name, String sourceid, String targetid, Map<String, Object> properties) {
-		String linkid = OnyxUtils.getRandomUUID("r");
-		session.execute("insert into links (id_,source_,target_,name_,properties_) values (?,?,?,?,?)", linkid,
-				sourceid, targetid, name, properties);
-		session.execute("insert into links_source (id_,source_,target_,name_,properties_) values (?,?,?,?,?)", linkid,
-				sourceid, targetid, name, properties);
-		session.execute("insert into links_target (id_,source_,target_,name_,properties_) values (?,?,?,?,?)", linkid,
-				sourceid, targetid, name, properties);
+	private void addToList(ResultSet value, List<Map<String, Object>> linknames, String type) {
+		Iterator<Row> it = value.iterator();
+		while (it.hasNext()) {
+			Row row = it.next();
+			String name = row.getString(0);
+			Map<String, Object> item = new HashMap<String, Object>(2);
+			item.put("name", name);
+			item.put("type", type);
+			linknames.add(item);
+		}
 	}
+
 }

@@ -88,8 +88,8 @@ public class OnyxStreamingServiceImpl implements OnyxStreamingService {
 	}
 
 	@Override
-	public OnyxStreamingMessage createMessage(Object message) {
-		return new OnyxStreamingMessageImpl(message);
+	public OnyxStreamingMessage createMessage(String streaming, Object message) {
+		return new OnyxStreamingMessageImpl(streaming, message);
 	}
 
 }

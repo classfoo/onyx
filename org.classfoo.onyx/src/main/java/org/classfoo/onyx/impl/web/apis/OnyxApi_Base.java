@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
  *
  */
 @Component
-public class OnyxApi_KnowledgeBase extends OnyxApiImpl implements OnyxApi {
+public class OnyxApi_Base extends OnyxApiImpl implements OnyxApi {
 
 	private static final String BASE = "base";
 

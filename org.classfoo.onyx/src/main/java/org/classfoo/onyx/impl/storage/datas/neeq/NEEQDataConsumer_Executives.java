@@ -4,13 +4,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.collections.MapUtils;
-import org.apache.tinkerpop.gremlin.structure.io.Storage;
+import org.apache.commons.lang3.StringUtils;
 import org.classfoo.onyx.api.OnyxService;
 import org.classfoo.onyx.api.storage.OnyxStorage;
-import org.classfoo.onyx.api.storage.OnyxStorageService;
 import org.classfoo.onyx.api.storage.OnyxStorageSession;
-import org.classfoo.onyx.api.storage.conditions.OnyxEntityCondition;
-import org.classfoo.onyx.api.storage.conditions.OnyxEntityConditionListener;
 import org.classfoo.onyx.api.streaming.OnyxStreamingConsumer;
 import org.classfoo.onyx.api.streaming.OnyxStreamingMessage;
 import org.classfoo.onyx.api.streaming.OnyxStreamingMessageListener;
@@ -54,24 +51,13 @@ public class NEEQDataConsumer_Executives implements OnyxStreamingMessageListener
 		properties.put("salary", salary);
 		String term = line[7];
 		properties.put("term", term);
-		String[] jobs = job.split("、");
+		String[] jobs = StringUtils.split(job, "、,， ");
 		Map<String, Object> entity = session.addEntity(this.kid, name, properties);
 		String sourceid = MapUtils.getString(entity, "id");
-		OnyxStorageService storageService = this.onyxService.getStorageService();
-		OnyxStorage storage = storageService.getStorage();
-		OnyxEntityCondition condition = storage.createEntityCondition();
-		condition.setLabels("新三板企业");
-		condition.addCondition("code", hqzqdm);
-		condition.setListener(new OnyxEntityConditionListener() {
-			@Override
-			public void onMatch(Map<String, Object> entity, OnyxStorageSession session) {
-				String targetid = MapUtils.getString(entity, "id");
-				for (String job : jobs) {
-					session.addLink(job, sourceid, targetid, null);
-				}
-			}
-		});
-		storage.addEntityCondition(condition);
+		String targetid = consumer.getContext().getEntityIdByProperty("code", hqzqdm);
+		for (String link : jobs) {
+			session.addLink(link, sourceid, targetid, null);
+		}
 	}
 
 	@Override
