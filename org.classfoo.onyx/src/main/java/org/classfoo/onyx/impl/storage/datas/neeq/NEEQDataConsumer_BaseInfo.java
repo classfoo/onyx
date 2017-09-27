@@ -10,6 +10,7 @@ import org.classfoo.onyx.api.storage.OnyxStorageSession;
 import org.classfoo.onyx.api.streaming.OnyxStreamingConsumer;
 import org.classfoo.onyx.api.streaming.OnyxStreamingMessage;
 import org.classfoo.onyx.api.streaming.OnyxStreamingMessageListener;
+import org.classfoo.onyx.impl.OnyxUtils;
 
 public class NEEQDataConsumer_BaseInfo implements OnyxStreamingMessageListener {
 
@@ -35,44 +36,55 @@ public class NEEQDataConsumer_BaseInfo implements OnyxStreamingMessageListener {
 		String[] line = (String[]) message.getBody();
 		HashMap<String, Object> properties = new HashMap<String, Object>();
 		String address = line[0];
-		properties.put("address", address);
+		properties.put("地址", address);
 		String area = line[1];
-		properties.put("area", area);
+		properties.put("区域", area);
 		String broker = line[2];
-		properties.put("broker", broker);
+		properties.put("主办券商", broker);
 		String code = line[3];
-		properties.put("code", code);
+		properties.put("股票代码", code);
 		String email = line[4];
-		properties.put("email", email);
+		properties.put("邮件", email);
 		String englishName = line[5];
-		properties.put("englishName", englishName);
+		properties.put("英文名", englishName);
 		String fax = line[6];
-		properties.put("fax", fax);
+		properties.put("传真", fax);
 		String industry = line[7];
-		properties.put("industry", industry);
+		properties.put("行业", industry);
 		String legalRepresentative = line[8];
-		properties.put("legalRepresentative", legalRepresentative);
+		properties.put("法人代表", legalRepresentative);
 		String listingDate = line[9];
-		properties.put("listingDate", listingDate);
+		properties.put("挂牌时间", listingDate);
 		String name = line[10];
-		properties.put("name", name);
+		properties.put("名称", name);
 		String phone = line[11];
-		properties.put("phone", phone);
+		properties.put("电话", phone);
 		String postcode = line[12];
-		properties.put("postcode", postcode);
+		properties.put("邮编", postcode);
 		String secretaries = line[13];
-		properties.put("secretaries", secretaries);
+		properties.put("董事长秘书", secretaries);
 		String shortname = line[14];
-		properties.put("shortname", shortname);
+		properties.put("简称", shortname);
 		String totalStockEquity = line[15];
-		properties.put("totalStockEquity", totalStockEquity);
+		properties.put("总股本", totalStockEquity);
 		String transferMode = line[16];
-		properties.put("transferMode", transferMode);
+		properties.put("交易方式", transferMode);
 		String website = line[17];
-		properties.put("website", website);
+		properties.put("网站", website);
 		Map<String, Object> entity = session.addEntity(this.kid, shortname, properties);
-		String entityId = MapUtils.getString(entity, "id");
-		consumer.getContext().putEntityIdByProperty("code", code, entityId);
+		consumer.getContext().putEntityByProperty("code", code, entity);
+		Map<String, Object> brokerEntity = consumer.getContext().getEntityByProperty("broker", broker);
+		Map<String, Object> linkProperties = new HashMap<String, Object>(1);
+		linkProperties.put("color", OnyxUtils.getRandomColor());
+		if (brokerEntity == null) {
+			brokerEntity = session.addEntity(this.kid, broker, properties);
+			String sourceid = MapUtils.getString(entity, "id");
+			String sourcename = MapUtils.getString(entity, "name");
+			String targetid = MapUtils.getString(brokerEntity, "id");
+			String targetname = MapUtils.getString(brokerEntity, "name");
+			this.session.addLink("主办券商", sourceid, sourcename, targetid, targetname, linkProperties);
+			this.session.addLink("辅导公司", targetid, targetname, sourceid, sourcename, linkProperties);
+		}
 	}
 
 	@Override

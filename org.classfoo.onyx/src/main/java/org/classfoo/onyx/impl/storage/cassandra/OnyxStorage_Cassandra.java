@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
-import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * Onyx Storage In Cassandra
@@ -102,9 +101,9 @@ public class OnyxStorage_Cassandra extends OnyxStorageImpl implements OnyxStorag
 			session.execute(
 					"create table if not exists links(id_ text, source_ text,target_ text,name_ text,properties_ map<text,text>, primary key (id_,source_,target_,name_))");
 			session.execute(
-					"create table if not exists links_source(source_ text,name_ text,target_ text,id_ text, properties_ map<text,text>, primary key (source_,name_,target_))");
+					"create table if not exists links_source(source_ text,sourcename_ text, name_ text,target_ text,targetname_ text, id_ text, properties_ map<text,text>, primary key (source_,name_,target_))");
 			session.execute(
-					"create table if not exists links_target(target_ text,name_ text,source_ text,id_ text, properties_ map<text,text>, primary key (target_,name_,source_))");
+					"create table if not exists links_target(target_ text,targetname_ text,name_ text,source_ text,sourcename_ text, id_ text, properties_ map<text,text>, primary key (target_,name_,source_))");
 
 			//this.initBaseData_YLQ(session);
 			this.initBaseData_NEEQ(session);

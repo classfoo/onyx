@@ -389,57 +389,24 @@ define(
 				this.hideTools();
 				var relation = options.relation;
 				var node = options.node;
-				var distance = Math.sqrt(128 * 128 + 128 * 128);
-				var nodex = node.x + 128;
-				var nodey = node.y - 128;
-				var nodes = [ {
-					id : Utils.guid(),
-					name : "节点1",
-					x : nodex,
-					y : nodey
-				}, {
-					id : Utils.guid(),
-					name : "节点2",
-					x : nodex,
-					y : nodey
-				}, {
-					id : Utils.guid(),
-					name : "节点3",
-					x : nodex,
-					y : nodey
-				}, {
-					id : Utils.guid(),
-					name : "节点4",
-					x : nodex,
-					y : nodey
-				}, {
-					id : Utils.guid(),
-					name : "节点5",
-					x : nodex,
-					y : nodey
-				} ];
-				var links = [ {
-					target : nodes[0].id,
-					source : node.id,
-					distance : distance
-				}, {
-					target : nodes[1].id,
-					source : node.id,
-					distance : distance
-				}, {
-					target : nodes[2].id,
-					source : node.id,
-					distance : distance
-				}, {
-					target : nodes[3].id,
-					source : node.id,
-					distance : distance
-				}, {
-					target : nodes[4].id,
-					source : node.id,
-					distance : distance
-				} ];
-				this.addNodesAndLinks(nodes, links);
+				var options = {
+					id : node.id,
+					name : options.relation.data.name,
+					type : options.relation.data.type
+				}
+				var self = this;
+				Api.linknodes().list(options).done(function(result) {
+					var distance = Math.sqrt(128 * 128 + 128 * 128);
+					var nodex = node.x + 128;
+					var nodey = node.y - 128;
+					var nodes = result.entities;
+					nodes.forEach(function(n) {
+						n.x = nodex;
+						n.y = nodey;
+					});
+					var links = result.links;
+					self.addNodesAndLinks(nodes, links);
+				});
 			}
 
 			Graph.prototype.onDblClick = function(event) {
@@ -525,6 +492,7 @@ define(
 			}
 
 			Graph.prototype.renderLink = function(link) {
+				var name = link.name || "关系";
 				this.context.save();
 				// render line;
 				this.context.beginPath();
@@ -546,19 +514,26 @@ define(
 				this.context.translate(middlex, middley);
 				this.context.rotate(angle);
 				this.context.globalAlpha = 1;
-				this.context.fillStyle = "pink";
-				this.context.moveTo(-16, -8);
-				this.context.lineTo(-16, 8);
-				this.context.lineTo(16, 8);
-				this.context.lineTo(20, 0);
-				this.context.lineTo(16, -8);
+				this.context.fillStyle = (link.properties && link.properties.color)
+						|| "pink";
+				var width = name.length * 16;
+				this.context.moveTo(-width / 2, -8);
+				this.context.lineTo(-width / 2, 8);
+				this.context.lineTo(width / 2, 8);
+				this.context.lineTo(width / 2 + 4, 0);
+				this.context.lineTo(width / 2, -8);
 				// this.context.fillRect(-16, -8, 32, 16);
 				this.context.fill();
 				// render text
+				var angle = Math
+						.atan2(target.x - source.x, target.y - source.y);
+				if (angle <= 0) {
+					this.context.rotate(Math.PI);
+				}
 				this.context.font = "12px 微软雅黑";
 				this.context.textAlign = "center"
 				this.context.fillStyle = "white";
-				this.context.fillText("关系", 0, 4);
+				this.context.fillText(name, 0, 4);
 				this.context.restore();
 			}
 
@@ -1034,19 +1009,24 @@ define("onyx/canvas/relationnode", [ "jquery", "require", "d3/d3" ], function(
 
 	RelationNode.prototype.show = function(node) {
 		this.node = node;
-		Api.linknames().list(node.id).done(function(names) {
-			var pack = d3.pack().size([ 256, 256 ]).padding(3);
-			var data = {
-				name : "root",
-				children : names
-			}
-			self.root = d3.hierarchy(data).sum(function(d) {
-				return d.name.length;
-			}).sort(function(a, b) {
-				return 1;
-			});
-			pack(this.root);
-		});
+		var self = this;
+		Api.linknames().list(node.id).done(
+				function(names) {
+					var pack = d3.pack().size([ 256, 256 ]).padding(3).radius(
+							function(node) {
+								return node.data.name.length * 6;
+							});
+					var data = {
+						name : "root",
+						children : names
+					}
+					self.root = d3.hierarchy(data).sum(function(d) {
+						return d.name.length;
+					}).sort(function(a, b) {
+						return 1;
+					});
+					pack(self.root);
+				});
 	}
 
 	RelationNode.prototype.hide = function() {
@@ -1106,6 +1086,9 @@ define("onyx/canvas/relationnode", [ "jquery", "require", "d3/d3" ], function(
 	}
 
 	RelationNode.prototype.renderRelations = function(node) {
+		if (!this.root || !this.root.children) {
+			return;
+		}
 		var self = this;
 		$.each(this.root.children, function(index, item) {
 			self.renderRelation(node, item);
@@ -1166,6 +1149,9 @@ define("onyx/canvas/relationnode", [ "jquery", "require", "d3/d3" ], function(
 		}
 		this.active = true;
 		// check if inside the relation bubble
+		if (!this.root || !this.root.children) {
+			return false;
+		}
 		var children = this.root.children;
 		var current = null;
 		for (var i = 0; i < children.length; i++) {

@@ -154,6 +154,8 @@ public class OnyxStreamingConsumerImpl implements OnyxStreamingConsumer, Runnabl
 	}
 
 	private void onShutdown() {
+		long period = System.currentTimeMillis() - this.startTime;
+		logger.info("流{}处理总共耗时：{}秒", this.name, ((double) period) / 1000);
 		if (this.listeners == null || this.listeners.isEmpty()) {
 			return;
 		}

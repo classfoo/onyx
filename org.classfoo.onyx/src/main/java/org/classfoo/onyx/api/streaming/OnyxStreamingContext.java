@@ -1,5 +1,7 @@
 package org.classfoo.onyx.api.streaming;
 
+import java.util.Map;
+
 /**
  * Onyx Streaming Context
  * @author ClassFoo
@@ -7,8 +9,20 @@ package org.classfoo.onyx.api.streaming;
  */
 public interface OnyxStreamingContext {
 
-	String putEntityIdByProperty(String property, String value, String id);
+	/**
+	 * cache a entity by property and value
+	 * @param property
+	 * @param value
+	 * @param entity
+	 */
+	public void putEntityByProperty(String property, String value, Map<String, Object> entity);
 
-	String getEntityIdByProperty(String property, String value);
+	/**
+	 * get a cached entity by property and value
+	 * @param property
+	 * @param value
+	 * @return
+	 */
+	public Map<String, Object> getEntityByProperty(String property, String value);
 
 }

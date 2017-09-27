@@ -3,14 +3,18 @@ package org.classfoo.onyx.impl.storage.cassandra;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.collections.MapUtils;
 import org.classfoo.onyx.api.storage.OnyxStorage;
 import org.classfoo.onyx.api.storage.OnyxStorageSession;
 import org.classfoo.onyx.impl.OnyxUtils;
+import org.eclipse.jetty.server.session.HashSessionIdManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +65,7 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 
 	@Override
 	public List<Map<String, Object>> queryBaseEntities(String kid) {
-		ResultSet value = this.executeQuery("select * from base_entity where kid_=? LIMIT 500", kid);
+		ResultSet value = this.executeQuery("select * from base_entity where kid_=? LIMIT 32", kid);
 		return convertToList(value);
 	}
 
@@ -99,10 +103,94 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 	public List<Map<String, Object>> queryLinkNames(String eid) {
 		ResultSet sourceValue = this.executeQuery("select name_ from links_source where source_=?", eid);
 		ArrayList<Map<String, Object>> linknames = new ArrayList<Map<String, Object>>(20);
-		addToList(sourceValue, linknames, "out");
+		Set<String> ignores = new HashSet<String>();
+		addToLinkNames(sourceValue, linknames, "out", ignores);
 		ResultSet targetValue = this.executeQuery("select name_ from links_target where target_=?", eid);
-		addToList(targetValue, linknames, "in");
+		addToLinkNames(targetValue, linknames, "in", ignores);
 		return linknames;
+	}
+
+	private void addToLinkNames(ResultSet value, List<Map<String, Object>> linknames, String type,
+			Set<String> ignores) {
+		Iterator<Row> it = value.iterator();
+		while (it.hasNext()) {
+			Row row = it.next();
+			String name = row.getString(0);
+			if (ignores.contains(name)) {
+				continue;
+			}
+			ignores.add(name);
+			Map<String, Object> item = new HashMap<String, Object>(2);
+			item.put("name", name);
+			item.put("type", type);
+			linknames.add(item);
+		}
+	}
+
+	@Override
+	public Map<String, Object> queryLinkNodes(String eid, Map<String, Object> options) {
+		String name = MapUtils.getString(options, "name");
+		String type = MapUtils.getString(options, "type");
+		List<Map<String, Object>> entities = new ArrayList<Map<String, Object>>(10);
+		List<Map<String, Object>> links = new ArrayList<Map<String, Object>>(10);
+		if ("in".equals(type)) {
+			ResultSet sourceValue = this.executeQuery(
+					"select id_,name_,source_,sourcename_,target_,targetname_,properties_ from links_target where target_=? and name_=?",
+					eid, name);
+			Iterator<Row> it = sourceValue.iterator();
+			while (it.hasNext()) {
+				Row row = it.next();
+				String linkid = row.getString(0);
+				String linkname = row.getString(1);
+				String sourceid = row.getString(2);
+				String sourcename = row.getString(3);
+				String targetid = row.getString(4);
+				String targetname = row.getString(5);
+				Map<String, String> properties = row.getMap(6, String.class, String.class);
+				HashMap<String, Object> entity = new HashMap<String, Object>(2);
+				entity.put("id", sourceid);
+				entity.put("name", sourcename);
+				entities.add(entity);
+				HashMap<String, Object> link = new HashMap<String, Object>(5);
+				link.put("id", linkid);
+				link.put("name", linkname);
+				link.put("source", sourceid);
+				link.put("target", targetid);
+				link.put("properties", properties);
+				links.add(link);
+			}
+		}
+		else {
+			ResultSet sourceValue = this.executeQuery(
+					"select id_,name_,source_,sourcename_,target_,targetname_,properties_ from links_source where source_=? and name_=?",
+					eid, name);
+			Iterator<Row> it = sourceValue.iterator();
+			while (it.hasNext()) {
+				Row row = it.next();
+				String linkid = row.getString(0);
+				String linkname = row.getString(1);
+				String sourceid = row.getString(2);
+				String sourcename = row.getString(3);
+				String targetid = row.getString(4);
+				String targetname = row.getString(5);
+				Map<String, String> properties = row.getMap(6, String.class, String.class);
+				HashMap<String, Object> entity = new HashMap<String, Object>(2);
+				entity.put("id", targetid);
+				entity.put("name", targetname);
+				entities.add(entity);
+				HashMap<String, Object> link = new HashMap<String, Object>(5);
+				link.put("id", linkid);
+				link.put("name", linkname);
+				link.put("source", sourceid);
+				link.put("target", targetid);
+				link.put("properties", properties);
+				links.add(link);
+			}
+		}
+		HashMap<String, Object> result = new HashMap<String, Object>(2);
+		result.put("entities", entities);
+		result.put("links", links);
+		return result;
 	}
 
 	private List<Map<String, Object>> convertToList(ResultSet value) {
@@ -237,14 +325,17 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 	}
 
 	@Override
-	public void addLink(String name, String sourceid, String targetid, Map<String, Object> properties) {
+	public void addLink(String name, String sourceid, String sourcename, String targetid, String targetname,
+			Map<String, Object> properties) {
 		String linkid = OnyxUtils.getRandomUUID("r");
 		this.executeUpdate("insert into links (id_,source_,target_,name_,properties_) values (?,?,?,?,?)", linkid,
 				sourceid, targetid, name, properties);
-		this.executeUpdate("insert into links_source (id_,source_,target_,name_,properties_) values (?,?,?,?,?)",
-				linkid, sourceid, targetid, name, properties);
-		this.executeUpdate("insert into links_target (id_,source_,target_,name_,properties_) values (?,?,?,?,?)",
-				linkid, sourceid, targetid, name, properties);
+		this.executeUpdate(
+				"insert into links_source (id_,source_,sourcename_,target_,targetname_,name_,properties_) values (?,?,?,?,?,?,?)",
+				linkid, sourceid, sourcename, targetid, targetname, name, properties);
+		this.executeUpdate(
+				"insert into links_target (id_,source_,sourcename_,target_,targetname_,name_,properties_) values (?,?,?,?,?,?,?)",
+				linkid, sourceid, sourcename, targetid, targetname, name, properties);
 	}
 
 	@Override
@@ -291,18 +382,6 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 	public void close() {
 		this.batch = null;
 		this.session.close();
-	}
-
-	private void addToList(ResultSet value, List<Map<String, Object>> linknames, String type) {
-		Iterator<Row> it = value.iterator();
-		while (it.hasNext()) {
-			Row row = it.next();
-			String name = row.getString(0);
-			Map<String, Object> item = new HashMap<String, Object>(2);
-			item.put("name", name);
-			item.put("type", type);
-			linknames.add(item);
-		}
 	}
 
 }

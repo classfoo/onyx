@@ -12,22 +12,21 @@ import org.classfoo.onyx.api.streaming.OnyxStreamingContext;
  */
 public class OnyxStreamingContextImpl implements OnyxStreamingContext {
 
-	private Map<String, Map<String, String>> entityids = new HashMap<String, Map<String, String>>();
+	private Map<String, Map<String, Map<String, Object>>> entitiesCache = new HashMap<String, Map<String, Map<String, Object>>>();
 
 	@Override
-	public String putEntityIdByProperty(String property, String value, String id) {
-		Map<String, String> map = entityids.get(property);
+	public void putEntityByProperty(String property, String value, Map<String, Object> entity) {
+		Map<String, Map<String, Object>> map = entitiesCache.get(property);
 		if (map == null) {
-			map = new HashMap<String, String>();
-			entityids.put(property, map);
+			map = new HashMap<String, Map<String, Object>>();
+			entitiesCache.put(property, map);
 		}
-		map.put(value, id);
-		return null;
+		map.put(value, entity);
 	}
 
 	@Override
-	public String getEntityIdByProperty(String property, String value) {
-		Map<String, String> map = this.entityids.get(property);
+	public Map<String, Object> getEntityByProperty(String property, String value) {
+		Map<String, Map<String, Object>> map = this.entitiesCache.get(property);
 		if (map == null) {
 			return null;
 		}

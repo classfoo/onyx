@@ -4,272 +4,278 @@
 define("onyx/api", [ "jquery", "require", "onyx/api/label", "onyx/api/entity",
 		"onyx/api/recommend", "onyx/api/base", "onyx/api/timeline",
 		"onyx/api/material", "onyx/api/file", "onyx/api/image",
-		"onyx/api/link", "onyx/api/linknames" ], function($, require) {
+		"onyx/api/link", "onyx/api/linknames", "onyx/api/linknodes" ],
+		function($, require) {
 
-	var labels = {};
+			var labels = {};
 
-	var label;
+			var label;
 
-	var entities = {};
+			var entities = {};
 
-	var entity;
+			var entity;
 
-	var links = {};
+			var links = {};
 
-	var link;
+			var link;
 
-	var linknames = {};
+			var linknames = {};
 
-	var linkname;
+			var linkname;
 
-	var timelines = {};
+			var timelines = {};
 
-	var timeline;
+			var timeline;
 
-	var materials = {};
+			var materials = {};
 
-	var material;
+			var material;
 
-	var base;
+			var base;
 
-	var recommend;
+			var recommend;
 
-	function Api() {
-		window.Api = Api;
-	}
-
-	Api.recommend = function() {
-		var Recommend = require("onyx/api/recommend");
-		return new Recommend();
-	}
-
-	Api.base = function() {
-		var Base = require("onyx/api/base");
-		return new Base();
-	}
-
-	Api.label = function(kid) {
-		if (!kid) {
-			if (label) {
-				return label;
+			function Api() {
+				window.Api = Api;
 			}
-			var Label = require("onyx/api/label");
-			label = new Label();
-			return label;
-		}
-		if (labels[kid]) {
-			return labels[kid];
-		}
-		var Label = require("onyx/api/label");
-		labels[kid] = new Label(kid);
-		return labels[kid];
-	}
 
-	Api.entity = function(kid) {
-		if (!kid) {
-			if (entity) {
-				return entity;
+			Api.recommend = function() {
+				var Recommend = require("onyx/api/recommend");
+				return new Recommend();
 			}
-			var Entity = require("onyx/api/entity");
-			entity = new Entity();
-			return entity;
-		}
-		if (entities[kid]) {
-			return entities[kid];
-		}
-		var Entity = require("onyx/api/entity");
-		entities[kid] = new Entity(kid);
-		return entities[kid];
-	}
 
-	Api.link = function(kid) {
-		if (!kid) {
-			if (link) {
-				return link;
+			Api.base = function() {
+				var Base = require("onyx/api/base");
+				return new Base();
 			}
-			var Link = require("onyx/api/link");
-			link = new Link();
-			return link;
-		}
-		if (links[kid]) {
-			return links[kid];
-		}
-		var Link = require("onyx/api/link");
-		links[kid] = new Link(kid);
-		return links[kid];
-	}
 
-	Api.linknames = function(kid) {
-		if (!kid) {
-			if (linkname) {
-				return linkname;
+			Api.label = function(kid) {
+				if (!kid) {
+					if (label) {
+						return label;
+					}
+					var Label = require("onyx/api/label");
+					label = new Label();
+					return label;
+				}
+				if (labels[kid]) {
+					return labels[kid];
+				}
+				var Label = require("onyx/api/label");
+				labels[kid] = new Label(kid);
+				return labels[kid];
 			}
-			var LinkName = require("onyx/api/linknames");
-			linkname = new LinkName();
-			return linkname;
-		}
-		if (linknames[kid]) {
-			return linknames[kid];
-		}
-		var LinkName = require("onyx/api/linknames");
-		linknames[kid] = new LinkName(kid);
-		return linknames[kid];
-	}
 
-	Api.timeline = function(kid) {
-		if (!kid) {
-			if (timeline) {
-				return timeline;
+			Api.entity = function(kid) {
+				if (!kid) {
+					if (entity) {
+						return entity;
+					}
+					var Entity = require("onyx/api/entity");
+					entity = new Entity();
+					return entity;
+				}
+				if (entities[kid]) {
+					return entities[kid];
+				}
+				var Entity = require("onyx/api/entity");
+				entities[kid] = new Entity(kid);
+				return entities[kid];
 			}
-			var TimeLine = require("onyx/api/timeline");
-			timeline = new TimeLine();
-			return timeline;
-		}
-		if (timelines[kid]) {
-			return timelines[kid];
-		}
-		var TimeLine = require("onyx/api/timeline");
-		timelines[kid] = new TimeLine(kid);
-		return timelines[kid];
-	}
 
-	Api.material = function(kid) {
-		if (!kid) {
-			if (material) {
-				return material;
+			Api.link = function(kid) {
+				if (!kid) {
+					if (link) {
+						return link;
+					}
+					var Link = require("onyx/api/link");
+					link = new Link();
+					return link;
+				}
+				if (links[kid]) {
+					return links[kid];
+				}
+				var Link = require("onyx/api/link");
+				links[kid] = new Link(kid);
+				return links[kid];
 			}
-			var Material = require("onyx/api/material");
-			material = new Material();
-			return material;
-		}
-		if (materials[kid]) {
-			return materials[kid];
-		}
-		var Material = require("onyx/api/material");
-		materials[kid] = new Material(kid);
-		return materials[kid];
-	}
 
-	/**
-	 * Api File for uploading and visit files
-	 */
-	Api.file = function() {
-		var File = require("onyx/api/file");
-		return new File();
-	}
+			Api.linknames = function(kid) {
+				if (!kid) {
+					if (linkname) {
+						return linkname;
+					}
+					var LinkName = require("onyx/api/linknames");
+					linkname = new LinkName();
+					return linkname;
+				}
+				if (linknames[kid]) {
+					return linknames[kid];
+				}
+				var LinkName = require("onyx/api/linknames");
+				linknames[kid] = new LinkName(kid);
+				return linknames[kid];
+			}
 
-	/**
-	 * Api Image for canvas drawing
-	 */
-	Api.image = function() {
-		if (this.imageApi) {
-			return this.imageApi;
-		}
-		var OnyxImage = require("onyx/api/image");
-		this.imageApi = new OnyxImage();
-		return this.imageApi;
-	}
+			Api.linknodes = function() {
+				var LinkNodes = require("onyx/api/linknodes");
+				return new LinkNodes();
+			}
 
-	Api.getResource = function(resource) {
-		if (resource == null || typeof (resource) == "undefined") {
-			return $.dfd({});
-		}
-		var type = resource.substring(0, 1);
-		switch (type) {
-		case 'k': {
-			return Api.base().single(resource);
-		}
-		case 'u': {
-			return $.dfd();// Api.user().single(resource);
-		}
-		case 'e': {
-			return Api.entity().single(resource);
-		}
-		case 'm': {
-			return Api.material().single(resource);
-		}
-		case 'l': {
-			return Api.label().single(resource);
-		}
-		}
-		return $.dfd({
-			id : resource,
-			caption : "知识库1"
+			Api.timeline = function(kid) {
+				if (!kid) {
+					if (timeline) {
+						return timeline;
+					}
+					var TimeLine = require("onyx/api/timeline");
+					timeline = new TimeLine();
+					return timeline;
+				}
+				if (timelines[kid]) {
+					return timelines[kid];
+				}
+				var TimeLine = require("onyx/api/timeline");
+				timelines[kid] = new TimeLine(kid);
+				return timelines[kid];
+			}
+
+			Api.material = function(kid) {
+				if (!kid) {
+					if (material) {
+						return material;
+					}
+					var Material = require("onyx/api/material");
+					material = new Material();
+					return material;
+				}
+				if (materials[kid]) {
+					return materials[kid];
+				}
+				var Material = require("onyx/api/material");
+				materials[kid] = new Material(kid);
+				return materials[kid];
+			}
+
+			/**
+			 * Api File for uploading and visit files
+			 */
+			Api.file = function() {
+				var File = require("onyx/api/file");
+				return new File();
+			}
+
+			/**
+			 * Api Image for canvas drawing
+			 */
+			Api.image = function() {
+				if (this.imageApi) {
+					return this.imageApi;
+				}
+				var OnyxImage = require("onyx/api/image");
+				this.imageApi = new OnyxImage();
+				return this.imageApi;
+			}
+
+			Api.getResource = function(resource) {
+				if (resource == null || typeof (resource) == "undefined") {
+					return $.dfd({});
+				}
+				var type = resource.substring(0, 1);
+				switch (type) {
+				case 'k': {
+					return Api.base().single(resource);
+				}
+				case 'u': {
+					return $.dfd();// Api.user().single(resource);
+				}
+				case 'e': {
+					return Api.entity().single(resource);
+				}
+				case 'm': {
+					return Api.material().single(resource);
+				}
+				case 'l': {
+					return Api.label().single(resource);
+				}
+				}
+				return $.dfd({
+					id : resource,
+					caption : "知识库1"
+				});
+			}
+
+			Api.get = function(api, options) {
+				return this.ajax("get", api, options);
+			}
+
+			Api.post = function(api, options) {
+				return this.ajax("post", api, options);
+			}
+
+			Api.upload = function(api, options) {
+				return this.ajaxform("post", api, options);
+			}
+
+			Api.put = function(api, options) {
+				return this.ajax("put", api, options);
+			}
+
+			Api.remove = function(api, options) {
+				return this.ajax("delete", api, options);
+			}
+
+			Api.ajax = function(method, api, options) {
+				var dfd = $.Deferred();
+				var data = Api.stringifyData(options);
+				$.ajax({
+					method : method,
+					url : "/onyxapi/v1/" + api,
+					data : data,
+					success : function(result) {
+						dfd.resolve(result);
+					},
+					error : function(error) {
+						dfd.resolve({});
+					}
+				});
+				return dfd.promise();
+			}
+
+			Api.ajaxform = function(method, api, formdata) {
+				var dfd = $.Deferred();
+				$.ajax({
+					method : method,
+					url : "/onyxapi/v1/" + api,
+					data : formdata,
+					enctype : 'multipart/form-data',
+					processData : false,
+					contentType : false,
+					success : function(result) {
+						dfd.resolve(result);
+					},
+					error : function(error) {
+						dfd.resolve({});
+					}
+				});
+				return dfd.promise();
+			}
+
+			Api.stringifyData = function(options) {
+				if (!options) {
+					return null;
+				}
+				var data = {};
+				$.each(options, function(k, v) {
+					if (typeof (v) === "string") {
+						data[k] = v;
+						return;
+					}
+					data[k] = JSON.stringify(v);
+				});
+				return data;
+			}
+			return Api;
 		});
-	}
-
-	Api.get = function(api, options) {
-		return this.ajax("get", api, options);
-	}
-
-	Api.post = function(api, options) {
-		return this.ajax("post", api, options);
-	}
-
-	Api.upload = function(api, options) {
-		return this.ajaxform("post", api, options);
-	}
-
-	Api.put = function(api, options) {
-		return this.ajax("put", api, options);
-	}
-
-	Api.remove = function(api, options) {
-		return this.ajax("delete", api, options);
-	}
-
-	Api.ajax = function(method, api, options) {
-		var dfd = $.Deferred();
-		var data = Api.stringifyData(options);
-		$.ajax({
-			method : method,
-			url : "/onyxapi/v1/" + api,
-			data : data,
-			success : function(result) {
-				dfd.resolve(result);
-			},
-			error : function(error) {
-				dfd.resolve({});
-			}
-		});
-		return dfd.promise();
-	}
-
-	Api.ajaxform = function(method, api, formdata) {
-		var dfd = $.Deferred();
-		$.ajax({
-			method : method,
-			url : "/onyxapi/v1/" + api,
-			data : formdata,
-			enctype : 'multipart/form-data',
-			processData : false,
-			contentType : false,
-			success : function(result) {
-				dfd.resolve(result);
-			},
-			error : function(error) {
-				dfd.resolve({});
-			}
-		});
-		return dfd.promise();
-	}
-
-	Api.stringifyData = function(options) {
-		if (!options) {
-			return null;
-		}
-		var data = {};
-		$.each(options, function(k, v) {
-			if (typeof (v) === "string") {
-				data[k] = v;
-				return;
-			}
-			data[k] = JSON.stringify(v);
-		});
-		return data;
-	}
-	return Api;
-});
 
 define("onyx/api/recommend", [ "jquery", "require" ], function($, require) {
 
@@ -454,6 +460,29 @@ define("onyx/api/linknames", [ "jquery", "require" ], function($, require) {
 
 	return LinkNames;
 });
+
+/**
+ * query links and nodes by one node
+ */
+define("onyx/api/linknodes", [ "jquery", "require" ], function($, require) {
+
+	function LinkNodes() {
+	}
+
+	/**
+	 * get links and nodes by one node
+	 * 
+	 * @param eid
+	 * @param offset
+	 * @param limit
+	 */
+	LinkNodes.prototype.list = function(options) {
+		return Api.get("linknodes/" + options.id, options);
+	}
+
+	return LinkNodes;
+});
+
 define("onyx/api/timeline", [ "jquery", "require" ], function($, require) {
 
 	function TimeLine(kid) {

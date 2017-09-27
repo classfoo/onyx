@@ -38,7 +38,7 @@ public class OnyxApi_TimeLine extends OnyxApiImpl implements OnyxApi {
 	public Object get(Map<String, Object> args) {
 		OnyxQueryKnowledgeBases queryknowledgeBases = this.onyxService.createQuery(OnyxQueryKnowledgeBases.class);
 		List<Map<String, Object>> bases = queryknowledgeBases.queryList();
-		ArrayList<Map<String,Object>> result = new ArrayList<Map<String,Object>>(100);
+		ArrayList<Map<String, Object>> result = new ArrayList<Map<String, Object>>(100);
 		for (Map<String, Object> base : bases) {
 			base.put("type", "base");
 			result.add(base);
@@ -46,11 +46,8 @@ public class OnyxApi_TimeLine extends OnyxApiImpl implements OnyxApi {
 			OnyxQueryEntities queryEntities = this.onyxService.createQuery(OnyxQueryEntities.class);
 			queryEntities.setKid(kid);
 			List<Map<String, Object>> entities = queryEntities.queryList();
-			for(Map<String, Object> entity:entities){
-				int r = (int) (Math.random() * 255);
-				int g = (int) (Math.random() * 255);
-				int b = (int) (Math.random() * 255);
-				entity.put("color", "rgb(" + r + "," + g + "," + b + ")");
+			for (Map<String, Object> entity : entities) {
+				entity.put("color", OnyxUtils.getRandomColor());
 				entity.put("type", "entity");
 				result.add(entity);
 			}

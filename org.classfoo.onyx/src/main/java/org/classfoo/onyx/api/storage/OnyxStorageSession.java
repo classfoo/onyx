@@ -11,16 +11,6 @@ import java.util.Map;
 public interface OnyxStorageSession {
 
 	/**
-	 * begin batch
-	 */
-	public void beginBatch();
-
-	/**
-	 * commit batch
-	 */
-	public Map<String, Object> commit();
-
-	/**
 	 * Query knowledge base by id
 	 * @param id
 	 * @return
@@ -40,6 +30,25 @@ public interface OnyxStorageSession {
 	public List<Map<String, Object>> queryBaseLabels(String kid);
 
 	public List<Map<String, Object>> queryLabelModifies(String lid);
+
+	public Map<String, Object> queryMaterial(String mid);
+
+	public List<Map<String, Object>> queryMaterials(String kid);
+
+	/**
+	 * query all link names of entity
+	 * @param eid
+	 * @return
+	 */
+	public List<Map<String, Object>> queryLinkNames(String eid);
+
+	/**
+	 * query linked nodes by entity
+	 * @param eid
+	 * @param options
+	 * @return
+	 */
+	public Map<String, Object> queryLinkNodes(String eid, Map<String, Object> options);
 
 	/**
 	 * Create new knowledge base
@@ -81,21 +90,21 @@ public interface OnyxStorageSession {
 
 	public Map<String, Object> addMaterial(String name, String desc, String kid, Map<String, Object> properties);
 
-	public Map<String, Object> queryMaterial(String mid);
-
-	public List<Map<String, Object>> queryMaterials(String kid);
-
 	public Map<String, Object> addEntity(String kid, String name, Map<String, Object> properties);
 
-	public void addLink(String name, String sourceid, String targetid, Map<String, Object> properties);
-
-	public void close();
+	public void addLink(String name, String sourceid, String sourcename, String targetid, String targetname,
+			Map<String, Object> properties);
 
 	/**
-	 * query all link names of entity
-	 * @param eid
-	 * @return
+	 * begin batch
 	 */
-	public List<Map<String, Object>> queryLinkNames(String eid);
+	public void beginBatch();
+
+	/**
+	 * commit batch
+	 */
+	public Map<String, Object> commit();
+
+	public void close();
 
 }
