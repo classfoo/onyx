@@ -39,7 +39,7 @@ public class OnyxStorage_Cassandra extends OnyxStorageImpl implements OnyxStorag
 				return this.cluster;
 			}
 			this.cluster = Cluster.builder().addContactPoint("127.0.0.1").build();
-			this.init(this.cluster);
+			//this.init(this.cluster);
 			return this.cluster;
 		}
 	}

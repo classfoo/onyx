@@ -74,16 +74,16 @@ public class NEEQDataConsumer_BaseInfo implements OnyxStreamingMessageListener {
 		Map<String, Object> entity = session.addEntity(this.kid, shortname, properties);
 		consumer.getContext().putEntityByProperty("code", code, entity);
 		Map<String, Object> brokerEntity = consumer.getContext().getEntityByProperty("broker", broker);
-		Map<String, Object> linkProperties = new HashMap<String, Object>(1);
-		linkProperties.put("color", OnyxUtils.getRandomColor());
 		if (brokerEntity == null) {
 			brokerEntity = session.addEntity(this.kid, broker, properties);
 			String sourceid = MapUtils.getString(entity, "id");
 			String sourcename = MapUtils.getString(entity, "name");
 			String targetid = MapUtils.getString(brokerEntity, "id");
 			String targetname = MapUtils.getString(brokerEntity, "name");
+			Map<String, Object> linkProperties = new HashMap<String, Object>(1);
+			linkProperties.put("color", OnyxUtils.getRandomColor());
 			this.session.addLink("主办券商", sourceid, sourcename, targetid, targetname, linkProperties);
-			this.session.addLink("辅导公司", targetid, targetname, sourceid, sourcename, linkProperties);
+			consumer.getContext().putEntityByProperty("broker", broker, brokerEntity);
 		}
 	}
 

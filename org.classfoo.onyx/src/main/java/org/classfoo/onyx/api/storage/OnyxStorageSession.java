@@ -25,6 +25,8 @@ public interface OnyxStorageSession {
 
 	public List<Map<String, Object>> queryBaseEntities(String kid);
 
+	public Map<String, Object> queryEntity(String eid);
+
 	public List<Map<String, Object>> queryEntityModifies(String eid);
 
 	public List<Map<String, Object>> queryBaseLabels(String kid);

@@ -1915,14 +1915,39 @@ define(
 					},
 					pdom : this.container
 				});
+				var self = this;
+				Api.entity().get(node.id).done(function(entity) {
+					self.buildHeader(node, entity, layout.getHeader());
+					self.buildBody(node, entity, layout.getBody());
+				});
+			}
+
+			RightPanel.prototype.buildHeader = function(node, entity, pdom) {
 				var icon = $("<img class='onyx-canvas-rightpanel-icon'></img>");
 				icon.attr("src", "/onyxapi/v1/image/" + node.id);
-				icon.appendTo(layout.getHeader());
+				icon.appendTo(pdom);
 				var details = $("<div class='onyx-canvas-rightpanel-details'></div>");
-				details.appendTo(layout.getHeader());
+				details.appendTo(pdom);
 				var title = $("<p class='onyx-canvas-rightpanel-title'></p>");
 				title.text(node.name);
 				title.appendTo(details);
+			}
+
+			RightPanel.prototype.buildBody = function(node, entity, pdom) {
+				var properties = $("<div class='onyx-canvas-rightpanel-properties'></div>");
+				properties.appendTo(pdom);
+				var items = [];
+				for ( var p in entity.properties) {
+					items.push({
+						id : p,
+						name : p + ":" + entity.properties[p]
+					});
+				}
+				UI.createList({
+					clazz : "onyx-canvas-rightpanel-properties-list",
+					datas : items,
+					pdom : properties
+				});
 			}
 
 			RightPanel.prototype.show = function(node) {

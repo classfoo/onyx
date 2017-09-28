@@ -401,7 +401,7 @@ define("onyx/api/entity", [ "jquery", "require" ], function($, require) {
 	 * 
 	 * @param eid
 	 */
-	Entity.prototype.single = function(eid) {
+	Entity.prototype.get = function(eid) {
 		return Api.get("entity/" + eid);
 	}
 

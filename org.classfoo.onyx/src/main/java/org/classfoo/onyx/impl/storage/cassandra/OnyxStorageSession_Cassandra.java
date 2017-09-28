@@ -70,6 +70,12 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 	}
 
 	@Override
+	public Map<String, Object> queryEntity(String eid) {
+		ResultSet value = this.executeQuery("select * from entities where id_=?", eid);
+		return convertToMap(value);
+	}
+
+	@Override
 	public List<Map<String, Object>> queryEntityModifies(String eid) {
 		ResultSet value = this.executeQuery("select * from entities where id_=?", eid);
 		return convertToList(value);

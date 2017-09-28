@@ -30,29 +30,29 @@ public class OnyxQueryEntityImpl extends OnyxQuerySingleImpl<Map<String, Object>
 		OnyxStorage storage = storageService.getStorage();
 		OnyxStorageSession session = storage.openSession();
 		try {
-			List<Map<String, Object>> modifies = session.queryEntityModifies(this.eid);
-			return this.convertToEntity(modifies);
+			Map<String, Object> entity = session.queryEntity(this.eid);
+			return entity;
 		}
 		finally {
 			session.close();
 		}
 	}
 
-	private Map<String, Object> convertToEntity(List<Map<String, Object>> modifies) {
-		Map<String, Object> entity = new HashMap<String, Object>(10);
-		for (Map<String, Object> modify : modifies) {
-			this.modifyEntity(entity, modify);
-		}
-		return entity;
-	}
-
-	private void modifyEntity(Map<String, Object> entity, Map<String, Object> modify) {
-		String eid = MapUtils.getString(modify, "eid");
-		String kid = MapUtils.getString(modify, "kid");
-		String name = MapUtils.getString(modify, "name");
-		entity.put("eid", eid);
-		entity.put("kid", kid);
-		entity.put("name", name);
-	}
+//	private Map<String, Object> convertToEntity(List<Map<String, Object>> modifies) {
+//		Map<String, Object> entity = new HashMap<String, Object>(10);
+//		for (Map<String, Object> modify : modifies) {
+//			this.modifyEntity(entity, modify);
+//		}
+//		return entity;
+//	}
+//
+//	private void modifyEntity(Map<String, Object> entity, Map<String, Object> modify) {
+//		String eid = MapUtils.getString(modify, "eid");
+//		String kid = MapUtils.getString(modify, "kid");
+//		String name = MapUtils.getString(modify, "name");
+//		entity.put("eid", eid);
+//		entity.put("kid", kid);
+//		entity.put("name", name);
+//	}
 
 }
