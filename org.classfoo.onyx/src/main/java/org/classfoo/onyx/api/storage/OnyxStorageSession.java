@@ -92,7 +92,7 @@ public interface OnyxStorageSession {
 
 	public Map<String, Object> addMaterial(String name, String desc, String kid, Map<String, Object> properties);
 
-	public Map<String, Object> addEntity(String kid, String name, Map<String, Object> properties);
+	public Map<String, Object> addEntity(String kid, String name, List<String> labels, Map<String, Object> properties);
 
 	public void addLink(String name, String sourceid, String sourcename, String targetid, String targetname,
 			Map<String, Object> properties);

@@ -361,6 +361,7 @@ define(
 			}
 
 			Graph.prototype.onClickNode = function(event, node) {
+				this.canvas.docmd("view", node);
 				this.compass.showNodeMenu(node);
 			}
 
@@ -1929,8 +1930,19 @@ define(
 				var details = $("<div class='onyx-canvas-rightpanel-details'></div>");
 				details.appendTo(pdom);
 				var title = $("<p class='onyx-canvas-rightpanel-title'></p>");
-				title.text(node.name);
+				title.text(entity.name);
 				title.appendTo(details);
+				if(entity.labels){
+					var labels = $("<ul class='onyx-canvas-rightpanel-labels'></ul>")
+					for(var i = 0;i < entity.labels.length;i++){
+						var labelName = entity.labels[i];
+						var label = $("<li class='onyx-canvas-rightpanel-label'></li>");
+						label.text(labelName);
+						label.appendTo(labels);
+					}
+					labels.text(entity.labels);
+					labels.appendTo(details);
+				}
 			}
 
 			RightPanel.prototype.buildBody = function(node, entity, pdom) {

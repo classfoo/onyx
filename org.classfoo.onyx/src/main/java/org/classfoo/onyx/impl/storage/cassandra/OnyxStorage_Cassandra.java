@@ -39,7 +39,7 @@ public class OnyxStorage_Cassandra extends OnyxStorageImpl implements OnyxStorag
 				return this.cluster;
 			}
 			this.cluster = Cluster.builder().addContactPoint("127.0.0.1").build();
-			//this.init(this.cluster);
+			this.init(this.cluster);
 			return this.cluster;
 		}
 	}
@@ -106,7 +106,7 @@ public class OnyxStorage_Cassandra extends OnyxStorageImpl implements OnyxStorag
 					"create table if not exists links_target(target_ text,targetname_ text,name_ text,source_ text,sourcename_ text, id_ text, properties_ map<text,text>, primary key (target_,name_,source_))");
 
 			//this.initBaseData_YLQ(session);
-			this.initBaseData_NEEQ(session);
+			//this.initBaseData_NEEQ(session);
 			logger.info("finish initialize cassandra tables！");
 		}
 		catch (Exception e) {

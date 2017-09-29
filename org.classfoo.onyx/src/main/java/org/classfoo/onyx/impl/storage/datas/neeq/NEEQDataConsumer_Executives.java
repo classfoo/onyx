@@ -1,5 +1,6 @@
 package org.classfoo.onyx.impl.storage.datas.neeq;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,7 +56,7 @@ public class NEEQDataConsumer_Executives implements OnyxStreamingMessageListener
 		String term = line[7];
 		properties.put("任期", term);
 		String[] jobs = StringUtils.split(job, "、,， /／");
-		Map<String, Object> entity = session.addEntity(this.kid, name, properties);
+		Map<String, Object> entity = session.addEntity(this.kid, name, Arrays.asList(jobs), properties);
 		String targetid = MapUtils.getString(entity, "id");
 		String targetname = MapUtils.getString(entity, "name");
 		Map<String, Object> target = consumer.getContext().getEntityByProperty("code", hqzqdm);

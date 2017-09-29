@@ -1,5 +1,6 @@
 package org.classfoo.onyx.impl.storage.datas.neeq;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -71,20 +72,20 @@ public class NEEQDataConsumer_BaseInfo implements OnyxStreamingMessageListener {
 		properties.put("交易方式", transferMode);
 		String website = line[17];
 		properties.put("网站", website);
-		Map<String, Object> entity = session.addEntity(this.kid, shortname, properties);
+		Map<String, Object> entity = session.addEntity(this.kid, shortname, Arrays.asList("挂牌公司"), properties);
 		consumer.getContext().putEntityByProperty("code", code, entity);
 		Map<String, Object> brokerEntity = consumer.getContext().getEntityByProperty("broker", broker);
 		if (brokerEntity == null) {
-			brokerEntity = session.addEntity(this.kid, broker, properties);
-			String sourceid = MapUtils.getString(entity, "id");
-			String sourcename = MapUtils.getString(entity, "name");
-			String targetid = MapUtils.getString(brokerEntity, "id");
-			String targetname = MapUtils.getString(brokerEntity, "name");
-			Map<String, Object> linkProperties = new HashMap<String, Object>(1);
-			linkProperties.put("color", OnyxUtils.getRandomColor());
-			this.session.addLink("主办券商", sourceid, sourcename, targetid, targetname, linkProperties);
-			consumer.getContext().putEntityByProperty("broker", broker, brokerEntity);
+			brokerEntity = session.addEntity(this.kid, broker, Arrays.asList("券商"), null);
 		}
+		String sourceid = MapUtils.getString(entity, "id");
+		String sourcename = MapUtils.getString(entity, "name");
+		String targetid = MapUtils.getString(brokerEntity, "id");
+		String targetname = MapUtils.getString(brokerEntity, "name");
+		Map<String, Object> linkProperties = new HashMap<String, Object>(1);
+		linkProperties.put("color", OnyxUtils.getRandomColor());
+		this.session.addLink("主办券商", sourceid, sourcename, targetid, targetname, linkProperties);
+		consumer.getContext().putEntityByProperty("broker", broker, brokerEntity);
 	}
 
 	@Override

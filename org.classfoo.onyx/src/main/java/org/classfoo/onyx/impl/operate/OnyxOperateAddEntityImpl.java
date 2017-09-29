@@ -1,5 +1,6 @@
 package org.classfoo.onyx.impl.operate;
 
+import java.util.List;
 import java.util.Map;
 
 import org.classfoo.onyx.api.OnyxService;
@@ -13,6 +14,8 @@ public class OnyxOperateAddEntityImpl extends OnyxOperateImpl implements OnyxOpe
 	private Map<String, Object> properties;
 
 	private String kid;
+
+	private List<String> labels;
 
 	public OnyxOperateAddEntityImpl(OnyxService onyxService) {
 		super(onyxService);
@@ -29,13 +32,18 @@ public class OnyxOperateAddEntityImpl extends OnyxOperateImpl implements OnyxOpe
 	}
 
 	@Override
+	public void setLabels(List<String> labels) {
+		this.labels = labels;
+	}
+
+	@Override
 	public void setProperties(Map<String, Object> properties) {
 		this.properties = properties;
 	}
 
 	@Override
 	public Map<String, Object> execute(OnyxStorageSession session) {
-		return session.addEntity(this.kid, this.name, this.properties);
+		return session.addEntity(this.kid, this.name, this.labels, this.properties);
 	}
 
 }

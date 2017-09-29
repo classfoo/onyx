@@ -1,5 +1,6 @@
 package org.classfoo.onyx.impl.storage.datas.neeq;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -57,7 +58,7 @@ public class NEEQDataConsumer_TopTenHolders implements OnyxStreamingMessageListe
 		properties.put("占比", ratio);
 		String unlimitedQuantity = line[9];
 		properties.put("解禁股份", unlimitedQuantity);
-		Map<String, Object> entity = session.addEntity(this.kid, name, properties);
+		Map<String, Object> entity = session.addEntity(this.kid, name, Arrays.asList("股东"), properties);
 		String targetid = MapUtils.getString(entity, "id");
 		String targetname = MapUtils.getString(entity, "name");
 		Map<String, Object> target = consumer.getContext().getEntityByProperty("code", hqzqdm);

@@ -141,7 +141,7 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 		List<Map<String, Object>> links = new ArrayList<Map<String, Object>>(10);
 		if ("in".equals(type)) {
 			ResultSet sourceValue = this.executeQuery(
-					"select id_,name_,source_,sourcename_,target_,targetname_,properties_ from links_target where target_=? and name_=?",
+					"select id_,name_,source_,sourcename_,target_,targetname_,properties_ from links_target where target_=? and name_=? limit 10",
 					eid, name);
 			Iterator<Row> it = sourceValue.iterator();
 			while (it.hasNext()) {
@@ -168,7 +168,7 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 		}
 		else {
 			ResultSet sourceValue = this.executeQuery(
-					"select id_,name_,source_,sourcename_,target_,targetname_,properties_ from links_source where source_=? and name_=?",
+					"select id_,name_,source_,sourcename_,target_,targetname_,properties_ from links_source where source_=? and name_=? limit 10",
 					eid, name);
 			Iterator<Row> it = sourceValue.iterator();
 			while (it.hasNext()) {
@@ -275,10 +275,10 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 	}
 
 	@Override
-	public Map<String, Object> addEntity(String kid, String name, Map<String, Object> properties) {
+	public Map<String, Object> addEntity(String kid, String name, List<String> labels, Map<String, Object> properties) {
 		String eid = OnyxUtils.getRandomUUID("e");
 		this.executeUpdate("insert into entities (kid_,id_,name_,labels_, properties_) values(?,?,?,?,?)", kid, eid,
-				name, null, properties);
+				name, labels, properties);
 		this.executeUpdate("insert into base_entity (kid_,id_,name_) values(?,?,?)", kid, eid, name);
 		HashMap<String, Object> entity = new HashMap<String, Object>();
 		entity.put("id", eid);
