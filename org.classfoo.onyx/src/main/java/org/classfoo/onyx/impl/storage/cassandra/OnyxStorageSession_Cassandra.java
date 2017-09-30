@@ -236,22 +236,28 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 	}
 
 	@Override
-	public void createKnowledgeBase(Map<String, Object> base) {
+	public void addBase(String kid, String name, String desc) {
+		this.executeUpdate("insert into bases (id_,name_,desc_) values(?,?,?)", kid, name, desc);
+	}
+
+	@Override
+	public void addLabel(String kid, String lid, String name, Map<String, Object> properties) {
+		this.executeUpdate("insert into labels (kid_,id_,name_,properties_) values(?,?,?,?)", kid, lid, name,
+				properties);
+	}
+
+	@Override
+	public void updateBaseName(String id, String newname) {
 
 	}
 
 	@Override
-	public void updateKnowledgeBaseName(String id, String newname) {
+	public void updateBaseCaption(String id, String newcaption) {
 
 	}
 
 	@Override
-	public void updateKnowledgeBaseCaption(String id, String newcaption) {
-
-	}
-
-	@Override
-	public void updateKnowledgeBaseProperties(String id, Map<String, Object> newproperties) {
+	public void updateBaseProperties(String id, Map<String, Object> newproperties) {
 
 	}
 

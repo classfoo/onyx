@@ -53,10 +53,21 @@ public interface OnyxStorageSession {
 	public Map<String, Object> queryLinkNodes(String eid, Map<String, Object> options);
 
 	/**
-	 * Create new knowledge base
-	 * @param base
+	 * add new knowledge base
+	 * @param kid
+	 * @param name
+	 * @param desc
 	 */
-	public void createKnowledgeBase(Map<String, Object> base);
+	public void addBase(String kid, String name, String desc);
+
+	/**
+	 * add new label
+	 * @param kid
+	 * @param lid
+	 * @param name
+	 * @param properties
+	 */
+	public void addLabel(String kid, String lid, String name, Map<String, Object> properties);
 
 	public Map<String, Object> saveLabelModifies(String kid, String lid, String labelName,
 			List<Map<String, Object>> modifies);
@@ -66,21 +77,21 @@ public interface OnyxStorageSession {
 	 * @param id
 	 * @param newname
 	 */
-	public void updateKnowledgeBaseName(String id, String newname);
+	public void updateBaseName(String id, String newname);
 
 	/**
 	 * Update knowledge base caption
 	 * @param id
 	 * @param newcaption
 	 */
-	public void updateKnowledgeBaseCaption(String id, String newcaption);
+	public void updateBaseCaption(String id, String newcaption);
 
 	/**
 	 * Update knowledge base properties
 	 * @param id
 	 * @param newproperties
 	 */
-	public void updateKnowledgeBaseProperties(String id, Map<String, Object> newproperties);
+	public void updateBaseProperties(String id, Map<String, Object> newproperties);
 
 	public Map<String, Object> createLabel(String kid, String labelName, List<String> parents, List<String> links,
 			List<String> properties);

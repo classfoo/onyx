@@ -33,4 +33,10 @@ public class OnyxStreamingContextImpl implements OnyxStreamingContext {
 		return map.get(value);
 	}
 
+	@Override
+	public void putLabel(String id, String label) {
+		// TODO Auto-generated method stub
+
+	}
+
 }

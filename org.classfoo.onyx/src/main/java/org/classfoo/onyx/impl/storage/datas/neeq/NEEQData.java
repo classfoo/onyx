@@ -4,6 +4,7 @@ import java.io.InputStreamReader;
 import java.util.UUID;
 
 import org.classfoo.onyx.api.OnyxService;
+import org.classfoo.onyx.api.storage.OnyxStorageSession;
 import org.classfoo.onyx.api.streaming.OnyxStreamingConsumer;
 import org.classfoo.onyx.api.streaming.OnyxStreamingMessage;
 import org.classfoo.onyx.api.streaming.OnyxStreamingProducer;
@@ -35,13 +36,13 @@ public class NEEQData {
 		this.streamingService = this.onyxService.getStreamingService();
 	}
 
-	public void initTestData(Session session) {
+	public void initTestData(OnyxStorageSession session) {
 		String kid = OnyxUtils.getRandomUUID("k");
-		session.execute("insert into bases (id_,name_,desc_) values(?,?,?)", kid, "新三板知识库",
-				"新三板知识库，新三板公司档案，投资人信息，股权关系，交易意向");
+		session.addBase(kid, "新三板知识库", "新三板知识库，新三板公司档案，投资人信息，股权关系，交易意向");
 		// initialize consumers
 		String uuid = OnyxUtils.getCompressedUUID();
 		OnyxStreamingConsumer consumer = this.streamingService.createConsumer(uuid);
+		this.initLabels(kid, consumer, session);
 		consumer.registListener("executives.csv", new NEEQDataConsumer_Executives(this.onyxService, kid));
 		consumer.registListener("baseinfo.csv", new NEEQDataConsumer_BaseInfo(this.onyxService, kid));
 		consumer.registListener("topTenHolders.csv", new NEEQDataConsumer_TopTenHolders(this.onyxService, kid));
@@ -51,6 +52,25 @@ public class NEEQData {
 				"topTenHolders.csv");
 		thread.setName("NEEQProducer");
 		thread.start();
+	}
+
+	private void initLabels(String kid, OnyxStreamingConsumer consumer, OnyxStorageSession session) {
+		this.initLabel("股东", kid, consumer, session);
+		this.initLabel("挂牌公司", kid, consumer, session);
+		this.initLabel("高管", kid, consumer, session);
+		this.initLabel("董事长", kid, consumer, session);
+		this.initLabel("董事", kid, consumer, session);
+		this.initLabel("董事长秘书", kid, consumer, session);
+		this.initLabel("总经理", kid, consumer, session);
+		this.initLabel("副总经理", kid, consumer, session);
+		this.initLabel("财务总监", kid, consumer, session);
+		this.initLabel("法人", kid, consumer, session);
+	}
+
+	private void initLabel(String name, String kid, OnyxStreamingConsumer consumer, OnyxStorageSession session) {
+		String lid = OnyxUtils.getRandomUUID("l");
+		session.addLabel(kid, lid, name, null);
+		consumer.getContext().putLabel(lid, name);
 	}
 
 	private class ProducerThread extends Thread {

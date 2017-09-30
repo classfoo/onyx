@@ -25,4 +25,6 @@ public interface OnyxStreamingContext {
 	 */
 	public Map<String, Object> getEntityByProperty(String property, String value);
 
+	public void putLabel(String id, String label);
+
 }

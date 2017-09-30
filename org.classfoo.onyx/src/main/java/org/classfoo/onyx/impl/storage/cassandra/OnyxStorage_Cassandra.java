@@ -39,7 +39,7 @@ public class OnyxStorage_Cassandra extends OnyxStorageImpl implements OnyxStorag
 				return this.cluster;
 			}
 			this.cluster = Cluster.builder().addContactPoint("127.0.0.1").build();
-			this.init(this.cluster);
+			//this.init(this.cluster);
 			return this.cluster;
 		}
 	}
@@ -49,6 +49,8 @@ public class OnyxStorage_Cassandra extends OnyxStorageImpl implements OnyxStorag
 		try {
 			logger.info("start initialize cassandra tables...");
 			try {
+				long start = System.currentTimeMillis();
+				logger.info("开始清理数据库表...");
 				session.execute("drop table bases");
 				session.execute("drop table base_entity");
 				session.execute("drop table base_label");
@@ -64,10 +66,14 @@ public class OnyxStorage_Cassandra extends OnyxStorageImpl implements OnyxStorag
 				session.execute("drop table links");
 				session.execute("drop table links_source");
 				session.execute("drop table links_target");
+				long end = System.currentTimeMillis();
+				logger.info("清理数据库表完毕，耗时：{}秒！", ((double)(end - start))/1000);
 			}
 			catch (Exception e) {
 
 			}
+			logger.info("开始创建数据库表...");
+			long start = System.currentTimeMillis();
 			session.execute(
 					"CREATE KEYSPACE if not exists onyx WITH REPLICATION={'class':'SimpleStrategy','replication_factor':3};");
 			session.execute(
@@ -86,8 +92,10 @@ public class OnyxStorage_Cassandra extends OnyxStorageImpl implements OnyxStorag
 					"create table if not exists label_entity(label_ text, id_ text, name_ text, primary key (label_,id_))");
 			session.execute(
 					"create table if not exists base_entity(kid_ text, id_ text, name_ text,primary key (kid_,id_,name_)) WITH CLUSTERING ORDER BY (id_ asc,name_ asc)");
+			//			session.execute(
+			//					"create table if not exists labels(id_ text, event_ timeuuid,order_ int,key_ text, operate_ text,name_ text,parent_ text,pname_ text,ptype_ text,poptions_ map<text,text>,kid_ text, user_ text, primary key (id_,event_,order_)) WITH CLUSTERING ORDER BY (event_ asc,order_ asc)");
 			session.execute(
-					"create table if not exists labels(id_ text, event_ timeuuid,order_ int,key_ text, operate_ text,name_ text,parent_ text,pname_ text,ptype_ text,poptions_ map<text,text>,kid_ text, user_ text, primary key (id_,event_,order_)) WITH CLUSTERING ORDER BY (event_ asc,order_ asc)");
+					"create table if not exists labels(name_ text, kid_ text,id_ text,properties_ map<text, text>, primary key (name_,kid_))");
 			session.execute(
 					"create table if not exists base_label(kid_ text, id_ text, name_ text,primary key (kid_,id_,name_)) WITH CLUSTERING ORDER BY (id_ asc,name_ asc)");
 			session.execute(
@@ -104,9 +112,11 @@ public class OnyxStorage_Cassandra extends OnyxStorageImpl implements OnyxStorag
 					"create table if not exists links_source(source_ text,sourcename_ text, name_ text,target_ text,targetname_ text, id_ text, properties_ map<text,text>, primary key (source_,name_,target_))");
 			session.execute(
 					"create table if not exists links_target(target_ text,targetname_ text,name_ text,source_ text,sourcename_ text, id_ text, properties_ map<text,text>, primary key (target_,name_,source_))");
+			long end = System.currentTimeMillis();
+			logger.info("创建数据库表完毕，耗时：{}秒！", ((double)(end - start))/1000);
 
 			//this.initBaseData_YLQ(session);
-			//this.initBaseData_NEEQ(session);
+			this.initBaseData_NEEQ();
 			logger.info("finish initialize cassandra tables！");
 		}
 		catch (Exception e) {
@@ -137,9 +147,16 @@ public class OnyxStorage_Cassandra extends OnyxStorageImpl implements OnyxStorag
 		}
 	}
 
-	private void initBaseData_NEEQ(Session session) {
-		NEEQData data = new NEEQData(this.onyxService);
-		data.initTestData(session);
+	private void initBaseData_NEEQ() {
+		OnyxStorageSession session = this.openSession();
+		try {
+			logger.info("开始初始化新三板数据...");
+			NEEQData data = new NEEQData(this.onyxService);
+			data.initTestData(session);
+		}
+		finally {
+			session.close();
+		}
 	}
 
 	@Override

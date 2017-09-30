@@ -15,6 +15,8 @@ import org.classfoo.onyx.impl.OnyxUtils;
 
 public class NEEQDataConsumer_BaseInfo implements OnyxStreamingMessageListener {
 
+	private static final String ZBQS_COLOR = OnyxUtils.getRandomColor();
+
 	private OnyxService onyxService;
 
 	private String kid;
@@ -83,7 +85,7 @@ public class NEEQDataConsumer_BaseInfo implements OnyxStreamingMessageListener {
 		String targetid = MapUtils.getString(brokerEntity, "id");
 		String targetname = MapUtils.getString(brokerEntity, "name");
 		Map<String, Object> linkProperties = new HashMap<String, Object>(1);
-		linkProperties.put("color", OnyxUtils.getRandomColor());
+		linkProperties.put("color", ZBQS_COLOR);
 		this.session.addLink("主办券商", sourceid, sourcename, targetid, targetname, linkProperties);
 		consumer.getContext().putEntityByProperty("broker", broker, brokerEntity);
 	}
