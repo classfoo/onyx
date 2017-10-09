@@ -345,8 +345,42 @@ define("onyx/api/label", [ "jquery", "require" ], function($, require) {
 	 * 
 	 * @param lid
 	 */
-	Label.prototype.single = function(lid) {
+	Label.prototype.get = function(lid) {
 		return Api.get("label/" + lid);
+	}
+
+	/**
+	 * get label image
+	 * 
+	 * @param name
+	 */
+	Label.prototype.image = function(name) {
+		var dfd = $.Deferred();
+		Api.get("label/" + name, {
+			kid : this.kid
+		}).done(function(label) {
+			var icon = (label.properties && label.properties.icon) || "\ue66f";
+			var background = (label.properties && label.properties.background)||"#C5DBF0";
+			var color = (label.properties && label.properties.color)||"white";
+			var canvasOffscreen = document.createElement('canvas');
+			canvasOffscreen.width = 64;
+			canvasOffscreen.height = 64;
+			var context = canvasOffscreen.getContext('2d');
+			context.save();
+			context.beginPath();
+			context.moveTo(0,0);
+			context.rect(0, 0, 64,64);
+			context.font = "32px iconfont";
+			context.textAlign = "center";
+			context.fillStyle = background;
+			context.fill();
+			context.fillStyle = color;
+			context.fillText(icon, 32, 48);
+			context.closePath();
+			context.restore();
+			dfd.resolve(canvasOffscreen);
+		});
+		return dfd.promise();
 	}
 
 	/**
@@ -582,6 +616,16 @@ define("onyx/api/image", [ "jquery", "require" ], function($, require) {
 		image.onload = function() {
 			self.images[id] = image;
 			dfd.resolve(image);
+		}
+		image.onerror = function() {
+			// 通过node.id获取类型信息，将icon绘制到canvas，然后取出image
+			Api.entity().get(id).done(function(entity) {
+				var kid = entity.kid;
+				var name = entity.labels[0];
+				Api.label(kid).image(name).done(function(image) {
+					dfd.resolve(image);
+				});
+			});
 		}
 		image.src = "/onyxapi/v1/image/" + id;
 		return dfd.promise();

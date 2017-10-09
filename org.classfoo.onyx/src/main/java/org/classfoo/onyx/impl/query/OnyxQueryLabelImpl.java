@@ -15,22 +15,34 @@ import org.classfoo.onyx.api.storage.OnyxStorage;
 import org.classfoo.onyx.api.storage.OnyxStorageService;
 import org.classfoo.onyx.api.storage.OnyxStorageSession;
 
+/**
+ * @see OnyxQueryLabel
+ * @author ClassFoo
+ *
+ */
 public class OnyxQueryLabelImpl extends OnyxQuerySingleImpl<Map<String, Object>> implements OnyxQueryLabel {
 
-	private String lid;
+	private String kid;
+
+	private String name;
 
 	public OnyxQueryLabelImpl(OnyxService onyxService) {
 		super(onyxService);
 	}
 
 	@Override
-	public void setLid(String lid) {
-		this.lid = lid;
+	public void setKid(String kid) {
+		this.kid = kid;
+	}
+
+	@Override
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	@Override
 	public int hashCode() {
-		return this.lid.hashCode();
+		return this.kid.hashCode();
 	}
 
 	@Override
@@ -39,7 +51,10 @@ public class OnyxQueryLabelImpl extends OnyxQuerySingleImpl<Map<String, Object>>
 			return false;
 		}
 		OnyxQueryLabelImpl queryLabel = (OnyxQueryLabelImpl) obj;
-		if (!StringUtils.equals(this.lid, queryLabel.lid)) {
+		if (!StringUtils.equals(this.kid, queryLabel.kid)) {
+			return false;
+		}
+		if (!StringUtils.equals(this.name, queryLabel.name)) {
 			return false;
 		}
 		return true;
@@ -55,8 +70,7 @@ public class OnyxQueryLabelImpl extends OnyxQuerySingleImpl<Map<String, Object>>
 				OnyxStorage storage = storageService.getStorage();
 				OnyxStorageSession session = storage.openSession();
 				try {
-					List<Map<String, Object>> modifies = session.queryLabelModifies(lid);
-					return convertToLabel(modifies);
+					return session.queryBaseLabel(kid, name);
 				}
 				finally {
 					session.close();

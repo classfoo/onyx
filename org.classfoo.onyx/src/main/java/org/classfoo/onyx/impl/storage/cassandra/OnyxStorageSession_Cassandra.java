@@ -11,23 +11,20 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.classfoo.onyx.api.storage.OnyxStorage;
 import org.classfoo.onyx.api.storage.OnyxStorageSession;
 import org.classfoo.onyx.impl.OnyxUtils;
-import org.eclipse.jetty.server.session.HashSessionIdManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.datastax.driver.core.BatchStatement;
-import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.ColumnDefinitions;
 import com.datastax.driver.core.ColumnDefinitions.Definition;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
-import com.datastax.driver.core.Statement;
 
 /**
  * @see OnyxStorageSession
@@ -79,6 +76,12 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 	public List<Map<String, Object>> queryEntityModifies(String eid) {
 		ResultSet value = this.executeQuery("select * from entities where id_=?", eid);
 		return convertToList(value);
+	}
+
+	@Override
+	public Map<String, Object> queryBaseLabel(String kid, String name) {
+		ResultSet value = this.executeQuery("select * from labels where kid_=? and name_=?", kid, name);
+		return this.convertToMap(value);
 	}
 
 	@Override
@@ -137,66 +140,163 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 	public Map<String, Object> queryLinkNodes(String eid, Map<String, Object> options) {
 		String name = MapUtils.getString(options, "name");
 		String type = MapUtils.getString(options, "type");
-		List<Map<String, Object>> entities = new ArrayList<Map<String, Object>>(10);
-		List<Map<String, Object>> links = new ArrayList<Map<String, Object>>(10);
+		if (StringUtils.isBlank(type)) {//in out
+			if (StringUtils.isBlank(name)) {
+				return queryLinkNodesInOutByEid(eid);
+			}
+			else {
+				return queryLinkNodesInOutByName(eid, name);
+			}
+		}
 		if ("in".equals(type)) {
-			ResultSet sourceValue = this.executeQuery(
-					"select id_,name_,source_,sourcename_,target_,targetname_,properties_ from links_target where target_=? and name_=? limit 10",
-					eid, name);
-			Iterator<Row> it = sourceValue.iterator();
-			while (it.hasNext()) {
-				Row row = it.next();
-				String linkid = row.getString(0);
-				String linkname = row.getString(1);
-				String sourceid = row.getString(2);
-				String sourcename = row.getString(3);
-				String targetid = row.getString(4);
-				String targetname = row.getString(5);
-				Map<String, String> properties = row.getMap(6, String.class, String.class);
-				HashMap<String, Object> entity = new HashMap<String, Object>(2);
-				entity.put("id", sourceid);
-				entity.put("name", sourcename);
-				entities.add(entity);
-				HashMap<String, Object> link = new HashMap<String, Object>(5);
-				link.put("id", linkid);
-				link.put("name", linkname);
-				link.put("source", sourceid);
-				link.put("target", targetid);
-				link.put("properties", properties);
-				links.add(link);
+			if (StringUtils.isBlank(name)) {
+				return queryLinkNodesInByEid(eid);
+			}
+			else {
+				return queryLinkNodesInByName(eid, name);
 			}
 		}
 		else {
-			ResultSet sourceValue = this.executeQuery(
-					"select id_,name_,source_,sourcename_,target_,targetname_,properties_ from links_source where source_=? and name_=? limit 10",
-					eid, name);
-			Iterator<Row> it = sourceValue.iterator();
-			while (it.hasNext()) {
-				Row row = it.next();
-				String linkid = row.getString(0);
-				String linkname = row.getString(1);
-				String sourceid = row.getString(2);
-				String sourcename = row.getString(3);
-				String targetid = row.getString(4);
-				String targetname = row.getString(5);
-				Map<String, String> properties = row.getMap(6, String.class, String.class);
-				HashMap<String, Object> entity = new HashMap<String, Object>(2);
-				entity.put("id", targetid);
-				entity.put("name", targetname);
-				entities.add(entity);
-				HashMap<String, Object> link = new HashMap<String, Object>(5);
-				link.put("id", linkid);
-				link.put("name", linkname);
-				link.put("source", sourceid);
-				link.put("target", targetid);
-				link.put("properties", properties);
-				links.add(link);
+			if (StringUtils.isBlank(name)) {
+				return this.queryLinkNodesOutByEid(eid);
+			}
+			else {
+				return this.queryLinkNodesOutByName(eid, name);
 			}
 		}
+	}
+
+	private Map<String, Object> queryLinkNodesInOutByEid(String eid) {
+		return this.queryLinkNodesInOutBySql(
+				"select id_,name_,source_,sourcename_,target_,targetname_,properties_ from links_target where target_=? limit 20",
+				"select id_,name_,source_,sourcename_,target_,targetname_,properties_ from links_source where source_=? limit 20",
+				eid);
+	}
+
+	private Map<String, Object> queryLinkNodesInOutByName(String eid, String name) {
+		return this.queryLinkNodesInOutBySql(
+				"select id_,name_,source_,sourcename_,target_,targetname_,properties_ from links_target where target_=? and name = ?  limit 20",
+				"select id_,name_,source_,sourcename_,target_,targetname_,properties_ from links_source where source_=? and name = ? limit 20",
+				eid, name);
+	}
+
+	private Map<String, Object> queryLinkNodesInOutBySql(String sql1, String sql2, Object... params) {
+		List<Map<String, Object>> entities = new ArrayList<Map<String, Object>>(10);
+		List<Map<String, Object>> links = new ArrayList<Map<String, Object>>(10);
+		ResultSet value1 = this.executeQuery(sql1, params);
+		this.convertLinkNodesIn(value1, entities, links);
+		ResultSet value2 = this.executeQuery(sql2, params);
+		this.convertLinkNodesOut(value2, entities, links);
 		HashMap<String, Object> result = new HashMap<String, Object>(2);
 		result.put("entities", entities);
 		result.put("links", links);
 		return result;
+	}
+
+	private Map<String, Object> queryLinkNodesInByEid(String eid) {
+		return this.queryLinkNodesInBySql(
+				"select id_,name_,source_,sourcename_,target_,targetname_,properties_ from links_target where target_=? limit 20",
+				eid);
+	}
+
+	private Map<String, Object> queryLinkNodesInByName(String eid, String name) {
+		return this.queryLinkNodesInBySql(
+				"select id_,name_,source_,sourcename_,target_,targetname_,properties_ from links_target where target_=? and name_=? limit 20",
+				eid, name);
+	}
+
+	private Map<String, Object> queryLinkNodesInBySql(String sql, Object... params) {
+		ResultSet sourceValue = this.executeQuery(sql, params);
+		return convertLinkNodesIn(sourceValue);
+	}
+
+	private Map<String, Object> convertLinkNodesIn(ResultSet sourceValue) {
+		List<Map<String, Object>> entities = new ArrayList<Map<String, Object>>(10);
+		List<Map<String, Object>> links = new ArrayList<Map<String, Object>>(10);
+		convertLinkNodesIn(sourceValue, entities, links);
+		HashMap<String, Object> result = new HashMap<String, Object>(2);
+		result.put("entities", entities);
+		result.put("links", links);
+		return result;
+	}
+
+	private void convertLinkNodesIn(ResultSet sourceValue, List<Map<String, Object>> entities,
+			List<Map<String, Object>> links) {
+		Iterator<Row> it = sourceValue.iterator();
+		while (it.hasNext()) {
+			Row row = it.next();
+			String linkid = row.getString(0);
+			String linkname = row.getString(1);
+			String sourceid = row.getString(2);
+			String sourcename = row.getString(3);
+			String targetid = row.getString(4);
+			String targetname = row.getString(5);
+			Map<String, String> properties = row.getMap(6, String.class, String.class);
+			HashMap<String, Object> entity = new HashMap<String, Object>(2);
+			entity.put("id", sourceid);
+			entity.put("name", sourcename);
+			entities.add(entity);
+			HashMap<String, Object> link = new HashMap<String, Object>(5);
+			link.put("id", linkid);
+			link.put("name", linkname);
+			link.put("source", sourceid);
+			link.put("target", targetid);
+			link.put("properties", properties);
+			links.add(link);
+		}
+	}
+
+	private Map<String, Object> queryLinkNodesOutByEid(String eid) {
+		return queryLinkNodesOutBySql(
+				"select id_,name_,source_,sourcename_,target_,targetname_,properties_ from links_source where source_=? limit 20",
+				eid);
+	}
+
+	private Map<String, Object> queryLinkNodesOutByName(String eid, String name) {
+		return queryLinkNodesOutBySql(
+				"select id_,name_,source_,sourcename_,target_,targetname_,properties_ from links_source where source_=? and name_=? limit 20",
+				eid, name);
+	}
+
+	private Map<String, Object> queryLinkNodesOutBySql(String sql, Object... params) {
+		ResultSet sourceValue = this.executeQuery(sql, params);
+		return convertLinkNodesOut(sourceValue);
+	}
+
+	private Map<String, Object> convertLinkNodesOut(ResultSet sourceValue) {
+		List<Map<String, Object>> entities = new ArrayList<Map<String, Object>>(10);
+		List<Map<String, Object>> links = new ArrayList<Map<String, Object>>(10);
+		convertLinkNodesOut(sourceValue, entities, links);
+		HashMap<String, Object> result = new HashMap<String, Object>(2);
+		result.put("entities", entities);
+		result.put("links", links);
+		return result;
+	}
+
+	private void convertLinkNodesOut(ResultSet sourceValue, List<Map<String, Object>> entities,
+			List<Map<String, Object>> links) {
+		Iterator<Row> it = sourceValue.iterator();
+		while (it.hasNext()) {
+			Row row = it.next();
+			String linkid = row.getString(0);
+			String linkname = row.getString(1);
+			String sourceid = row.getString(2);
+			String sourcename = row.getString(3);
+			String targetid = row.getString(4);
+			String targetname = row.getString(5);
+			Map<String, String> properties = row.getMap(6, String.class, String.class);
+			HashMap<String, Object> entity = new HashMap<String, Object>(2);
+			entity.put("id", targetid);
+			entity.put("name", targetname);
+			entities.add(entity);
+			HashMap<String, Object> link = new HashMap<String, Object>(5);
+			link.put("id", linkid);
+			link.put("name", linkname);
+			link.put("source", sourceid);
+			link.put("target", targetid);
+			link.put("properties", properties);
+			links.add(link);
+		}
 	}
 
 	private List<Map<String, Object>> convertToList(ResultSet value) {

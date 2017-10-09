@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpStatus;
 import org.classfoo.onyx.api.OnyxService;
 import org.classfoo.onyx.api.file.OnyxFileService;
 import org.classfoo.onyx.api.query.OnyxQueryEntities;
@@ -45,14 +46,15 @@ public class OnyxApi_Image extends OnyxApiImpl implements OnyxApi {
 	@Override
 	public Object get(Map<String, Object> args) throws IOException {
 		HttpServletResponse response = (HttpServletResponse) MapUtils.getObject(args, "response");
-		ServletOutputStream os = response.getOutputStream();
-		InputStream is = OnyxApi_Image.class.getResourceAsStream("image.png");
-		try {
-			IOUtils.copy(is, os);
-		}
-		finally {
-			is.close();
-		}
+//		ServletOutputStream os = response.getOutputStream();
+//		InputStream is = OnyxApi_Image.class.getResourceAsStream("image.png");
+//		try {
+//			IOUtils.copy(is, os);
+//		}
+//		finally {
+//			is.close();
+//		}
+		response.sendError(HttpStatus.SC_NOT_FOUND);
 		return null;
 	}
 }

@@ -1,9 +1,12 @@
 package org.classfoo.onyx.impl.web.apis;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.classfoo.onyx.api.OnyxService;
 import org.classfoo.onyx.api.operate.OnyxOperateAddLabel;
 import org.classfoo.onyx.api.operate.OnyxOperateSaveLabel;
@@ -15,6 +18,8 @@ import org.classfoo.onyx.impl.OnyxUtils;
 import org.classfoo.onyx.impl.web.OnyxApiImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import jodd.util.HtmlEncoder;
 
 /**
  * KnowledgeBases Api
@@ -35,9 +40,12 @@ public class OnyxApi_Label extends OnyxApiImpl implements OnyxApi {
 	}
 
 	@Override
-	public Object getSingle(String resid, Map<String, Object> args) {
+	public Object getSingle(String resid, Map<String, Object> args) throws UnsupportedEncodingException {
 		OnyxQueryLabel queryLabel = onyxService.createQuery(OnyxQueryLabel.class);
-		queryLabel.setLid(resid);
+		String kid = MapUtils.getString(args, "kid");
+		queryLabel.setKid(kid);
+		String name = URLDecoder.decode(resid, "UTF-8");
+		queryLabel.setName(name);
 		return queryLabel.querySingle();
 	}
 

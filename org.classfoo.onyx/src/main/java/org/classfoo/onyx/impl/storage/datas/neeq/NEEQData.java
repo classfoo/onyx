@@ -1,7 +1,7 @@
 package org.classfoo.onyx.impl.storage.datas.neeq;
 
 import java.io.InputStreamReader;
-import java.util.UUID;
+import java.util.HashMap;
 
 import org.classfoo.onyx.api.OnyxService;
 import org.classfoo.onyx.api.storage.OnyxStorageSession;
@@ -13,8 +13,6 @@ import org.classfoo.onyx.impl.OnyxUtils;
 import org.janusgraph.util.system.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.datastax.driver.core.Session;
 
 import au.com.bytecode.opencsv.CSVReader;
 
@@ -55,21 +53,29 @@ public class NEEQData {
 	}
 
 	private void initLabels(String kid, OnyxStreamingConsumer consumer, OnyxStorageSession session) {
-		this.initLabel("股东", kid, consumer, session);
-		this.initLabel("挂牌公司", kid, consumer, session);
-		this.initLabel("高管", kid, consumer, session);
-		this.initLabel("董事长", kid, consumer, session);
-		this.initLabel("董事", kid, consumer, session);
-		this.initLabel("董事长秘书", kid, consumer, session);
-		this.initLabel("总经理", kid, consumer, session);
-		this.initLabel("副总经理", kid, consumer, session);
-		this.initLabel("财务总监", kid, consumer, session);
-		this.initLabel("法人", kid, consumer, session);
+		this.initLabel("股东", kid, "\ue67f", "blue", "white", consumer, session);
+		this.initLabel("挂牌公司", kid, "\ue6ba", "mediumslateblue", "white", consumer, session);
+		this.initLabel("券商", kid, "\ue6c6", "orange", "white", consumer, session);
+		this.initLabel("高管", kid, "\ue6c1", "red", "white", consumer, session);
+		this.initLabel("董事长", kid, "\ue6c8", "orchid", "white", consumer, session);
+		this.initLabel("董事", kid, "\ue6b7", "tomato", "white", consumer, session);
+		this.initLabel("董事长秘书", kid, "\ue6b8", "green", "white", consumer, session);
+		this.initLabel("监事", kid, "\ue6b7", "purple", "white", consumer, session);
+		this.initLabel("监事会主席", kid, "\ue6b7", "lightskyblue", "white", consumer, session);
+		this.initLabel("总经理", kid, "\ue6cb", "navy", "white", consumer, session);
+		this.initLabel("副总经理", kid, "\ue62c", "aqua", "white", consumer, session);
+		this.initLabel("财务总监", kid, "\ue61b", "blueviolet", "white", consumer, session);
+		this.initLabel("法人", kid, "\ue65c", "chocolate", "white", consumer, session);
 	}
 
-	private void initLabel(String name, String kid, OnyxStreamingConsumer consumer, OnyxStorageSession session) {
+	private void initLabel(String name, String kid, String icon, String background, String color,
+			OnyxStreamingConsumer consumer, OnyxStorageSession session) {
 		String lid = OnyxUtils.getRandomUUID("l");
-		session.addLabel(kid, lid, name, null);
+		HashMap<String, Object> options = new HashMap<String, Object>(3);
+		options.put("icon", icon);
+		options.put("background", background);
+		options.put("color", color);
+		session.addLabel(kid, lid, name, options);
 		consumer.getContext().putLabel(lid, name);
 	}
 

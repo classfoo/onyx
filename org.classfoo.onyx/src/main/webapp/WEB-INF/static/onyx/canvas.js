@@ -435,11 +435,27 @@ define(
 			}
 
 			Graph.prototype.onDblClickNode = function(event, node) {
-				var selects = [ node ];
-				var targets = this.getTargetNodes(node.id, true);
-				selects = selects.concat(targets)
-				this.selectNodes(selects);
-				this.compass.showSelectsMenu(node, selects);
+				// var selects = [ node ];
+				// var targets = this.getTargetNodes(node.id, true);
+				// selects = selects.concat(targets)
+				// this.selectNodes(selects);
+				// this.compass.showSelectsMenu(node, selects);
+				var options = {
+						id : node.id
+					};
+				var self = this;
+				Api.linknodes().list(options).done(function(result) {
+					var distance = Math.sqrt(128 * 128 + 128 * 128);
+					var nodex = node.x + 128;
+					var nodey = node.y - 128;
+					var nodes = result.entities;
+					nodes.forEach(function(n) {
+							n.x = nodex;
+							n.y = nodey;
+					});
+					var links = result.links;
+					self.addNodesAndLinks(nodes, links);
+				});
 			}
 
 			Graph.prototype.onDblClickGraph = function(event, graph) {
@@ -505,7 +521,7 @@ define(
 				this.context.lineTo(this.toScreenX(target.x), this
 						.toScreenY(target.y));
 				this.context.lineWidth = 3;
-				this.context.strokeStyle = "pink";
+				this.context.strokeStyle = "white";
 				this.context.stroke();
 				// render text rectangle
 				var middlex = this.toScreenX((target.x + source.x) / 2);
@@ -575,15 +591,16 @@ define(
 					this.context.font = "26px iconfont";
 					this.context.textAlign = "center";
 					this.context.fillStyle = "#C5DBF0";
-					this.context.fillText("\ue60a", nodex, nodey + radius / 2);
 					this.context.fill();
+					this.context.fillStyle = "black";
+					this.context.fillText("\ue67f", nodex, nodey + radius / 2);
 					this.context.closePath();
 				}
 				this.context.restore();
 				this.context.save();
 				// draw circle
 				this.context.beginPath();
-				this.context.arc(nodex, nodey, radius + 5, 0, 2 * Math.PI);
+				this.context.arc(nodex, nodey, radius+3, 0, 2 * Math.PI);
 				if (dragged) {
 					this.context.strokeStyle = "#C5DBF0";
 					this.context.setLineDash([ 3, 3 ]);
@@ -598,7 +615,11 @@ define(
 				this.context.lineWidth = 3;
 				this.context.stroke();
 				// draw label
-				this.context.font = "14px 微软雅黑";
+				if (mouseovered) {
+					this.context.font = "18px 微软雅黑";
+				}else{
+					this.context.font = "12px 微软雅黑";
+				}
 				this.context.textAlign = "center";
 				this.context.fillStyle = "#FFFFFF";
 				this.context.fillText(node.name || node.id, nodex, nodey
@@ -625,9 +646,13 @@ define(
 				// draw icon
 				var self = this;
 				Api.image().get(id).done(function(image) {
+					if(!image){
+						return;
+					}
 					self.images[id] = image;
 					self.imageRequesting[id] = false;
 				});
+				return null;
 			}
 
 			/**
@@ -776,6 +801,9 @@ define(
 			}
 
 			Graph.prototype._addNode = function(node) {
+				if(this.nodeMap[node.id]){
+					return;
+				}
 				this.nodes.push(node);
 				this.nodeMap[node.id] = node;
 			}
@@ -803,14 +831,19 @@ define(
 			}
 
 			Graph.prototype._addLink = function(link) {
+				for(var i = 0;i < this.links.length;i++){
+					if(this.links[i].id === link.id){
+						return;
+					}
+				}
 				this.links.push(link);
 				var sources = this.linkSourceMap[link.source];
+				var targets = this.linkTargetMap[link.target];
 				if (sources) {
 					sources.push(link);
 				} else {
 					this.linkSourceMap[link.source] = [ link ];
 				}
-				var targets = this.linkTargetMap[link.target];
 				if (targets) {
 					targets.push(link);
 				} else {
