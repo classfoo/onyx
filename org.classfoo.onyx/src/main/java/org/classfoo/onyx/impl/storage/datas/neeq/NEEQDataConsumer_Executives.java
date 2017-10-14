@@ -56,7 +56,11 @@ public class NEEQDataConsumer_Executives implements OnyxStreamingMessageListener
 		String term = line[7];
 		properties.put("任期", term);
 		String[] jobs = StringUtils.split(job, "、,， /／");
-		Map<String, Object> entity = session.addEntity(this.kid, name, Arrays.asList(jobs), properties);
+		Map<String, Object> entity = consumer.getContext().getEntityByProperty("people", name);
+		if (entity == null) {
+			entity = session.addEntity(this.kid, name, Arrays.asList(jobs), properties);
+			consumer.getContext().putEntityByProperty("people", name, entity);
+		}
 		String targetid = MapUtils.getString(entity, "id");
 		String targetname = MapUtils.getString(entity, "name");
 		Map<String, Object> target = consumer.getContext().getEntityByProperty("code", hqzqdm);

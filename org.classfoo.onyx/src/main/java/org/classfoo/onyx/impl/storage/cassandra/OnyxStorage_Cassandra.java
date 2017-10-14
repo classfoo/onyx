@@ -1,6 +1,7 @@
 package org.classfoo.onyx.impl.storage.cassandra;
 
 import org.classfoo.onyx.api.OnyxService;
+import org.classfoo.onyx.api.index.OnyxIndexService;
 import org.classfoo.onyx.api.storage.OnyxStorage;
 import org.classfoo.onyx.api.storage.OnyxStorageSession;
 import org.classfoo.onyx.impl.OnyxUtils;
@@ -162,6 +163,6 @@ public class OnyxStorage_Cassandra extends OnyxStorageImpl implements OnyxStorag
 	@Override
 	public OnyxStorageSession openSession() {
 		Session session = this.getCluster().connect("onyx");
-		return new OnyxStorageSession_Cassandra(this, session);
+		return new OnyxStorageSession_Cassandra(this.onyxService, this, session);
 	}
 }

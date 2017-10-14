@@ -76,18 +76,39 @@ public class NEEQDataConsumer_BaseInfo implements OnyxStreamingMessageListener {
 		properties.put("网站", website);
 		Map<String, Object> entity = session.addEntity(this.kid, shortname, Arrays.asList("挂牌公司"), properties);
 		consumer.getContext().putEntityByProperty("code", code, entity);
-		Map<String, Object> brokerEntity = consumer.getContext().getEntityByProperty("broker", broker);
+		//券商
+		Map<String, Object> brokerEntity = consumer.getContext().getEntityByProperty("company", broker);
 		if (brokerEntity == null) {
 			brokerEntity = session.addEntity(this.kid, broker, Arrays.asList("券商"), null);
+			consumer.getContext().putEntityByProperty("company", broker, brokerEntity);
 		}
+		this.addLink("主办券商", ZBQS_COLOR, entity, brokerEntity);
+		//董事长秘书
+		Map<String, Object> secretariesEntity = consumer.getContext().getEntityByProperty("people", secretaries);
+		if (secretariesEntity == null) {
+			secretariesEntity = session.addEntity(this.kid, secretaries, Arrays.asList("董事长秘书"), properties);
+			consumer.getContext().putEntityByProperty("people", secretaries, secretariesEntity);
+		}
+		this.addLink("董事长秘书", ZBQS_COLOR, entity, secretariesEntity);
+		//法人代表
+		Map<String, Object> legalRepresentativeEntity = consumer.getContext().getEntityByProperty("people",
+				legalRepresentative);
+		if (legalRepresentativeEntity == null) {
+			legalRepresentativeEntity = session.addEntity(this.kid, legalRepresentative, Arrays.asList("法人代表"),
+					properties);
+			consumer.getContext().putEntityByProperty("people", legalRepresentative, legalRepresentativeEntity);
+		}
+		this.addLink("法人代表", ZBQS_COLOR, entity, legalRepresentativeEntity);
+	}
+
+	private void addLink(String name, String color, Map<String, Object> entity, Map<String, Object> brokerEntity) {
 		String sourceid = MapUtils.getString(entity, "id");
 		String sourcename = MapUtils.getString(entity, "name");
 		String targetid = MapUtils.getString(brokerEntity, "id");
 		String targetname = MapUtils.getString(brokerEntity, "name");
 		Map<String, Object> linkProperties = new HashMap<String, Object>(1);
-		linkProperties.put("color", ZBQS_COLOR);
-		this.session.addLink("主办券商", sourceid, sourcename, targetid, targetname, linkProperties);
-		consumer.getContext().putEntityByProperty("broker", broker, brokerEntity);
+		linkProperties.put("color", color);
+		this.session.addLink(name, sourceid, sourcename, targetid, targetname, linkProperties);
 	}
 
 	@Override

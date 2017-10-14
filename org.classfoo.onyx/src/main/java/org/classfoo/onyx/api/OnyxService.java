@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.classfoo.onyx.api.cache.OnyxCacheService;
 import org.classfoo.onyx.api.file.OnyxFileService;
+import org.classfoo.onyx.api.index.OnyxIndexService;
 import org.classfoo.onyx.api.operate.OnyxOperate;
 import org.classfoo.onyx.api.query.OnyxQuery;
 import org.classfoo.onyx.api.storage.OnyxStorageService;
@@ -62,4 +63,10 @@ public interface OnyxService {
 	 * @return
 	 */
 	public OnyxStreamingService getStreamingService();
+
+	/**
+	 * get onyx index service
+	 * @return
+	 */
+	public OnyxIndexService getIndexService();
 }

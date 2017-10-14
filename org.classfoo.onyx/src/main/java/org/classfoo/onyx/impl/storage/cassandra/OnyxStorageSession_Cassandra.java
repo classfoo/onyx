@@ -12,6 +12,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.classfoo.onyx.api.OnyxService;
+import org.classfoo.onyx.api.index.OnyxIndexService;
 import org.classfoo.onyx.api.storage.OnyxStorage;
 import org.classfoo.onyx.api.storage.OnyxStorageSession;
 import org.classfoo.onyx.impl.OnyxUtils;
@@ -35,6 +37,8 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 
 	private static final Logger logger = LoggerFactory.getLogger(OnyxStorageSession_Cassandra.class);
 
+	private OnyxService onyxService;
+
 	private Session session;
 
 	private OnyxStorage storage;
@@ -43,7 +47,8 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 
 	private BatchStatement batch;
 
-	public OnyxStorageSession_Cassandra(OnyxStorage storage, Session session) {
+	public OnyxStorageSession_Cassandra(OnyxService onyxService, OnyxStorage storage, Session session) {
+		this.onyxService = onyxService;
 		this.storage = storage;
 		this.session = session;
 	}
@@ -391,6 +396,8 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 		entity.put("kid", kid);
 		entity.put("name", name);
 		entity.put("properties", properties);
+		OnyxIndexService indexService = this.onyxService.getIndexService();
+		indexService.addEntityIndex(entity);
 		return entity;
 	}
 

@@ -55,7 +55,7 @@ define(
 			}
 
 			Canvas.prototype.onContextMenu = function(event) {
-				return false;
+				return this.graph.onContextMenu(event);
 			}
 
 			Canvas.prototype.fire = function(event, options) {
@@ -100,7 +100,7 @@ define(
 define(
 		"onyx/canvas/graph",
 		[ "jquery", "require", "d3/d3", "onyx/canvas/compass",
-				"onyx/canvas/relationnode" ],
+				"onyx/canvas/relationnode", "onyx/canvas/linksnode" ],
 		function($, require) {
 
 			var d3 = require("d3/d3");
@@ -109,6 +109,8 @@ define(
 
 			var RelationNode = require("onyx/canvas/relationnode");
 
+			var LinksNode = require("onyx/canvas/linksnode");
+
 			var RADIUS = 20;
 
 			var Graph = function(canvas) {
@@ -116,6 +118,7 @@ define(
 				this.context = canvas.getContext();
 				this.compass = new Compass(this.canvas, this);
 				this.relationNode = new RelationNode(this.canvas, this);
+				this.linksNode = new LinksNode(this.canvas, this);
 				this.canvas.on("dblclick", this.onDblClick.bind(this));
 				this.canvas.on("click", this.onClick.bind(this));
 				this.canvas.on("clickmenu", this.onClickMenu.bind(this));
@@ -125,6 +128,7 @@ define(
 				this.nodes = [];
 				this.nodeMap = {};
 				this.links = [];
+				this.linkMap = {};
 				this.linkSourceMap = {};
 				this.linkTargetMap = {};
 				this.width = this.canvas.width;
@@ -330,6 +334,34 @@ define(
 				requestAnimFrame(drawFrame);
 			}
 
+			Graph.prototype.onContextMenu = function(event) {
+				event.stopPropagation();
+				var item = this.findNode(event.offsetX, event.offsetY);
+				if (item == null) {
+					this.onGraphMenu(event);
+					this.canvas.fire("graphmenu");
+					this.canvas.render();
+					return false;
+				}
+				this.onNodeMenu(event, item);
+				this.canvas.fire("nodemenu", item);
+				this.canvas.render();
+				return false;
+			}
+
+			Graph.prototype.onNodeMenu = function(event, node) {
+				this.hideTools();
+				this.compass.showNodeMenu(node);
+			}
+
+			Graph.prototype.onGraphMenu = function(event, node) {
+				this.hideTools();
+				this.compass.showGraphMenu({
+					x : this.toStandardX(event.offsetX),
+					y : this.toStandardY(event.offsetY)
+				});
+			}
+
 			Graph.prototype.onClick = function(event) {
 				clearTimeout(this.intervalTimer);
 				var self = this;
@@ -348,6 +380,10 @@ define(
 					this.canvas.render();
 					return;
 				}
+				if (this.linksNode.onClick(event)) {
+					this.canvas.render();
+					return;
+				}
 				var item = this.findNode(event.offsetX, event.offsetY);
 				if (item == null) {
 					this.onClickGraph(event);
@@ -362,7 +398,7 @@ define(
 
 			Graph.prototype.onClickNode = function(event, node) {
 				this.canvas.docmd("view", node);
-				this.compass.showNodeMenu(node);
+				// this.compass.showNodeMenu(node);
 			}
 
 			Graph.prototype.onClickGraph = function(event, node) {
@@ -417,6 +453,10 @@ define(
 					this.canvas.render();
 					return;
 				}
+				if (this.linksNode.onDblClick(event)) {
+					this.canvas.render();
+					return;
+				}
 				var item = this.findNode(event.offsetX, event.offsetY);
 				if (item == null) {
 					var pos = {
@@ -435,34 +475,11 @@ define(
 			}
 
 			Graph.prototype.onDblClickNode = function(event, node) {
-				// var selects = [ node ];
-				// var targets = this.getTargetNodes(node.id, true);
-				// selects = selects.concat(targets)
-				// this.selectNodes(selects);
-				// this.compass.showSelectsMenu(node, selects);
-				var options = {
-						id : node.id
-					};
-				var self = this;
-				Api.linknodes().list(options).done(function(result) {
-					var distance = Math.sqrt(128 * 128 + 128 * 128);
-					var nodex = node.x + 128;
-					var nodey = node.y - 128;
-					var nodes = result.entities;
-					nodes.forEach(function(n) {
-							n.x = nodex;
-							n.y = nodey;
-					});
-					var links = result.links;
-					self.addNodesAndLinks(nodes, links);
-				});
+				this.hideTools();
+				this.linksNode.show(node);
 			}
 
 			Graph.prototype.onDblClickGraph = function(event, graph) {
-				this.compass.showGraphMenu({
-					x : this.toStandardX(event.offsetX),
-					y : this.toStandardY(event.offsetY)
-				});
 			}
 
 			Graph.prototype.onMouseMove = function(event) {
@@ -472,6 +489,10 @@ define(
 					return;
 				}
 				if (this.relationNode.onMouseMove(event)) {
+					this.canvas.render();
+					return;
+				}
+				if (this.linksNode.onMouseMove(event)) {
 					this.canvas.render();
 					return;
 				}
@@ -499,6 +520,7 @@ define(
 				this.renderNodes();
 				this.compass.render();
 				this.relationNode.render();
+				this.linksNode.render();
 			}
 
 			Graph.prototype.renderLinks = function() {
@@ -571,10 +593,12 @@ define(
 				var dragged = node.dragged;
 				var selected = node.selected;
 				var mouseovered = node.mouseovered;
+				var fixed = node.fixed;
 				var nodex = node.x + this.graph.x;
 				var nodey = node.y + this.graph.y;
 				var radius = node.radius || RADIUS;
-				radius = mouseovered || selected ? (radius + 5) : radius;
+				radius = mouseovered || selected || fixed ? (radius + 5)
+						: radius;
 				// draw node
 				// draw image or icon
 				this.context.save();
@@ -586,38 +610,44 @@ define(
 					this.context.clip();
 					this.context.drawImage(image, nodex - radius, nodey
 							- radius, radius * 2, radius * 2);
-					this.context.closePath();
 				} else {
 					this.context.font = "26px iconfont";
 					this.context.textAlign = "center";
 					this.context.fillStyle = "#C5DBF0";
 					this.context.fill();
-					this.context.fillStyle = "black";
-					this.context.fillText("\ue67f", nodex, nodey + radius / 2);
-					this.context.closePath();
 				}
+				// this.context.moveTo(nodex + radius, nodey);
+				// this.context.font = "48px 微软雅黑";
+				// this.context.fillStyle = "pink";
+				// this.context.fillText("1", nodex, nodey + radius / 2);
+				this.context.closePath();
 				this.context.restore();
 				this.context.save();
 				// draw circle
 				this.context.beginPath();
-				this.context.arc(nodex, nodey, radius+3, 0, 2 * Math.PI);
+				this.context.arc(nodex, nodey, radius + 1, 0, 2 * Math.PI);
+				this.context.lineWidth = 4;
+				this.context.globalAlpha = 0.5;
 				if (dragged) {
 					this.context.strokeStyle = "#C5DBF0";
 					this.context.setLineDash([ 3, 3 ]);
 				} else if (selected) {
 					this.context.setLineDash([ 3, 3 ]);
-					this.context.strokeStyle = "pink";
+					this.context.strokeStyle = "white";
+				} else if (fixed) {
+					this.context.strokeStyle = "#FF0029";
 				} else if (mouseovered) {
-					this.context.strokeStyle = "pink";
+					this.context.strokeStyle = "white";
 				} else {
 					this.context.strokeStyle = "#C5DBF0";
 				}
-				this.context.lineWidth = 3;
 				this.context.stroke();
+				this.context.restore();
+				this.context.save();
 				// draw label
 				if (mouseovered) {
 					this.context.font = "18px 微软雅黑";
-				}else{
+				} else {
 					this.context.font = "12px 微软雅黑";
 				}
 				this.context.textAlign = "center";
@@ -646,7 +676,7 @@ define(
 				// draw icon
 				var self = this;
 				Api.image().get(id).done(function(image) {
-					if(!image){
+					if (!image) {
 						return;
 					}
 					self.images[id] = image;
@@ -768,12 +798,59 @@ define(
 				}
 			}
 
-			Graph.prototype.getLink = function(sourceid, targetid) {
-
+			Graph.prototype.getLink = function(id) {
+				return this.linkMap[id]
 			}
 
 			Graph.prototype.getLinksBySource = function(sourceid) {
 				return this.linkSourceMap[sourceid];
+			}
+
+			Graph.prototype.expandNode = function(node) {
+				node.fixed = true;
+				var options = {
+					id : node.id
+				};
+				var self = this;
+				Api.linknodes().list(options).done(function(result) {
+					var distance = Math.sqrt(128 * 128 + 128 * 128);
+					var nodex = node.x + 128;
+					var nodey = node.y - 128;
+					var nodes = result.entities;
+					nodes.forEach(function(n) {
+						n.x = nodex;
+						n.y = nodey;
+						n.refer = node;
+					});
+					var links = result.links;
+					self.addNodesAndLinks(nodes, links);
+				});
+			}
+
+			Graph.prototype.encloseNode = function(node) {
+				var targets = this.getTargetNodes(node.id);
+				if (targets) {
+					for (var i = 0; i < targets.length; i++) {
+						var target = targets[i];
+						if (target.fixed) {
+							continue;
+						}
+						this._removeNode(target);
+						this._removeLinksByNode(target);
+					}
+				}
+				var sources = this.getSourceNodes(node.id);
+				if (sources) {
+					for (var i = 0; i < sources.length; i++) {
+						var source = sources[i];
+						if (source.fixed) {
+							continue;
+						}
+						this._removeNode(source);
+						this._removeLinksByNode(source);
+					}
+				}
+				this.initSimulations();
 			}
 
 			Graph.prototype.getLinksByTarget = function(targetid) {
@@ -801,7 +878,7 @@ define(
 			}
 
 			Graph.prototype._addNode = function(node) {
-				if(this.nodeMap[node.id]){
+				if (this.nodeMap[node.id]) {
 					return;
 				}
 				this.nodes.push(node);
@@ -831,12 +908,11 @@ define(
 			}
 
 			Graph.prototype._addLink = function(link) {
-				for(var i = 0;i < this.links.length;i++){
-					if(this.links[i].id === link.id){
-						return;
-					}
+				if (this.linkMap[link.id]) {
+					return;
 				}
 				this.links.push(link);
+				this.linkMap[link.id] = link;
 				var sources = this.linkSourceMap[link.source];
 				var targets = this.linkTargetMap[link.target];
 				if (sources) {
@@ -862,7 +938,7 @@ define(
 			}
 
 			Graph.prototype.removeLinksByNode = function(node) {
-				this._removeLinkByNode(node);
+				this._removeLinksByNode(node);
 				this.initSimulations();
 			}
 
@@ -889,6 +965,7 @@ define(
 				if (link && link.length == 1) {
 					this.linkTargetMap[link[0].target] = null;
 					this.linkSourceMap[link[0].source] = null;
+					this.linkMap[link[0].id] = null;
 				}
 			}
 
@@ -948,6 +1025,7 @@ define(
 				if (this.relationNode.hide()) {
 					this.initSimulations();
 				}
+				this.linksNode.hide();
 				if (this.selects) {
 					this.unselectNodes();
 				}
@@ -994,6 +1072,395 @@ define(
 			}
 			return Graph;
 		});
+
+/**
+ * Onyx Canvas Relation Dialog
+ */
+define("onyx/canvas/linksnode", [ "jquery", "require", "d3/d3" ], function($,
+		require) {
+
+	var d3 = require("d3/d3");
+
+	var RADIUS = 256;
+
+	var LinksNode = function(canvas, graph) {
+		this.canvas = canvas;
+		this.context = canvas.getContext();
+		this.graph = graph;
+		this.nodes = [];
+		this.nodeMap = {};
+		this.links = [];
+		this.linkMap = {};
+		this.linkSourceMap = {};
+		this.linkTargetMap = {};
+	}
+
+	LinksNode.prototype.show = function(node) {
+		this.hide();
+		this.node = node;
+		node.fixed = true;
+		node.fx = node.x;
+		node.fy = node.y;
+		var options = {
+			id : node.id
+		};
+		var self = this;
+		this._addNode(this.node);
+		Api.linknodes().list(options).done(function(result) {
+			var distance = Math.sqrt(128 * 128 + 128 * 128);
+			var nodex = self.node.x + 128;
+			var nodey = self.node.y - 128;
+			var nodes = result.entities;
+			nodes.forEach(function(n) {
+				n.x = nodex;
+				n.y = nodey;
+				n.refer = node;
+			});
+			var links = result.links;
+
+			self.addNodesAndLinks(nodes, links);
+		});
+	}
+
+	LinksNode.prototype.addNodesAndLinks = function(nodes, links) {
+		if (nodes) {
+			for (var i = 0; i < nodes.length; i++) {
+				var node = nodes[i];
+				if (this.graph.getNode(node.id)) {
+					continue;
+				}
+				this._addNode(node);
+			}
+		}
+		if (links) {
+			for (var i = 0; i < links.length; i++) {
+				var link = links[i];
+				if (this.graph.getLink(link.id)) {
+					continue;
+				}
+				this._addLink(link);
+			}
+		}
+		this.initSimulations();
+	}
+
+	LinksNode.prototype._addNode = function(node) {
+		if (this.nodeMap[node.id]) {
+			return;
+		}
+		this.nodes.push(node);
+		this.nodeMap[node.id] = node;
+	}
+
+	LinksNode.prototype._addLink = function(link) {
+		if (this.linkMap[link.id]) {
+			return;
+		}
+		this.links.push(link);
+		this.linkMap[link.id] = link;
+		var sources = this.linkSourceMap[link.source];
+		var targets = this.linkTargetMap[link.target];
+		if (sources) {
+			sources.push(link);
+		} else {
+			this.linkSourceMap[link.source] = [ link ];
+		}
+		if (targets) {
+			targets.push(link);
+		} else {
+			this.linkTargetMap[link.target] = [ link ];
+		}
+	}
+
+	LinksNode.prototype.getNode = function(nodeid) {
+		return this.nodeMap[nodeid];
+	}
+
+	LinksNode.prototype.initSimulations = function() {
+		var width = this.canvas.width;
+		var height = this.canvas.height;
+		this.simulationNodes = this.initSimulationNodes(this.nodes);
+		this.simulation = d3.forceSimulation(this.simulationNodes);
+		this.simulation.force("collide", d3.forceCollide(this.simulationNodes)
+				.radius(function(d) {
+					return (d.radius || 32);
+				}).iterations(1).strength(1));
+		var simulationLinks = this.initSimulationLinks(this.links);
+		if (simulationLinks && simulationLinks.length > 0) {
+			this.simulation.force("link", d3.forceLink(simulationLinks).id(
+					function(d) {
+						return d.id;
+					}).iterations(1).strength(1).distance(function(link) {
+				return link.distance;
+			}));
+		}
+		this.simulation.stop();
+		this.doTicks();
+	}
+
+	LinksNode.prototype.initSimulationNodes = function(nodes) {
+		var nodes = [];
+		for (var i = 0; i < this.nodes.length; i++) {
+			var node = this.nodes[i];
+			nodes.push(node);
+		}
+		return nodes;
+	}
+
+	LinksNode.prototype.initSimulationLinks = function(links) {
+		var result = [];
+		if (!links) {
+			return result;
+		}
+		for (var i = 0; i < links.length; i++) {
+			var link = links[i];
+			var source = this.getNode(link.source);
+			var target = this.getNode(link.target);
+			if (source == null || target == null) {
+				continue;
+			}
+			var distance = Math.sqrt((source.x - target.x)
+					* (source.x - target.x) + (source.y - target.y)
+					* (source.y - target.y));
+			result.push($.extend({
+				distance : distance
+			}, link));
+		}
+		return result;
+	}
+
+	LinksNode.prototype.doTicks = function() {
+		var self = this;
+		function drawFrame() {
+			if (self.simulation.alpha() < 0.05) {
+				return;
+			}
+			self.simulation.tick();
+			self.canvas.render();
+			requestAnimFrame(drawFrame);
+		}
+		requestAnimFrame(drawFrame);
+	}
+
+	LinksNode.prototype.hide = function() {
+		if (this.simulation) {
+			this.simulation.stop();
+			this.simulation = null;
+		}
+		this.node = null;
+		this.nodes = [];
+		this.nodeMap = {};
+		this.links = [];
+		this.linkMap = {};
+		this.linkSourceMap = {};
+		this.linkTargetMap = {};
+	}
+
+	LinksNode.prototype.render = function() {
+		if (!this.node) {
+			return;
+		}
+		this.renderBackGround(this.node);
+		this.graph.renderNode(this.node);
+		var self = this;
+		if (this.links) {
+			this.links.forEach(function(link) {
+				self.renderLink(link);
+			})
+		}
+		if (this.nodes) {
+			this.nodes.forEach(function(node) {
+				self.graph.renderNode(node);
+			})
+		}
+	}
+
+	LinksNode.prototype.renderLink = function(link) {
+		var source = this.getNode(link.source);
+		var target = this.getNode(link.target);
+		if (source == null || target == null) {
+			return;
+		}
+		var name = link.name || "关系";
+		this.context.save();
+		// render line;
+		this.context.beginPath();
+		this.context.globalAlpha = 0.5;
+		this.context.moveTo(this.graph.toScreenX(source.x), this.graph
+				.toScreenY(source.y));
+		this.context.lineTo(this.graph.toScreenX(target.x), this.graph
+				.toScreenY(target.y));
+		if (source.fixed && target.fixed) {
+
+		} else {
+			this.context.setLineDash([ 3, 3 ]);
+		}
+		this.context.lineWidth = 3;
+		this.context.strokeStyle = "white";
+		this.context.stroke();
+		// render text rectangle
+		var middlex = this.graph.toScreenX((target.x + source.x) / 2);
+		var middley = this.graph.toScreenY((target.y + source.y) / 2);
+		var angle = Math.atan2(target.y - source.y, target.x - source.x);
+		this.context.translate(middlex, middley);
+		this.context.rotate(angle);
+		this.context.globalAlpha = 1;
+		this.context.fillStyle = (link.properties && link.properties.color)
+				|| "pink";
+		var width = name.length * 16;
+		this.context.moveTo(-width / 2, -8);
+		this.context.lineTo(-width / 2, 8);
+		this.context.lineTo(width / 2, 8);
+		this.context.lineTo(width / 2 + 4, 0);
+		this.context.lineTo(width / 2, -8);
+		// this.context.fillRect(-16, -8, 32, 16);
+		this.context.fill();
+		// render text
+		var angle = Math.atan2(target.x - source.x, target.y - source.y);
+		if (angle <= 0) {
+			this.context.rotate(Math.PI);
+		}
+		this.context.font = "12px 微软雅黑";
+		this.context.textAlign = "center"
+		this.context.fillStyle = "white";
+		this.context.fillText(name, 0, 4);
+		this.context.restore();
+	}
+
+	LinksNode.prototype.renderBackGround = function(node) {
+		var nodex = this.graph.toScreenX(node.x);
+		var nodey = this.graph.toScreenY(node.y);
+		// draw node
+		this.context.save();
+		this.context.globalAlpha = 0.9;
+		this.context.beginPath();
+		this.context.moveTo(nodex, nodey);
+		this.context.arc(nodex, nodey, RADIUS, 0, 2 * Math.PI);
+		this.context.fillStyle = "#5381B2";
+		this.context.fill();
+		// draw circle
+		this.context.beginPath();
+		this.context.arc(nodex, nodey, RADIUS + 2, 0, 2 * Math.PI);
+		this.context.strokeStyle = this.active ? "#FFFFFF" : "#5381B2";
+		this.context.setLineDash([ 3, 3 ]);
+		this.context.lineWidth = 3;
+		this.context.stroke();
+		this.context.restore();
+	}
+
+	LinksNode.prototype.onClick = function(event) {
+		if (this.current) {
+			this.current.fixed = !this.current.fixed;
+			return true;
+		}
+		if (this.active) {
+			return true;
+		}
+		return false;
+	}
+
+	LinksNode.prototype.onDblClick = function(event) {
+		if (this.current) {
+			this.addToGraph(this.current);
+			for (var i = 0; i < this.nodes.length; i++) {
+				var node = this.nodes[i];
+				if (!node.fixed) {
+					continue;
+				}
+				if (node.id == this.node.id) {
+					continue;
+				}
+				if (node.id == this.current.id) {
+					continue;
+				}
+				this.addToGraph(node);
+			}
+			this.hide();
+			return true;
+		}
+		if (this.active) {
+			return true;
+		}
+		return false;
+	}
+
+	LinksNode.prototype.addToGraph = function(node) {
+		node.fixed = true;
+		this.graph.addNode(node);
+		var self = this;
+		var sources = this.linkSourceMap[node.id];
+		if (sources) {
+			sources.forEach(function(source) {
+				self.graph.addLink(source);
+			})
+		}
+		var targets = this.linkTargetMap[node.id];
+		if (targets) {
+			targets.forEach(function(target) {
+				self.graph.addLink(target);
+			})
+		}
+	}
+
+	LinksNode.prototype.onMouseMove = function(event) {
+		if (!this.node) {
+			this.clearMouseMove();
+			return false;
+		}
+		var x = this.graph.toStandardX(event.offsetX);
+		var y = this.graph.toStandardY(event.offsetY);
+		var nodex = this.getX();
+		var nodey = this.getY();
+		// check if inside the node
+		var distance = Math.sqrt((nodex - x) * (nodex - x) + (nodey - y)
+				* (nodey - y));
+		var active = distance <= RADIUS;
+		var changed = active === this.active;
+		if (!active) {
+			this.clearMouseMove();
+			return changed;
+		}
+		this.active = true;
+		// check if inside the relation bubble
+		if (!this.nodes) {
+			return false;
+		}
+		var current = null;
+		for (var i = 0; i < this.nodes.length; i++) {
+			var child = this.nodes[i];
+			var childx = child.x;
+			var childy = child.y;
+			var childdistance = Math.sqrt((childx - x) * (childx - x)
+					+ (childy - y) * (childy - y));
+			var childactive = childdistance <= 32;
+			child.active = childactive;
+			if (childactive) {
+				current = child;
+			}
+		}
+		this.current = current;
+		return changed;
+	}
+
+	LinksNode.prototype.clearMouseMove = function(event) {
+		if (this.current) {
+			this.current.active = false;
+		}
+		this.current = null;
+		this.active = false;
+	}
+
+	LinksNode.prototype.getX = function() {
+		return this.node.x;
+	}
+
+	LinksNode.prototype.getY = function() {
+		return this.node.y;
+	}
+
+	return LinksNode;
+});
+
 /**
  * Onyx Canvas Relation Dialog
  */
@@ -1824,18 +2291,24 @@ define(
 					},
 					pdom : this.dom
 				});
-				this.layout.on("click", this.onClickBlank.bind(this));
+				// this.layout.on("click", this.onClickBlank.bind(this));
 				this.searchbox = UI.createSearchBox({
 					clazz : "onyx-canvas-searchpanel-search",
 					pdom : this.layout.getHeader()
 				});
+				this.searchbox.on("change", this.onSearch.bind(this));
 				this.slideboard = UI.createSlideBoard({
 					type : "entity",
 					datas : this.queryEntities.bind(this),
+					search : this.searchEntities.bind(this),
 					pdom : this.layout.getBody()
 				});
 				this.slideboard.on("clickblank", this.onClickBlank.bind(this));
 				this.slideboard.on("clickitem", this.onClickItem.bind(this));
+			}
+
+			SearchPanel.prototype.onSearch = function(event, value) {
+				this.slideboard.search(value);
 			}
 
 			SearchPanel.prototype.onClickBlank = function(event) {
@@ -1848,15 +2321,21 @@ define(
 						/ 2 - this.graph.getX();
 				var nodey = (this.pos && this.pos.y) || this.graph.getHeight()
 						/ 2 - this.graph.getY();
-				this.graph.addNode($.extend({
+				var currentNode = $.extend({
 					x : nodex,
 					y : nodey
-				}, node));
+				}, node);
+				this.graph.addNode(currentNode);
+				this.graph.expandNode(currentNode);
 				this.hide();
 			}
 
-			SearchPanel.prototype.queryEntities = function() {
+			SearchPanel.prototype.queryEntities = function(args) {
 				return Api.entity(this.canvas.kid).list();
+			}
+
+			SearchPanel.prototype.searchEntities = function(text) {
+				return Api.search(this.canvas.kid).searchEntities(text);
 			}
 
 			SearchPanel.prototype.show = function(pos) {
@@ -1965,9 +2444,9 @@ define(
 				var title = $("<p class='onyx-canvas-rightpanel-title'></p>");
 				title.text(entity.name);
 				title.appendTo(details);
-				if(entity.labels){
+				if (entity.labels) {
 					var labels = $("<ul class='onyx-canvas-rightpanel-labels'></ul>")
-					for(var i = 0;i < entity.labels.length;i++){
+					for (var i = 0; i < entity.labels.length; i++) {
 						var labelName = entity.labels[i];
 						var label = $("<li class='onyx-canvas-rightpanel-label'></li>");
 						label.text(labelName);

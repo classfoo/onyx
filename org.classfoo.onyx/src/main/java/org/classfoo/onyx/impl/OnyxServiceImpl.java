@@ -8,6 +8,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.classfoo.onyx.api.OnyxService;
 import org.classfoo.onyx.api.cache.OnyxCacheService;
 import org.classfoo.onyx.api.file.OnyxFileService;
+import org.classfoo.onyx.api.index.OnyxIndexService;
 import org.classfoo.onyx.api.operate.OnyxOperate;
 import org.classfoo.onyx.api.operate.OnyxOperateService;
 import org.classfoo.onyx.api.query.OnyxQuery;
@@ -48,6 +49,9 @@ public class OnyxServiceImpl implements OnyxService, InitializingBean {
 
 	@Autowired
 	private OnyxStreamingService streamingService;
+
+	@Autowired
+	private OnyxIndexService indexService;
 
 	private Map<String, OnyxApi> onyxApiMap;
 
@@ -124,5 +128,10 @@ public class OnyxServiceImpl implements OnyxService, InitializingBean {
 	@Override
 	public OnyxStreamingService getStreamingService() {
 		return this.streamingService;
+	}
+
+	@Override
+	public OnyxIndexService getIndexService() {
+		return this.indexService;
 	}
 }

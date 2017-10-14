@@ -4,278 +4,299 @@
 define("onyx/api", [ "jquery", "require", "onyx/api/label", "onyx/api/entity",
 		"onyx/api/recommend", "onyx/api/base", "onyx/api/timeline",
 		"onyx/api/material", "onyx/api/file", "onyx/api/image",
-		"onyx/api/link", "onyx/api/linknames", "onyx/api/linknodes" ],
-		function($, require) {
+		"onyx/api/link", "onyx/api/linknames", "onyx/api/linknodes",
+		"onyx/api/search" ], function($, require) {
 
-			var labels = {};
+	var searches = {};
 
-			var label;
+	var search;
 
-			var entities = {};
+	var labels = {};
 
-			var entity;
+	var label;
 
-			var links = {};
+	var entities = {};
 
-			var link;
+	var entity;
 
-			var linknames = {};
+	var links = {};
 
-			var linkname;
+	var link;
 
-			var timelines = {};
+	var linknames = {};
 
-			var timeline;
+	var linkname;
 
-			var materials = {};
+	var timelines = {};
 
-			var material;
+	var timeline;
 
-			var base;
+	var materials = {};
 
-			var recommend;
+	var material;
 
-			function Api() {
-				window.Api = Api;
+	var base;
+
+	var recommend;
+
+	function Api() {
+		window.Api = Api;
+	}
+
+	Api.recommend = function() {
+		var Recommend = require("onyx/api/recommend");
+		return new Recommend();
+	}
+
+	Api.base = function() {
+		var Base = require("onyx/api/base");
+		return new Base();
+	}
+
+	Api.search = function(kid) {
+		if (!kid) {
+			if (search) {
+				return search;
 			}
+			var Search = require("onyx/api/search");
+			search = new Search();
+			return search;
+		}
+		if (searches[kid]) {
+			return searches[kid];
+		}
+		var Search = require("onyx/api/search");
+		searches[kid] = new Search(kid);
+		return searches[kid];
+	}
 
-			Api.recommend = function() {
-				var Recommend = require("onyx/api/recommend");
-				return new Recommend();
+	Api.label = function(kid) {
+		if (!kid) {
+			if (label) {
+				return label;
 			}
+			var Label = require("onyx/api/label");
+			label = new Label();
+			return label;
+		}
+		if (labels[kid]) {
+			return labels[kid];
+		}
+		var Label = require("onyx/api/label");
+		labels[kid] = new Label(kid);
+		return labels[kid];
+	}
 
-			Api.base = function() {
-				var Base = require("onyx/api/base");
-				return new Base();
+	Api.entity = function(kid) {
+		if (!kid) {
+			if (entity) {
+				return entity;
 			}
+			var Entity = require("onyx/api/entity");
+			entity = new Entity();
+			return entity;
+		}
+		if (entities[kid]) {
+			return entities[kid];
+		}
+		var Entity = require("onyx/api/entity");
+		entities[kid] = new Entity(kid);
+		return entities[kid];
+	}
 
-			Api.label = function(kid) {
-				if (!kid) {
-					if (label) {
-						return label;
-					}
-					var Label = require("onyx/api/label");
-					label = new Label();
-					return label;
-				}
-				if (labels[kid]) {
-					return labels[kid];
-				}
-				var Label = require("onyx/api/label");
-				labels[kid] = new Label(kid);
-				return labels[kid];
+	Api.link = function(kid) {
+		if (!kid) {
+			if (link) {
+				return link;
 			}
+			var Link = require("onyx/api/link");
+			link = new Link();
+			return link;
+		}
+		if (links[kid]) {
+			return links[kid];
+		}
+		var Link = require("onyx/api/link");
+		links[kid] = new Link(kid);
+		return links[kid];
+	}
 
-			Api.entity = function(kid) {
-				if (!kid) {
-					if (entity) {
-						return entity;
-					}
-					var Entity = require("onyx/api/entity");
-					entity = new Entity();
-					return entity;
-				}
-				if (entities[kid]) {
-					return entities[kid];
-				}
-				var Entity = require("onyx/api/entity");
-				entities[kid] = new Entity(kid);
-				return entities[kid];
+	Api.linknames = function(kid) {
+		if (!kid) {
+			if (linkname) {
+				return linkname;
 			}
+			var LinkName = require("onyx/api/linknames");
+			linkname = new LinkName();
+			return linkname;
+		}
+		if (linknames[kid]) {
+			return linknames[kid];
+		}
+		var LinkName = require("onyx/api/linknames");
+		linknames[kid] = new LinkName(kid);
+		return linknames[kid];
+	}
 
-			Api.link = function(kid) {
-				if (!kid) {
-					if (link) {
-						return link;
-					}
-					var Link = require("onyx/api/link");
-					link = new Link();
-					return link;
-				}
-				if (links[kid]) {
-					return links[kid];
-				}
-				var Link = require("onyx/api/link");
-				links[kid] = new Link(kid);
-				return links[kid];
-			}
+	Api.linknodes = function() {
+		var LinkNodes = require("onyx/api/linknodes");
+		return new LinkNodes();
+	}
 
-			Api.linknames = function(kid) {
-				if (!kid) {
-					if (linkname) {
-						return linkname;
-					}
-					var LinkName = require("onyx/api/linknames");
-					linkname = new LinkName();
-					return linkname;
-				}
-				if (linknames[kid]) {
-					return linknames[kid];
-				}
-				var LinkName = require("onyx/api/linknames");
-				linknames[kid] = new LinkName(kid);
-				return linknames[kid];
+	Api.timeline = function(kid) {
+		if (!kid) {
+			if (timeline) {
+				return timeline;
 			}
+			var TimeLine = require("onyx/api/timeline");
+			timeline = new TimeLine();
+			return timeline;
+		}
+		if (timelines[kid]) {
+			return timelines[kid];
+		}
+		var TimeLine = require("onyx/api/timeline");
+		timelines[kid] = new TimeLine(kid);
+		return timelines[kid];
+	}
 
-			Api.linknodes = function() {
-				var LinkNodes = require("onyx/api/linknodes");
-				return new LinkNodes();
+	Api.material = function(kid) {
+		if (!kid) {
+			if (material) {
+				return material;
 			}
+			var Material = require("onyx/api/material");
+			material = new Material();
+			return material;
+		}
+		if (materials[kid]) {
+			return materials[kid];
+		}
+		var Material = require("onyx/api/material");
+		materials[kid] = new Material(kid);
+		return materials[kid];
+	}
 
-			Api.timeline = function(kid) {
-				if (!kid) {
-					if (timeline) {
-						return timeline;
-					}
-					var TimeLine = require("onyx/api/timeline");
-					timeline = new TimeLine();
-					return timeline;
-				}
-				if (timelines[kid]) {
-					return timelines[kid];
-				}
-				var TimeLine = require("onyx/api/timeline");
-				timelines[kid] = new TimeLine(kid);
-				return timelines[kid];
-			}
+	/**
+	 * Api File for uploading and visit files
+	 */
+	Api.file = function() {
+		var File = require("onyx/api/file");
+		return new File();
+	}
 
-			Api.material = function(kid) {
-				if (!kid) {
-					if (material) {
-						return material;
-					}
-					var Material = require("onyx/api/material");
-					material = new Material();
-					return material;
-				}
-				if (materials[kid]) {
-					return materials[kid];
-				}
-				var Material = require("onyx/api/material");
-				materials[kid] = new Material(kid);
-				return materials[kid];
-			}
+	/**
+	 * Api Image for canvas drawing
+	 */
+	Api.image = function() {
+		if (this.imageApi) {
+			return this.imageApi;
+		}
+		var OnyxImage = require("onyx/api/image");
+		this.imageApi = new OnyxImage();
+		return this.imageApi;
+	}
 
-			/**
-			 * Api File for uploading and visit files
-			 */
-			Api.file = function() {
-				var File = require("onyx/api/file");
-				return new File();
-			}
-
-			/**
-			 * Api Image for canvas drawing
-			 */
-			Api.image = function() {
-				if (this.imageApi) {
-					return this.imageApi;
-				}
-				var OnyxImage = require("onyx/api/image");
-				this.imageApi = new OnyxImage();
-				return this.imageApi;
-			}
-
-			Api.getResource = function(resource) {
-				if (resource == null || typeof (resource) == "undefined") {
-					return $.dfd({});
-				}
-				var type = resource.substring(0, 1);
-				switch (type) {
-				case 'k': {
-					return Api.base().single(resource);
-				}
-				case 'u': {
-					return $.dfd();// Api.user().single(resource);
-				}
-				case 'e': {
-					return Api.entity().single(resource);
-				}
-				case 'm': {
-					return Api.material().single(resource);
-				}
-				case 'l': {
-					return Api.label().single(resource);
-				}
-				}
-				return $.dfd({
-					id : resource,
-					caption : "知识库1"
-				});
-			}
-
-			Api.get = function(api, options) {
-				return this.ajax("get", api, options);
-			}
-
-			Api.post = function(api, options) {
-				return this.ajax("post", api, options);
-			}
-
-			Api.upload = function(api, options) {
-				return this.ajaxform("post", api, options);
-			}
-
-			Api.put = function(api, options) {
-				return this.ajax("put", api, options);
-			}
-
-			Api.remove = function(api, options) {
-				return this.ajax("delete", api, options);
-			}
-
-			Api.ajax = function(method, api, options) {
-				var dfd = $.Deferred();
-				var data = Api.stringifyData(options);
-				$.ajax({
-					method : method,
-					url : "/onyxapi/v1/" + api,
-					data : data,
-					success : function(result) {
-						dfd.resolve(result);
-					},
-					error : function(error) {
-						dfd.resolve({});
-					}
-				});
-				return dfd.promise();
-			}
-
-			Api.ajaxform = function(method, api, formdata) {
-				var dfd = $.Deferred();
-				$.ajax({
-					method : method,
-					url : "/onyxapi/v1/" + api,
-					data : formdata,
-					enctype : 'multipart/form-data',
-					processData : false,
-					contentType : false,
-					success : function(result) {
-						dfd.resolve(result);
-					},
-					error : function(error) {
-						dfd.resolve({});
-					}
-				});
-				return dfd.promise();
-			}
-
-			Api.stringifyData = function(options) {
-				if (!options) {
-					return null;
-				}
-				var data = {};
-				$.each(options, function(k, v) {
-					if (typeof (v) === "string") {
-						data[k] = v;
-						return;
-					}
-					data[k] = JSON.stringify(v);
-				});
-				return data;
-			}
-			return Api;
+	Api.getResource = function(resource) {
+		if (resource == null || typeof (resource) == "undefined") {
+			return $.dfd({});
+		}
+		var type = resource.substring(0, 1);
+		switch (type) {
+		case 'k': {
+			return Api.base().single(resource);
+		}
+		case 'u': {
+			return $.dfd();// Api.user().single(resource);
+		}
+		case 'e': {
+			return Api.entity().single(resource);
+		}
+		case 'm': {
+			return Api.material().single(resource);
+		}
+		case 'l': {
+			return Api.label().single(resource);
+		}
+		}
+		return $.dfd({
+			id : resource,
+			caption : "知识库1"
 		});
+	}
+
+	Api.get = function(api, options) {
+		return this.ajax("get", api, options);
+	}
+
+	Api.post = function(api, options) {
+		return this.ajax("post", api, options);
+	}
+
+	Api.upload = function(api, options) {
+		return this.ajaxform("post", api, options);
+	}
+
+	Api.put = function(api, options) {
+		return this.ajax("put", api, options);
+	}
+
+	Api.remove = function(api, options) {
+		return this.ajax("delete", api, options);
+	}
+
+	Api.ajax = function(method, api, options) {
+		var dfd = $.Deferred();
+		var data = Api.stringifyData(options);
+		$.ajax({
+			method : method,
+			url : "/onyxapi/v1/" + api,
+			data : data,
+			success : function(result) {
+				dfd.resolve(result);
+			},
+			error : function(error) {
+				dfd.resolve({});
+			}
+		});
+		return dfd.promise();
+	}
+
+	Api.ajaxform = function(method, api, formdata) {
+		var dfd = $.Deferred();
+		$.ajax({
+			method : method,
+			url : "/onyxapi/v1/" + api,
+			data : formdata,
+			enctype : 'multipart/form-data',
+			processData : false,
+			contentType : false,
+			success : function(result) {
+				dfd.resolve(result);
+			},
+			error : function(error) {
+				dfd.resolve({});
+			}
+		});
+		return dfd.promise();
+	}
+
+	Api.stringifyData = function(options) {
+		if (!options) {
+			return null;
+		}
+		var data = {};
+		$.each(options, function(k, v) {
+			if (typeof (v) === "string") {
+				data[k] = v;
+				return;
+			}
+			data[k] = JSON.stringify(v);
+		});
+		return data;
+	}
+	return Api;
+});
 
 define("onyx/api/recommend", [ "jquery", "require" ], function($, require) {
 
@@ -293,6 +314,32 @@ define("onyx/api/recommend", [ "jquery", "require" ], function($, require) {
 	}
 
 	return Recommend;
+});
+
+/**
+ * onyx search api
+ */
+define("onyx/api/search", [ "jquery", "require" ], function($, require) {
+
+	function Search(kid) {
+		this.kid = kid;
+	}
+
+	/**
+	 * search entity list
+	 * 
+	 * @param offset
+	 * @param limit
+	 */
+	Search.prototype.searchEntities = function(text, offset, limit) {
+		return Api.get("search", {
+			kid : this.kid,
+			type : "entity",
+			text : text
+		});
+	}
+
+	return Search;
 });
 
 define("onyx/api/base", [ "jquery", "require" ], function($, require) {
@@ -320,95 +367,106 @@ define("onyx/api/base", [ "jquery", "require" ], function($, require) {
 	return Base;
 });
 
-define("onyx/api/label", [ "jquery", "require" ], function($, require) {
+define(
+		"onyx/api/label",
+		[ "jquery", "require" ],
+		function($, require) {
 
-	function Label(kid) {
-		this.kid = kid;
-		this.labelNames = [];
-		this.labelMap = {};
-	}
+			function Label(kid) {
+				this.kid = kid;
+				this.labelNames = [];
+				this.labelMap = {};
+			}
 
-	/**
-	 * get label list
-	 * 
-	 * @param offset
-	 * @param limit
-	 */
-	Label.prototype.list = function(offset, limit) {
-		return Api.get("label", {
-			kid : this.kid
+			/**
+			 * get label list
+			 * 
+			 * @param offset
+			 * @param limit
+			 */
+			Label.prototype.list = function(offset, limit) {
+				return Api.get("label", {
+					kid : this.kid
+				});
+			}
+
+			/**
+			 * get label resource
+			 * 
+			 * @param lid
+			 */
+			Label.prototype.get = function(lid) {
+				return Api.get("label/" + lid);
+			}
+
+			/**
+			 * get label image
+			 * 
+			 * @param name
+			 */
+			Label.prototype.image = function(name) {
+				var dfd = $.Deferred();
+				Api
+						.get("label/" + name, {
+							kid : this.kid
+						})
+						.done(
+								function(label) {
+									var icon = (label.properties && label.properties.icon)
+											|| "\ue66f";
+									var background = (label.properties && label.properties.background)
+											|| "#C5DBF0";
+									var color = (label.properties && label.properties.color)
+											|| "white";
+									var canvasOffscreen = document
+											.createElement('canvas');
+									canvasOffscreen.width = 64;
+									canvasOffscreen.height = 64;
+									var context = canvasOffscreen
+											.getContext('2d');
+									context.save();
+									context.beginPath();
+									context.moveTo(0, 0);
+									context.rect(0, 0, 64, 64);
+									context.font = "48px iconfont";
+									context.textAlign = "center";
+									context.fillStyle = background;
+									context.fill();
+									context.fillStyle = color;
+									context.fillText(icon, 32, 48);
+									context.closePath();
+									context.restore();
+									dfd.resolve(canvasOffscreen);
+								});
+				return dfd.promise();
+			}
+
+			/**
+			 * get label properties by name
+			 */
+			Label.prototype.properties = function(name) {
+				return $.dfd([ {}, {}, {}, {} ]);
+			}
+
+			/**
+			 * get label parents by name
+			 */
+			Label.prototype.parents = function(name) {
+				return $.dfd([ {}, {}, {}, {} ]);
+			}
+
+			/**
+			 * save label modifies
+			 * 
+			 * @param kid
+			 * @param lid
+			 * @param modifies
+			 */
+			Label.prototype.save = function(options) {
+				return Api.post("label", options);
+			}
+			return Label;
 		});
-	}
-
-	/**
-	 * get label resource
-	 * 
-	 * @param lid
-	 */
-	Label.prototype.get = function(lid) {
-		return Api.get("label/" + lid);
-	}
-
-	/**
-	 * get label image
-	 * 
-	 * @param name
-	 */
-	Label.prototype.image = function(name) {
-		var dfd = $.Deferred();
-		Api.get("label/" + name, {
-			kid : this.kid
-		}).done(function(label) {
-			var icon = (label.properties && label.properties.icon) || "\ue66f";
-			var background = (label.properties && label.properties.background)||"#C5DBF0";
-			var color = (label.properties && label.properties.color)||"white";
-			var canvasOffscreen = document.createElement('canvas');
-			canvasOffscreen.width = 64;
-			canvasOffscreen.height = 64;
-			var context = canvasOffscreen.getContext('2d');
-			context.save();
-			context.beginPath();
-			context.moveTo(0,0);
-			context.rect(0, 0, 64,64);
-			context.font = "32px iconfont";
-			context.textAlign = "center";
-			context.fillStyle = background;
-			context.fill();
-			context.fillStyle = color;
-			context.fillText(icon, 32, 48);
-			context.closePath();
-			context.restore();
-			dfd.resolve(canvasOffscreen);
-		});
-		return dfd.promise();
-	}
-
-	/**
-	 * get label properties by name
-	 */
-	Label.prototype.properties = function(name) {
-		return $.dfd([ {}, {}, {}, {} ]);
-	}
-
-	/**
-	 * get label parents by name
-	 */
-	Label.prototype.parents = function(name) {
-		return $.dfd([ {}, {}, {}, {} ]);
-	}
-
-	/**
-	 * save label modifies
-	 * 
-	 * @param kid
-	 * @param lid
-	 * @param modifies
-	 */
-	Label.prototype.save = function(options) {
-		return Api.post("label", options);
-	}
-	return Label;
-});
 
 define("onyx/api/entity", [ "jquery", "require" ], function($, require) {
 

@@ -58,7 +58,11 @@ public class NEEQDataConsumer_TopTenHolders implements OnyxStreamingMessageListe
 		properties.put("占比", ratio);
 		String unlimitedQuantity = line[9];
 		properties.put("解禁股份", unlimitedQuantity);
-		Map<String, Object> entity = session.addEntity(this.kid, name, Arrays.asList("股东"), properties);
+		Map<String, Object> entity = consumer.getContext().getEntityByProperty("people", name);
+		if(entity == null){
+			entity = session.addEntity(this.kid, name, Arrays.asList("股东"), properties);
+			consumer.getContext().putEntityByProperty("people", name, entity);
+		}
 		String targetid = MapUtils.getString(entity, "id");
 		String targetname = MapUtils.getString(entity, "name");
 		Map<String, Object> target = consumer.getContext().getEntityByProperty("code", hqzqdm);

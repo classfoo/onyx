@@ -2139,7 +2139,14 @@ define("onyx/ui/searchbox", [ "jquery", "require", "onyx/ui/widget",
 		this.input = $("<input type='text'></input>");
 		this.addClass(this.input, "onyx-ui-searchbox", "input");
 		this.input.appendTo(this.dom);
+		this.input.on("change", this.onChange.bind(this));
 		return this.dom;
+	}
+
+	SearchBox.prototype.onChange = function(event) {
+		event.stopPropagation();
+		var text = this.input.val();
+		this.fire("change", text);
 	}
 
 	SearchBox.prototype.setText = function(text) {
@@ -3000,6 +3007,18 @@ define("onyx/ui/slideboard", [ "jquery", "require", "onyx/ui/widget",
 				});
 			}
 
+			SlideBoard.prototype.search = function(text){
+				this.container.children().remove();
+				var self = this;
+				var search = this.options.search;
+				if(!search){
+					return;
+				}
+				search(text).done(function(datas){
+					self.buildData(datas);
+				})
+			}
+	
 			SlideBoard.prototype.onMouseOver = function(event) {
 				var target = this.getEventTarget(event, "onyx-ui-slideboard",
 						"item");
