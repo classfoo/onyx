@@ -20,4 +20,5 @@ public interface OnyxIndexService {
 	
 	public List<Map<String, Object>> searchEntity(String name);
 
+	public void clearIndexes();
 }

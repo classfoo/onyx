@@ -84,6 +84,12 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 	}
 
 	@Override
+	public List<Map<String, Object>> queryEntityEvents(String eid) {
+		ResultSet value = this.executeQuery("select * from entity_event where id_=?", eid);
+		return convertToList(value);
+	}
+
+	@Override
 	public Map<String, Object> queryBaseLabel(String kid, String name) {
 		ResultSet value = this.executeQuery("select * from labels where kid_=? and name_=?", kid, name);
 		return this.convertToMap(value);
@@ -408,6 +414,15 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 				"insert into entities (kid_,id_,name_,event_,order_,property_,operate_,key_,value_,user_) values(?,?,?,now(),1,'name','add',?,?,?)",
 				kid, eid, name, name, null, "admin");
 		return convertToMap(value);
+	}
+
+	@Override
+	public void addEvent(String eid, String type, String name, String time, Map<String, Object> properties) {
+		String eventid = OnyxUtils.getRandomUUID("t");
+		this.executeUpdate("insert into events (id_,eid_ ,time_,name_,type_,properties_) values(?,?,?,?,?,?)", eventid,
+				eid, time, name, type, properties);
+		this.executeUpdate("insert into entity_event (id_, time_,name_,type_, eid_) values(?,?,?,?,?)", eid, time,
+				name, type, eventid);
 	}
 
 	@Override

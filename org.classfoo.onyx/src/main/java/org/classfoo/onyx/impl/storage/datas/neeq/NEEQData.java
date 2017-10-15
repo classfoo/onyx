@@ -44,10 +44,11 @@ public class NEEQData {
 		consumer.registListener("executives.csv", new NEEQDataConsumer_Executives(this.onyxService, kid));
 		consumer.registListener("baseinfo.csv", new NEEQDataConsumer_BaseInfo(this.onyxService, kid));
 		consumer.registListener("topTenHolders.csv", new NEEQDataConsumer_TopTenHolders(this.onyxService, kid));
+		consumer.registListener("tradeInfo.csv", new NEEQDataConsumer_TradeInfo(this.onyxService, kid));
 		consumer.start();
 		// initialize producer threads
 		ProducerThread thread = new ProducerThread(this.onyxService, uuid, "baseinfo.csv", "executives.csv",
-				"topTenHolders.csv");
+				"topTenHolders.csv", "tradeInfo.csv");
 		thread.setName("NEEQProducer");
 		thread.start();
 	}

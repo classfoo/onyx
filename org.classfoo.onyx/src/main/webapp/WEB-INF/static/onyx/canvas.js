@@ -2431,7 +2431,51 @@ define(
 				var self = this;
 				Api.entity().get(node.id).done(function(entity) {
 					self.buildHeader(node, entity, layout.getHeader());
-					self.buildBody(node, entity, layout.getBody());
+				});
+				var navpanel = UI.createNavPanel({
+					clazz:"onyx-canvas-rightpanel-navpanel",
+					on : {
+						"switch" : this.onSwitchNavPanel.bind(this, node)
+					},
+					navbar : {
+						theme : "tabset",
+						active : this.activeNavBar || "properties",
+						items : [ {
+							id : "properties",
+							caption : "属性"
+						}, {
+							id : "events",
+							caption : "事件"
+						} ]
+					},
+					pdom : layout.getBody()
+				});
+			}
+
+			RightPanel.prototype.onSwitchNavPanel = function(node, event, page) {
+				switch (page.id) {
+				case "properties": {
+					return this.onSwitchProperties(node, page);
+				}
+				case "events": {
+					return this.onSwitchEvents(node, page);
+				}
+				}
+			}
+
+			RightPanel.prototype.onSwitchProperties = function(node, page) {
+				var self = this;
+				this.activeNavBar = "properties";
+				Api.entity().get(node.id).done(function(entity) {
+					self.buildProperties(node, entity, page.dom);
+				});
+			}
+
+			RightPanel.prototype.onSwitchEvents = function(node, page) {
+				var self = this;
+				this.activeNavBar = "events";
+				Api.event().list(node.id).done(function(events) {
+					self.buildEvents(node, events, page.dom);
 				});
 			}
 
@@ -2457,7 +2501,7 @@ define(
 				}
 			}
 
-			RightPanel.prototype.buildBody = function(node, entity, pdom) {
+			RightPanel.prototype.buildProperties = function(node, entity, pdom) {
 				var properties = $("<div class='onyx-canvas-rightpanel-properties'></div>");
 				properties.appendTo(pdom);
 				var items = [];
@@ -2465,6 +2509,27 @@ define(
 					items.push({
 						id : p,
 						name : p + ":" + entity.properties[p]
+					});
+				}
+				UI.createList({
+					clazz : "onyx-canvas-rightpanel-properties-list",
+					datas : items,
+					pdom : properties
+				});
+			}
+
+			RightPanel.prototype.buildEvents = function(node, events, pdom) {
+				if(!events){
+					return;
+				}
+				var properties = $("<div class='onyx-canvas-rightpanel-events'></div>");
+				properties.appendTo(pdom);
+				var items = [];
+				for (var i = 0; i < events.length; i++) {
+					var event = events[i];
+					items.push({
+						id : event.eid,
+						name : event.name
 					});
 				}
 				UI.createList({

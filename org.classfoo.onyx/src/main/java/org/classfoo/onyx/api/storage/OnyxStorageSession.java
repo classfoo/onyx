@@ -29,6 +29,13 @@ public interface OnyxStorageSession {
 
 	public List<Map<String, Object>> queryEntityModifies(String eid);
 
+	/**
+	 * query entity events
+	 * @param eid
+	 * @return
+	 */
+	public List<Map<String, Object>> queryEntityEvents(String eid);
+
 	public Map<String, Object> queryBaseLabel(String kid, String name);
 
 	public List<Map<String, Object>> queryBaseLabels(String kid);
@@ -106,6 +113,16 @@ public interface OnyxStorageSession {
 	public Map<String, Object> addMaterial(String name, String desc, String kid, Map<String, Object> properties);
 
 	public Map<String, Object> addEntity(String kid, String name, List<String> labels, Map<String, Object> properties);
+
+	/**
+	 * add event of entity
+	 * @param eid
+	 * @param type
+	 * @param name
+	 * @param date
+	 * @param properties
+	 */
+	public void addEvent(String eid, String type, String name, String date, Map<String, Object> properties);
 
 	public void addLink(String name, String sourceid, String sourcename, String targetid, String targetname,
 			Map<String, Object> properties);

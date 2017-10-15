@@ -1340,7 +1340,7 @@ define("onyx/ui/navpanel",
 				this.layout = new Layout({
 					clazz : "onyx-ui-navpanel-layout",
 					header : {
-						height : 24
+						height : 28
 					},
 					body : {
 

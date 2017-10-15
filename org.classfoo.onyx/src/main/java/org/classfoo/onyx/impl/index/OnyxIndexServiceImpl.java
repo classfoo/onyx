@@ -27,6 +27,8 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
+import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
@@ -63,27 +65,9 @@ public class OnyxIndexServiceImpl implements OnyxIndexService {
 		return threadPool;
 	}
 
-	public void query() {
-		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-		searchSourceBuilder.query(QueryBuilders.matchAllQuery());
-		searchSourceBuilder.aggregation(AggregationBuilders.terms("top_10_states").field("state").size(10));
-		SearchRequest searchRequest = new SearchRequest();
-		searchRequest.indices("social-*");
-		searchRequest.source(searchSourceBuilder);
-		ActionFuture<SearchResponse> searchResponse = client.search(searchRequest);
-	}
-
 	@Override
 	public void addEntityIndex(Map<String, Object> entity) {
-		//BulkRequestBuilder bulkRequest = client.prepareBulk();
 		client.prepareIndex("onyx", "entity").setSource(entity).execute();
-		//
-		//		Runnable runnable = new Runnable() {
-		//			@Override
-		//			public void run() {
-		//			}
-		//		};
-		//		this.threadPool.submit(runnable);
 	}
 
 	@Override
@@ -99,5 +83,10 @@ public class OnyxIndexServiceImpl implements OnyxIndexService {
 			result.add(item);
 		}
 		return result;
+	}
+
+	@Override
+	public void clearIndexes() {
+		DeleteByQueryAction.INSTANCE.newRequestBuilder(client).filter(QueryBuilders.matchAllQuery()).source("onyx").get();
 	}
 }

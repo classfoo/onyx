@@ -46,6 +46,7 @@ public class OnyxStorage_Cassandra extends OnyxStorageImpl implements OnyxStorag
 	}
 
 	private void init(Cluster cluster) {
+		this.onyxService.getIndexService().clearIndexes();
 		Session session = cluster.connect("onyx");
 		try {
 			logger.info("start initialize cassandra tables...");
@@ -67,8 +68,10 @@ public class OnyxStorage_Cassandra extends OnyxStorageImpl implements OnyxStorag
 				session.execute("drop table links");
 				session.execute("drop table links_source");
 				session.execute("drop table links_target");
+				session.execute("drop table events");
+				session.execute("drop table entity_event");
 				long end = System.currentTimeMillis();
-				logger.info("清理数据库表完毕，耗时：{}秒！", ((double)(end - start))/1000);
+				logger.info("清理数据库表完毕，耗时：{}秒！", ((double) (end - start)) / 1000);
 			}
 			catch (Exception e) {
 
@@ -113,8 +116,12 @@ public class OnyxStorage_Cassandra extends OnyxStorageImpl implements OnyxStorag
 					"create table if not exists links_source(source_ text,sourcename_ text, name_ text,target_ text,targetname_ text, id_ text, properties_ map<text,text>, primary key (source_,name_,target_))");
 			session.execute(
 					"create table if not exists links_target(target_ text,targetname_ text,name_ text,source_ text,sourcename_ text, id_ text, properties_ map<text,text>, primary key (target_,name_,source_))");
+			session.execute(
+					"create table if not exists events(id_ text, eid_ text,time_ text,name_ text,type_ text, properties_ map<text,text>, primary key (id_))");
+			session.execute(
+					"create table if not exists entity_event(id_ text, time_ text,name_ text,type_ text,eid_ text, primary key (id_,time_,name_,type_,eid_)) WITH CLUSTERING ORDER BY (time_ desc)");
 			long end = System.currentTimeMillis();
-			logger.info("创建数据库表完毕，耗时：{}秒！", ((double)(end - start))/1000);
+			logger.info("创建数据库表完毕，耗时：{}秒！", ((double) (end - start)) / 1000);
 
 			//this.initBaseData_YLQ(session);
 			this.initBaseData_NEEQ();

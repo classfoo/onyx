@@ -5,7 +5,7 @@ define("onyx/api", [ "jquery", "require", "onyx/api/label", "onyx/api/entity",
 		"onyx/api/recommend", "onyx/api/base", "onyx/api/timeline",
 		"onyx/api/material", "onyx/api/file", "onyx/api/image",
 		"onyx/api/link", "onyx/api/linknames", "onyx/api/linknodes",
-		"onyx/api/search" ], function($, require) {
+		"onyx/api/search", "onyx/api/event" ], function($, require) {
 
 	var searches = {};
 
@@ -175,6 +175,14 @@ define("onyx/api", [ "jquery", "require", "onyx/api/label", "onyx/api/entity",
 		var Material = require("onyx/api/material");
 		materials[kid] = new Material(kid);
 		return materials[kid];
+	}
+
+	/**
+	 * Api Event for entity events
+	 */
+	Api.event = function() {
+		var Event = require("onyx/api/event");
+		return new Event();
 	}
 
 	/**
@@ -629,6 +637,24 @@ define("onyx/api/material", [ "jquery", "require" ], function($, require) {
 	}
 
 	return Material;
+});
+
+/**
+ * API Event
+ */
+define("onyx/api/event", [ "jquery", "require" ], function($, require) {
+
+	function Event() {
+	}
+
+	/**
+	 * query events of entity
+	 */
+	Event.prototype.list = function(eid) {
+		return Api.get("event/" + eid);
+	}
+
+	return Event;
 });
 
 /**
