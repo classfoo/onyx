@@ -421,8 +421,8 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 		String eventid = OnyxUtils.getRandomUUID("t");
 		this.executeUpdate("insert into events (id_,eid_ ,time_,name_,type_,properties_) values(?,?,?,?,?,?)", eventid,
 				eid, time, name, type, properties);
-		this.executeUpdate("insert into entity_event (id_, time_,name_,type_, eid_) values(?,?,?,?,?)", eid, time,
-				name, type, eventid);
+		this.executeUpdate("insert into entity_event (id_, time_,name_,type_, eid_) values(?,?,?,?,?)", eid, time, name,
+				type, eventid);
 	}
 
 	@Override
@@ -470,6 +470,13 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 		this.executeUpdate(
 				"insert into links_target (id_,source_,sourcename_,target_,targetname_,name_,properties_) values (?,?,?,?,?,?,?)",
 				linkid, sourceid, sourcename, targetid, targetname, name, properties);
+	}
+
+	@Override
+	public void addGraph(String name, String kid, String content, Map<String, Object> properties) {
+		String graphid = OnyxUtils.getRandomUUID("g");
+		this.executeUpdate("insert into links (id_,kid_,name_,content_,properties_) values (?,?,?,?,?)", graphid, kid,
+				name, content, properties);
 	}
 
 	@Override

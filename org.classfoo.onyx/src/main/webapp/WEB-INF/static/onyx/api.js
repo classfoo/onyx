@@ -5,7 +5,8 @@ define("onyx/api", [ "jquery", "require", "onyx/api/label", "onyx/api/entity",
 		"onyx/api/recommend", "onyx/api/base", "onyx/api/timeline",
 		"onyx/api/material", "onyx/api/file", "onyx/api/image",
 		"onyx/api/link", "onyx/api/linknames", "onyx/api/linknodes",
-		"onyx/api/search", "onyx/api/event" ], function($, require) {
+		"onyx/api/search", "onyx/api/event", "onyx/api/graph" ], function($,
+		require) {
 
 	var searches = {};
 
@@ -183,6 +184,14 @@ define("onyx/api", [ "jquery", "require", "onyx/api/label", "onyx/api/entity",
 	Api.event = function() {
 		var Event = require("onyx/api/event");
 		return new Event();
+	}
+
+	/**
+	 * Api Graph for graph storage
+	 */
+	Api.graph = function() {
+		var Graph = require("onyx/api/graph");
+		return new Graph();
 	}
 
 	/**
@@ -655,6 +664,24 @@ define("onyx/api/event", [ "jquery", "require" ], function($, require) {
 	}
 
 	return Event;
+});
+
+/**
+ * API Graph
+ */
+define("onyx/api/graph", [ "jquery", "require" ], function($, require) {
+
+	function Graph() {
+	}
+
+	/**
+	 * save graph
+	 */
+	Graph.prototype.save = function(json) {
+		return Api.post("graph", json);
+	}
+
+	return Graph;
 });
 
 /**

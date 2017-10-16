@@ -70,6 +70,7 @@ public class OnyxStorage_Cassandra extends OnyxStorageImpl implements OnyxStorag
 				session.execute("drop table links_target");
 				session.execute("drop table events");
 				session.execute("drop table entity_event");
+				session.execute("drop table graphes");
 				long end = System.currentTimeMillis();
 				logger.info("清理数据库表完毕，耗时：{}秒！", ((double) (end - start)) / 1000);
 			}
@@ -120,6 +121,9 @@ public class OnyxStorage_Cassandra extends OnyxStorageImpl implements OnyxStorag
 					"create table if not exists events(id_ text, eid_ text,time_ text,name_ text,type_ text, properties_ map<text,text>, primary key (id_))");
 			session.execute(
 					"create table if not exists entity_event(id_ text, time_ text,name_ text,type_ text,eid_ text, primary key (id_,time_,name_,type_,eid_)) WITH CLUSTERING ORDER BY (time_ desc)");
+			session.execute(
+					"create table if not exists graphs(id_ text,kid_ text, name_ text,content_ text,properties_ map<text,text>, primary key (id_))");
+
 			long end = System.currentTimeMillis();
 			logger.info("创建数据库表完毕，耗时：{}秒！", ((double) (end - start)) / 1000);
 

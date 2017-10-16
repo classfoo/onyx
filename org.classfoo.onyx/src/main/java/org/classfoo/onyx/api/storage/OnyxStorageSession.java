@@ -128,6 +128,15 @@ public interface OnyxStorageSession {
 			Map<String, Object> properties);
 
 	/**
+	 * add graph
+	 * @param name
+	 * @param kid
+	 * @param content
+	 * @param properties
+	 */
+	public void addGraph(String name, String kid, String content, Map<String, Object> properties);
+
+	/**
 	 * begin batch
 	 */
 	public void beginBatch();

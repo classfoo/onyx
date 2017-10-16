@@ -80,6 +80,9 @@ define(
 				case "add": {
 					return this.docmd_add(options);
 				}
+				case "save": {
+					return this.docmd_save(options);
+				}
 				}
 				return null;
 			}
@@ -91,6 +94,16 @@ define(
 			Canvas.prototype.docmd_add = function(options) {
 				this.searchPanel.show(options);
 			}
+
+			Canvas.prototype.docmd_save = function(options) {
+				var json = JSON.stringify(this.graph.toJson());
+				Api.graph().save({
+					kid : this.kid,
+					name : "图形",
+					content : json
+				});
+			}
+
 			return Canvas;
 		});
 
@@ -1069,6 +1082,14 @@ define(
 
 			Graph.prototype.toStandardY = function(y) {
 				return y - this.graph.y;
+			}
+
+			Graph.prototype.toJson = function() {
+				return {
+					graph : this.graph,
+					nodes : this.nodes,
+					links : this.links
+				};
 			}
 			return Graph;
 		});
