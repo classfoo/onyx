@@ -242,14 +242,14 @@ define("onyx/space/leak", [ "jquery", "require", "onyx/ui" ], function($,
 			},
 			pdom : this.page
 		});
-		this.timeline = UI.createTimeLine({
-			items : this.queryTimeLine.bind(this),
+		this.timeline = UI.createDataList({
+			items : this.queryDataList.bind(this),
 			pdom : this.page
 		});
 		return this.dom;
 	}
 
-	Leak.prototype.queryTimeLine = function() {
+	Leak.prototype.queryDataList = function() {
 		return Api.timeline().list();
 	}
 

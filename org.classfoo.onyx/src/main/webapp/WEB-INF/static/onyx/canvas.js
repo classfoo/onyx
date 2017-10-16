@@ -2433,7 +2433,7 @@ define(
 					self.buildHeader(node, entity, layout.getHeader());
 				});
 				var navpanel = UI.createNavPanel({
-					clazz:"onyx-canvas-rightpanel-navpanel",
+					clazz : "onyx-canvas-rightpanel-navpanel",
 					on : {
 						"switch" : this.onSwitchNavPanel.bind(this, node)
 					},
@@ -2519,7 +2519,7 @@ define(
 			}
 
 			RightPanel.prototype.buildEvents = function(node, events, pdom) {
-				if(!events){
+				if (!events) {
 					return;
 				}
 				var properties = $("<div class='onyx-canvas-rightpanel-events'></div>");
@@ -2527,12 +2527,20 @@ define(
 				var items = [];
 				for (var i = 0; i < events.length; i++) {
 					var event = events[i];
+					var times = event.time.split("/");
+					var year = times[0];
+					var month = times[1];
+					var day = times[2];
 					items.push({
 						id : event.eid,
-						name : event.name
+						name : event.name,
+						details : event.properties,
+						year : year,
+						month : month,
+						day : day
 					});
 				}
-				UI.createList({
+				UI.createTimeLine({
 					clazz : "onyx-canvas-rightpanel-properties-list",
 					datas : items,
 					pdom : properties
