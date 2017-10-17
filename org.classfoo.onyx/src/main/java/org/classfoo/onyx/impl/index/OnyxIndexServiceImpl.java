@@ -15,7 +15,11 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.collections.MapUtils;
+import org.classfoo.onyx.api.OnyxService;
 import org.classfoo.onyx.api.index.OnyxIndexService;
+import org.classfoo.onyx.api.index.OnyxIndexSession;
+import org.classfoo.onyx.api.index.OnyxIndexThread;
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.get.GetResponse;
@@ -35,6 +39,7 @@ import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
@@ -45,48 +50,32 @@ import org.springframework.stereotype.Component;
 @Component
 public class OnyxIndexServiceImpl implements OnyxIndexService {
 
+	@Autowired
+	private OnyxService onyxService;
+
 	private TransportClient client;
 
-	private ThreadPoolExecutor threadPool;
-
-	public OnyxIndexServiceImpl() throws UnknownHostException {
-		this.client = new PreBuiltTransportClient(Settings.EMPTY).addTransportAddress(
-				new InetSocketTransportAddress(InetAddress.getByName("localhost"), 9300));
-		this.threadPool = new ThreadPoolExecutor(8, 8, 1, TimeUnit.MILLISECONDS,
-				new LinkedBlockingQueue<Runnable>(100));
-	}
-
-	/**
-	 * 创建连接池以执行流程内部步骤
-	 * @param tables
-	 * @return
-	 */
-	private ThreadPoolExecutor getThreadPool(int total, final String threadName) {
-		return threadPool;
-	}
+	private OnyxIndexThreadImpl indexThread;
 
 	@Override
-	public void addEntityIndex(Map<String, Object> entity) {
-		client.prepareIndex("onyx", "entity").setSource(entity).execute();
-	}
-
-	@Override
-	public List<Map<String, Object>> searchEntity(String name) {
-		SearchResponse response = client.prepareSearch("onyx").setTypes("entity").setSearchType(
-				SearchType.DFS_QUERY_THEN_FETCH).setQuery(QueryBuilders.matchQuery("name", name)).setFrom(0).setSize(
-						32).setExplain(true).get();
-		SearchHits hits = response.getHits();
-		SearchHit[] hitsArray = hits.getHits();
-		ArrayList<Map<String, Object>> result = new ArrayList<Map<String, Object>>(hitsArray.length);
-		for (int i = 0; i < hitsArray.length; i++) {
-			Map<String, Object> item = hitsArray[i].getSourceAsMap();
-			result.add(item);
+	public OnyxIndexSession openSession() {
+		try {
+			if (this.client == null) {
+				this.client = new PreBuiltTransportClient(Settings.EMPTY).addTransportAddress(
+						new InetSocketTransportAddress(InetAddress.getByName("localhost"), 9300));
+			}
+			return new OnyxIndexSessionImpl(this.client);
 		}
-		return result;
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	@Override
-	public void clearIndexes() {
-		DeleteByQueryAction.INSTANCE.newRequestBuilder(client).filter(QueryBuilders.matchAllQuery()).source("onyx").get();
+	public OnyxIndexThread getIndexThread() {
+		if (this.indexThread == null) {
+			this.indexThread = new OnyxIndexThreadImpl(this.onyxService);
+		}
+		return this.indexThread;
 	}
 }

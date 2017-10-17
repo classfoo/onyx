@@ -5,6 +5,8 @@ import java.util.Map;
 
 import org.apache.commons.collections.MapUtils;
 import org.classfoo.onyx.api.OnyxService;
+import org.classfoo.onyx.api.index.OnyxIndexService;
+import org.classfoo.onyx.api.index.OnyxIndexSession;
 import org.classfoo.onyx.api.query.OnyxQueryEntity;
 import org.classfoo.onyx.api.web.OnyxApi;
 import org.classfoo.onyx.impl.web.OnyxApiImpl;
@@ -40,7 +42,14 @@ public class OnyxApi_Search extends OnyxApiImpl implements OnyxApi {
 	public Object getList(Map<String, Object> args) {
 		String type = MapUtils.getString(args, "type");
 		String text = MapUtils.getString(args, "text");
-		List<Map<String, Object>> result = this.onyxService.getIndexService().searchEntity(text);
-		return result;
+		OnyxIndexService indexService = this.onyxService.getIndexService();
+		OnyxIndexSession session = indexService.openSession();
+		try {
+			List<Map<String, Object>> result = session.searchEntity(text);
+			return result;
+		}
+		finally {
+			session.close();
+		}
 	}
 }

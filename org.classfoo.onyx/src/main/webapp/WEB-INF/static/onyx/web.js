@@ -102,6 +102,7 @@ define("onyx/web/topbar", [ "jquery", "require", "onyx/ui", "page/page" ],
 					},
 					pdom : this.layout.getMiddle(),
 				});
+				this.searchbox.on("change", function(){alert(1)});
 				this.navbar = UI.createNavBar({
 					theme : "topbar",
 					active : "space",

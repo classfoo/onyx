@@ -14,6 +14,7 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.classfoo.onyx.api.OnyxService;
 import org.classfoo.onyx.api.index.OnyxIndexService;
+import org.classfoo.onyx.api.index.OnyxIndexThread;
 import org.classfoo.onyx.api.storage.OnyxStorage;
 import org.classfoo.onyx.api.storage.OnyxStorageSession;
 import org.classfoo.onyx.impl.OnyxUtils;
@@ -116,6 +117,12 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 	@Override
 	public List<Map<String, Object>> queryMaterials(String kid) {
 		ResultSet value = this.executeQuery("select * from materials");
+		return convertToList(value);
+	}
+
+	@Override
+	public List<Map<String, Object>> queryBaseGraphs(String kid) {
+		ResultSet value = this.executeQuery("select * from base_graph where kid_=?", kid);
 		return convertToList(value);
 	}
 
@@ -397,14 +404,22 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 		this.executeUpdate("insert into entities (kid_,id_,name_,labels_, properties_) values(?,?,?,?,?)", kid, eid,
 				name, labels, properties);
 		this.executeUpdate("insert into base_entity (kid_,id_,name_) values(?,?,?)", kid, eid, name);
-		HashMap<String, Object> entity = new HashMap<String, Object>();
+		HashMap<String, Object> entity = new HashMap<String, Object>(6);
+		entity.put("type", "entity");
 		entity.put("id", eid);
 		entity.put("kid", kid);
 		entity.put("name", name);
+		entity.put("labels", labels);
 		entity.put("properties", properties);
-		OnyxIndexService indexService = this.onyxService.getIndexService();
-		indexService.addEntityIndex(entity);
+		this.addEntityIndex(eid, name, entity);
 		return entity;
+	}
+
+	private void addEntityIndex(String id, String name, Map<String, Object> entity) {
+		OnyxIndexService indexService = this.onyxService.getIndexService();
+		OnyxIndexThread indexThread = indexService.getIndexThread();
+		indexThread.addIndex(OnyxIndexThread.INSERT, "onyx", "entity", id, entity);
+		indexThread.addIndex(OnyxIndexThread.MERGE, "global", "entity", id, entity);
 	}
 
 	@Override
@@ -475,8 +490,9 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 	@Override
 	public void addGraph(String name, String kid, String content, Map<String, Object> properties) {
 		String graphid = OnyxUtils.getRandomUUID("g");
-		this.executeUpdate("insert into links (id_,kid_,name_,content_,properties_) values (?,?,?,?,?)", graphid, kid,
+		this.executeUpdate("insert into graphs (id_,kid_,name_,content_,properties_) values (?,?,?,?,?)", graphid, kid,
 				name, content, properties);
+		this.executeUpdate("insert into base_graph (kid_,id_,name_) values (?,?,?)", kid, graphid, name);
 	}
 
 	@Override

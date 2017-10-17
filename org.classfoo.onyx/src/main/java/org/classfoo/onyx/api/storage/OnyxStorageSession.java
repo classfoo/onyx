@@ -62,6 +62,13 @@ public interface OnyxStorageSession {
 	public Map<String, Object> queryLinkNodes(String eid, Map<String, Object> options);
 
 	/**
+	 * query graphs in base
+	 * @param kid
+	 * @return
+	 */
+	public List<Map<String, Object>> queryBaseGraphs(String kid);
+
+	/**
 	 * add new knowledge base
 	 * @param kid
 	 * @param name
