@@ -1,6 +1,7 @@
 package org.classfoo.onyx.impl.index;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +18,8 @@ import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.DeleteByQueryAction;
+import org.elasticsearch.script.Script;
+import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 
@@ -35,13 +38,21 @@ public class OnyxIndexSessionImpl implements OnyxIndexSession {
 
 	@Override
 	public void mergeIndex(String index, String type, String id, Map<String, Object> object) {
-		//HashMap<String, Object> item = new HashMap<String, Object>(2);
-		//item.put(type, MapUtils.getString(object, type));
-		//item.put(id, object);
-		//id = MapUtils.getString(object, "id");
-		//this.upsertIndex(index, type, id, object);
-		client.prepareIndex(index, type, id).setSource(object).execute();
-		//client.prepareUpdate(index, type, id).setDoc(item).get();
+		HashMap<String, Object> item = new HashMap<String, Object>(2);
+		item.put("name", id);
+		item.put("objects", Arrays.asList(object));
+		Script script = new Script("ctx._source.objects.add(params.object)");
+		HashMap<String, Object> scriptParams = new HashMap<String, Object>(1);
+		scriptParams.put("object", object);
+		UpdateRequest updateRequest = new UpdateRequest(index, type, id).script(script).scriptParams(
+				scriptParams).upsert(item);
+		try {
+			client.update(updateRequest).get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+
 	}
 
 	@Override
@@ -114,6 +125,9 @@ public class OnyxIndexSessionImpl implements OnyxIndexSession {
 		for (int i = 0; i < hitsArray.length; i++) {
 			Map<String, Object> item = hitsArray[i].getSourceAsMap();
 			item.put("type", "entity");
+			List<Map<String, Object>> objects = (List<Map<String, Object>>) item.get("objects");
+			String itemName = MapUtils.getString(item, "name");
+			item.put("name", itemName + objects.size());
 			result.add(item);
 		}
 		return result;
@@ -121,8 +135,8 @@ public class OnyxIndexSessionImpl implements OnyxIndexSession {
 
 	@Override
 	public void clearIndexes() {
-		DeleteByQueryAction.INSTANCE.newRequestBuilder(client).filter(QueryBuilders.matchAllQuery()).source(
-				"onyx").get();
+		DeleteByQueryAction.INSTANCE.newRequestBuilder(client).filter(QueryBuilders.matchAllQuery()).source("onyx",
+				"global").get();
 	}
 
 	@Override

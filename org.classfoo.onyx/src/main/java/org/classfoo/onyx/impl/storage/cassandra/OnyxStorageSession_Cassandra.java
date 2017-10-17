@@ -419,7 +419,7 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 		OnyxIndexService indexService = this.onyxService.getIndexService();
 		OnyxIndexThread indexThread = indexService.getIndexThread();
 		indexThread.addIndex(OnyxIndexThread.INSERT, "onyx", "entity", id, entity);
-		indexThread.addIndex(OnyxIndexThread.MERGE, "global", "entity", id, entity);
+		indexThread.addIndex(OnyxIndexThread.MERGE, "global", "entity", name, entity);
 	}
 
 	@Override
