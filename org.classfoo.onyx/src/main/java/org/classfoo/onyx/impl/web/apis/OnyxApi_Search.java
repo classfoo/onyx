@@ -41,12 +41,30 @@ public class OnyxApi_Search extends OnyxApiImpl implements OnyxApi {
 	@Override
 	public Object getList(Map<String, Object> args) {
 		String type = MapUtils.getString(args, "type");
+		if ("all".equals(type)) {
+			return this.searchAll(args);
+		}
+		if ("entity".equals(type)) {
+			String text = MapUtils.getString(args, "text");
+			OnyxIndexService indexService = this.onyxService.getIndexService();
+			OnyxIndexSession session = indexService.openSession();
+			try {
+				List<Map<String, Object>> result = session.searchEntity(text);
+				return result;
+			}
+			finally {
+				session.close();
+			}
+		}
+		return null;
+	}
+
+	private Object searchAll(Map<String, Object> args) {
 		String text = MapUtils.getString(args, "text");
 		OnyxIndexService indexService = this.onyxService.getIndexService();
 		OnyxIndexSession session = indexService.openSession();
 		try {
-			List<Map<String, Object>> result = session.searchEntity(text);
-			return result;
+			return session.searchNameIndex(text);
 		}
 		finally {
 			session.close();

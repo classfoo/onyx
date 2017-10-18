@@ -40,46 +40,35 @@ public class OnyxApi_TimeLine extends OnyxApiImpl implements OnyxApi {
 	}
 
 	@Override
-	public Object get(Map<String, Object> args) throws IOException {
-		OnyxIndexService indexService = this.onyxService.getIndexService();
-		OnyxIndexSession session = indexService.openSession();
-		try{
-			return session.searchNameIndex(null);
-		}finally{
+	public Object get(Map<String, Object> args) {
+		ArrayList<Map<String, Object>> result = new ArrayList<Map<String, Object>>(100);
+		OnyxStorage storage = this.onyxService.getStorageService().getStorage();
+		OnyxStorageSession session = storage.openSession();
+		try {
+			List<Map<String, Object>> bases = session.queryBases();
+			for (Map<String, Object> base : bases) {
+				base.put("type", "base");
+				result.add(base);
+				String kid = MapUtils.getString(base, "id");
+				List<Map<String, Object>> graphs = session.queryBaseGraphs(kid);
+				for(Map<String, Object> graph:graphs){
+					graph.put("color", OnyxUtils.getRandomColor());
+					graph.put("type", "graph");
+					result.add(graph);
+				}
+				List<Map<String, Object>> entities = session.queryBaseEntities(kid);
+				for (Map<String, Object> entity : entities) {
+					entity.put("color", OnyxUtils.getRandomColor());
+					entity.put("type", "entity");
+					result.add(entity);
+				}
+			}
+		}
+		finally {
 			session.close();
 		}
-	}
 
-//	@Override
-//	public Object get(Map<String, Object> args) {
-//		ArrayList<Map<String, Object>> result = new ArrayList<Map<String, Object>>(100);
-//		OnyxStorage storage = this.onyxService.getStorageService().getStorage();
-//		OnyxStorageSession session = storage.openSession();
-//		try {
-//			List<Map<String, Object>> bases = session.queryBases();
-//			for (Map<String, Object> base : bases) {
-//				base.put("type", "base");
-//				result.add(base);
-//				String kid = MapUtils.getString(base, "id");
-//				List<Map<String, Object>> graphs = session.queryBaseGraphs(kid);
-//				for(Map<String, Object> graph:graphs){
-//					graph.put("color", OnyxUtils.getRandomColor());
-//					graph.put("type", "graph");
-//					result.add(graph);
-//				}
-//				List<Map<String, Object>> entities = session.queryBaseEntities(kid);
-//				for (Map<String, Object> entity : entities) {
-//					entity.put("color", OnyxUtils.getRandomColor());
-//					entity.put("type", "entity");
-//					result.add(entity);
-//				}
-//			}
-//		}
-//		finally {
-//			session.close();
-//		}
-//
-//		return result;
-//	}
+		return result;
+	}
 
 }

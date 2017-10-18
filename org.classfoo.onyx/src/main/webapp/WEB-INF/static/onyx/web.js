@@ -104,8 +104,8 @@ define("onyx/web/topbar", [ "jquery", "require", "onyx/ui", "page/page" ],
 					pdom : this.search,
 				});
 				var self = this;
-				this.searchbox.on("change", function() {
-					alert(1);
+				this.searchbox.on("change", function(event, text) {
+					UI.redirect("/search/all?text=" + text);
 				});
 				this.searchbox.on("active", function() {
 					self.search.addClass("onyx-web-topbar-search-shadow");
@@ -113,7 +113,6 @@ define("onyx/web/topbar", [ "jquery", "require", "onyx/ui", "page/page" ],
 				this.searchbox.on("inactive", function() {
 					self.search.removeClass("onyx-web-topbar-search-shadow");
 				});
-
 				this.navbar = UI.createNavBar({
 					theme : "topbar",
 					active : "space",

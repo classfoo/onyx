@@ -29,7 +29,8 @@ require([ "jquery", "onyx/onyx" ], function($, Onyx) {
 			"/space" : "/space/recommend",
 			"/personal" : "/personal/files",
 			"/base" : "/base/home",
-			"/edit" : "/edit/home"
+			"/edit" : "/edit/home",
+			"/search" : "/search/all"
 		}
 	});
 });

@@ -452,7 +452,7 @@ define("onyx/ui/widget", [ "jquery", "require", "page/page" ], function($,
 			return $.dfd();
 		}
 		if (typeof (datas) == "function") {
-			return datas.call(args);
+			return datas(args);
 		}
 		return $.dfd(datas);
 	}
@@ -2618,6 +2618,15 @@ define(
 					children.remove();
 				}
 				this.buildData(datas);
+			}
+
+			ShowBoard.prototype.refresh = function() {
+				this.container.children().remove();
+				var self = this;
+				this.getDatas(this.options.datas).done(function(datas) {
+					self.buildData(datas);
+				});
+				return this.dom;
 			}
 
 			Utils.inherits(ShowBoard, Widget);

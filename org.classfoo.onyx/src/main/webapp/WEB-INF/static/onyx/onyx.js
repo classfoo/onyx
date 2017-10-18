@@ -86,10 +86,12 @@ define("onyx/onyx", [ "jquery", "require", "css!./ui.css", "onyx/utils",
 			return;
 		}
 		var path = path.substring(root.length - 1);
-		var pathes = path.split('/');
+		var url = Utils.parseUrl(path);
+		var pathes = url.path.split('/');
 		options.pagename = pathes[1];
 		options.framename = pathes[2];
 		options.resid = pathes[3];
+		options.params = url.params;
 		var onResource = this.onResource.bind(this, options)
 		Api.getResource(options.resid).done(onResource.bind(this));
 	}

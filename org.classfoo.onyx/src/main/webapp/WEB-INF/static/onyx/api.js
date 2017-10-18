@@ -343,6 +343,16 @@ define("onyx/api/search", [ "jquery", "require" ], function($, require) {
 	}
 
 	/**
+	 * search all
+	 */
+	Search.prototype.all = function(text) {
+		return Api.get("search", {
+			type : "all",
+			text : text
+		});
+	}
+
+	/**
 	 * search entity list
 	 * 
 	 * @param offset
