@@ -423,6 +423,23 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 	}
 
 	@Override
+	public void addEntityLabels(String id, List<String> labels) {
+		this.executeUpdate("update entities set labels_=labels_+? where id_=?", labels, id);
+	}
+
+	@Override
+	public void addEntityProperties(String id, Map<String, Object> properties) {
+		this.executeUpdate("update entities set properties_=properties_+? where id_=?", properties, id);
+	}
+
+	@Override
+	public Map<String, Object> updateEntity(String kid, String eid, List<String> labels,
+			Map<String, Object> properties) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
 	public Map<String, Object> updateEntity(String kid, String name, List<Map<String, Object>> modifies) {
 		String eid = OnyxUtils.getRandomUUID("e");
 		ResultSet value = this.executeUpdate(

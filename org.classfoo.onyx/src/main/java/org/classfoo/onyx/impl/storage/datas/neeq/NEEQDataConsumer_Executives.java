@@ -45,8 +45,8 @@ public class NEEQDataConsumer_Executives implements OnyxStreamingMessageListener
 		properties.put("学历", education);
 		String gender = line[2];
 		properties.put("性别", gender);
-		String hqzqdm = line[3];
-		properties.put("股票代码", hqzqdm);
+		String code = line[3];
+		properties.put("股票代码", code);
 		String job = line[4];
 		properties.put("职位", job);
 		String name = line[5];
@@ -55,17 +55,22 @@ public class NEEQDataConsumer_Executives implements OnyxStreamingMessageListener
 		properties.put("在职", salary);
 		String term = line[7];
 		properties.put("任期", term);
-		String[] jobs = StringUtils.split(job, "、,， /／");
-		Map<String, Object> entity = consumer.getContext().getEntityByProperty("people", name);
+		String[] jobs = StringUtils.split(job, "、,， /／兼");
+		Map<String, Object> entity = consumer.getContext().getEntityByProperty("people", name + ':' + code);
 		if (entity == null) {
 			entity = session.addEntity(this.kid, name, Arrays.asList(jobs), properties);
-			consumer.getContext().putEntityByProperty("people", name, entity);
+			consumer.getContext().putEntityByProperty("people", name + ':' + code, entity);
+		}
+		else {
+			String eid = MapUtils.getString(entity, "id");
+			session.addEntityLabels(eid, Arrays.asList(jobs));
+			session.addEntityProperties(eid, properties);
 		}
 		String targetid = MapUtils.getString(entity, "id");
 		String targetname = MapUtils.getString(entity, "name");
-		Map<String, Object> target = consumer.getContext().getEntityByProperty("code", hqzqdm);
-		String sourceid = MapUtils.getString(target, "id");
-		String sourcename = MapUtils.getString(target, "name");
+		Map<String, Object> company = consumer.getContext().getEntityByProperty("code", code);
+		String sourceid = MapUtils.getString(company, "id");
+		String sourcename = MapUtils.getString(company, "name");
 		for (String link : jobs) {
 			String color = this.getColor(link);
 			HashMap<String, Object> linkProperties = new HashMap<String, Object>(1);

@@ -1145,11 +1145,14 @@ textarea {
 	border-radius: 3px;
 }
 
+.onyx-ui-searchbox-input:focus {
+	outline: none;
+}
+
 /*Search Bread Crumb*/
 .onyx-ui-breadcrumb {
-	position: absolute;
 	top: 0px;
-	display: flex;
+	display: inline-block;
 	width: auto;
 	height: 100%;
 }
@@ -1174,13 +1177,16 @@ textarea {
 
 .onyx-ui-breadcrumb-split {
 	display: inline-block;
-	line-height: 28px;
-	text-align: center;
-	color: #3095e2;
-	width: 16px;
+	width: auto;
 	height: 100%;
+	line-height: 28px;
+	font-weight: bold;
+	color: #3095e2;
+	text-align: center;
 	cursor: pointer;
-	width: 16px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 /*Show Board*/

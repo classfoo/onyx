@@ -92,17 +92,28 @@ define("onyx/web/topbar", [ "jquery", "require", "onyx/ui", "page/page" ],
 						margin : "8px"
 					}
 				});
-				this.searchbox = UI.createSearchBox({
-					placeholder : "search all...",
-					style : {
-						width : "100%",
-						height : "60%",
-						top : 2,
-						"margin-top" : "8px"
-					},
-					pdom : this.layout.getMiddle(),
+				this.search = $("<div class='onyx-web-topbar-search'></div>");
+				this.search.appendTo(this.layout.getMiddle());
+				this.breadCrumb = UI.createBreadCrumb({
+					clazz : "onyx-web-topbar-search-breadcrumb",
+					pdom : this.search
 				});
-				this.searchbox.on("change", function(){alert(1)});
+				this.searchbox = UI.createSearchBox({
+					clazz : "onyx-web-topbar-search-searchbox",
+					placeholder : "search all...",
+					pdom : this.search,
+				});
+				var self = this;
+				this.searchbox.on("change", function() {
+					alert(1);
+				});
+				this.searchbox.on("active", function() {
+					self.search.addClass("onyx-web-topbar-search-shadow");
+				});
+				this.searchbox.on("inactive", function() {
+					self.search.removeClass("onyx-web-topbar-search-shadow");
+				});
+
 				this.navbar = UI.createNavBar({
 					theme : "topbar",
 					active : "space",
@@ -129,14 +140,7 @@ define("onyx/web/topbar", [ "jquery", "require", "onyx/ui", "page/page" ],
 					return $.dfd(this);
 				}
 				var pathes = options.component.getPathes();
-				if (this.breadCrumb) {
-					this.breadCrumb.setPathes(pathes);
-					return $.dfd(this);
-				}
-				this.breadCrumb = UI.createBreadCrumb({
-					pathes : pathes,
-					pdom : this.searchbox.dom
-				});
+				this.breadCrumb.setPathes(pathes);
 				return $.dfd(this);
 			}
 

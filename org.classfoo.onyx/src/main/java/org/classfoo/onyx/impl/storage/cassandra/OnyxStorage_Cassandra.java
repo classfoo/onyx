@@ -1,7 +1,6 @@
 package org.classfoo.onyx.impl.storage.cassandra;
 
 import org.classfoo.onyx.api.OnyxService;
-import org.classfoo.onyx.api.index.OnyxIndexService;
 import org.classfoo.onyx.api.index.OnyxIndexSession;
 import org.classfoo.onyx.api.storage.OnyxStorage;
 import org.classfoo.onyx.api.storage.OnyxStorageSession;
@@ -41,7 +40,7 @@ public class OnyxStorage_Cassandra extends OnyxStorageImpl implements OnyxStorag
 				return this.cluster;
 			}
 			this.cluster = Cluster.builder().addContactPoint("127.0.0.1").build();
-			this.init(this.cluster);
+			//this.init(this.cluster);
 			return this.cluster;
 		}
 	}

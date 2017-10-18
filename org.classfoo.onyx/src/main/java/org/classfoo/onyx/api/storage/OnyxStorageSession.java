@@ -1,5 +1,6 @@
 package org.classfoo.onyx.api.storage;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -120,6 +121,23 @@ public interface OnyxStorageSession {
 	public Map<String, Object> addMaterial(String name, String desc, String kid, Map<String, Object> properties);
 
 	public Map<String, Object> addEntity(String kid, String name, List<String> labels, Map<String, Object> properties);
+
+	public Map<String, Object> updateEntity(String kid, String eid, List<String> labels,
+			Map<String, Object> properties);
+
+	/**
+	 * add labels for entity
+	 * @param eid
+	 * @param label
+	 */
+	public void addEntityLabels(String eid, List<String> labels);
+
+	/**
+	 * add properties for entity
+	 * @param id
+	 * @param properties
+	 */
+	public void addEntityProperties(String id, Map<String, Object> properties);
 
 	/**
 	 * add event of entity

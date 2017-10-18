@@ -2173,7 +2173,8 @@ define("onyx/ui/timeline", [ "jquery", "require", "onyx/ui/widget",
 				yearItem.details = item.details;
 				continue;
 			}
-			var monthItem = this.getMonthItem(yearItem.monthes, parseInt(month));
+			var monthItem = this
+					.getMonthItem(yearItem.monthes, parseInt(month));
 			var day = item.day;
 			if (!day) {
 				monthItem.id = item.id;
@@ -2230,8 +2231,7 @@ define("onyx/ui/timeline", [ "jquery", "require", "onyx/ui/widget",
 			var item = monthItems[i];
 			if (item.month == month) {
 				return item;
-			}
-			else if (month > item.month) {
+			} else if (month > item.month) {
 				var monthItem = {
 					month : month,
 					time : month + "月",
@@ -2255,8 +2255,7 @@ define("onyx/ui/timeline", [ "jquery", "require", "onyx/ui/widget",
 			var item = dayItems[i];
 			if (item.day == day) {
 				return item;
-			}
-			else if (day > item.day) {
+			} else if (day > item.day) {
 				var dayItem = {
 					day : day,
 					time : day + "日"
@@ -2348,6 +2347,8 @@ define("onyx/ui/searchbox", [ "jquery", "require", "onyx/ui/widget",
 		this.addClass(this.input, "onyx-ui-searchbox", "input");
 		this.input.appendTo(this.dom);
 		this.input.on("change", this.onChange.bind(this));
+		this.input.on("focus", this.onFocus.bind(this));
+		this.input.on("blur", this.onBlur.bind(this));
 		return this.dom;
 	}
 
@@ -2355,6 +2356,16 @@ define("onyx/ui/searchbox", [ "jquery", "require", "onyx/ui/widget",
 		event.stopPropagation();
 		var text = this.input.val();
 		this.fire("change", text);
+	}
+
+	SearchBox.prototype.onFocus = function(event) {
+		event.stopPropagation();
+		this.fire("active", event);
+	}
+
+	SearchBox.prototype.onBlur = function(event) {
+		event.stopPropagation();
+		this.fire("inactive", event);
 	}
 
 	SearchBox.prototype.setText = function(text) {

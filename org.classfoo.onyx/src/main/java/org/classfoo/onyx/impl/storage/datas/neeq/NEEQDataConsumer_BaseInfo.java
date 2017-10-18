@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.classfoo.onyx.api.OnyxService;
 import org.classfoo.onyx.api.storage.OnyxStorage;
 import org.classfoo.onyx.api.storage.OnyxStorageSession;
@@ -13,6 +14,11 @@ import org.classfoo.onyx.api.streaming.OnyxStreamingMessage;
 import org.classfoo.onyx.api.streaming.OnyxStreamingMessageListener;
 import org.classfoo.onyx.impl.OnyxUtils;
 
+/**
+ * 新三板：公司基本信息
+ * @author ClassFoo
+ *
+ */
 public class NEEQDataConsumer_BaseInfo implements OnyxStreamingMessageListener {
 
 	private static final String ZBQS_COLOR = OnyxUtils.getRandomColor();
@@ -65,7 +71,7 @@ public class NEEQDataConsumer_BaseInfo implements OnyxStreamingMessageListener {
 		String postcode = line[12];
 		properties.put("邮编", postcode);
 		String secretaries = line[13];
-		properties.put("董事长秘书", secretaries);
+		properties.put("董事会秘书", secretaries);
 		String shortname = line[14];
 		properties.put("简称", shortname);
 		String totalStockEquity = line[15];
@@ -74,33 +80,111 @@ public class NEEQDataConsumer_BaseInfo implements OnyxStreamingMessageListener {
 		properties.put("交易方式", transferMode);
 		String website = line[17];
 		properties.put("网站", website);
-		Map<String, Object> entity = session.addEntity(this.kid, shortname, Arrays.asList("挂牌公司"), properties);
-		consumer.getContext().putEntityByProperty("code", code, entity);
+		Map<String, Object> company = session.addEntity(this.kid, shortname, Arrays.asList("挂牌公司"), properties);
+		consumer.getContext().putEntityByProperty("code", code, company);
 		//券商
+		this.addBroker(broker, company, consumer);
+		//董事长秘书
+		this.addSecretaries(secretaries, name, code, company, consumer);
+		//法人代表
+		this.addLegalRepresentative(legalRepresentative, name, code, company, consumer);
+	}
+
+	/**
+	 * 添加主办券商信息
+	 * @param broker
+	 * @param company
+	 * @param consumer
+	 */
+	private void addBroker(String broker, Map<String, Object> company, OnyxStreamingConsumer consumer) {
 		Map<String, Object> brokerEntity = consumer.getContext().getEntityByProperty("company", broker);
 		if (brokerEntity == null) {
 			brokerEntity = session.addEntity(this.kid, broker, Arrays.asList("券商"), null);
 			consumer.getContext().putEntityByProperty("company", broker, brokerEntity);
 		}
-		this.addLink("主办券商", ZBQS_COLOR, entity, brokerEntity);
-		//董事长秘书
-		Map<String, Object> secretariesEntity = consumer.getContext().getEntityByProperty("people", secretaries);
-		if (secretariesEntity == null) {
-			secretariesEntity = session.addEntity(this.kid, secretaries, Arrays.asList("董事长秘书"), properties);
-			consumer.getContext().putEntityByProperty("people", secretaries, secretariesEntity);
+		else {
+			String eid = MapUtils.getString(brokerEntity, "id");
+			session.addEntityLabels(eid, Arrays.asList("券商"));
 		}
-		this.addLink("董事长秘书", ZBQS_COLOR, entity, secretariesEntity);
-		//法人代表
-		Map<String, Object> legalRepresentativeEntity = consumer.getContext().getEntityByProperty("people",
-				legalRepresentative);
-		if (legalRepresentativeEntity == null) {
-			legalRepresentativeEntity = session.addEntity(this.kid, legalRepresentative, Arrays.asList("法人代表"),
-					properties);
-			consumer.getContext().putEntityByProperty("people", legalRepresentative, legalRepresentativeEntity);
-		}
-		this.addLink("法人代表", ZBQS_COLOR, entity, legalRepresentativeEntity);
+		this.addLink("主办券商", ZBQS_COLOR, company, brokerEntity);
 	}
 
+	/**
+	 * 添加法人代表信息
+	 * @param legalRepresentative
+	 * @param companyName
+	 * @param code
+	 * @param company
+	 * @param consumer
+	 */
+	private void addLegalRepresentative(String legalRepresentative, String companyName, String code,
+			Map<String, Object> company, OnyxStreamingConsumer consumer) {
+		if(legalRepresentative == null){
+			return;
+		}
+		Map<String, Object> legalRepresentativeEntity = consumer.getContext().getEntityByProperty("people",
+				legalRepresentative + ":" + code);
+		if (legalRepresentativeEntity == null) {
+			HashMap<String, Object> legalRepresentativeEntityProperties = new HashMap<String, Object>();
+			legalRepresentativeEntityProperties.put("挂牌公司", companyName);
+			legalRepresentativeEntityProperties.put("股票代码", code);
+			legalRepresentativeEntity = session.addEntity(this.kid, legalRepresentative, Arrays.asList("法人代表"),
+					legalRepresentativeEntityProperties);
+			consumer.getContext().putEntityByProperty("people", legalRepresentative + ":" + code,
+					legalRepresentativeEntity);
+		}
+		else {
+			String eid = MapUtils.getString(legalRepresentativeEntity, "id");
+			session.addEntityLabels(eid, Arrays.asList("法人代表"));
+			HashMap<String, Object> legalRepresentativeEntityProperties = new HashMap<String, Object>();
+			legalRepresentativeEntityProperties.put("挂牌公司", companyName);
+			legalRepresentativeEntityProperties.put("股票代码", code);
+			session.addEntityProperties(eid, legalRepresentativeEntityProperties);
+		}
+		this.addLink("法人代表", ZBQS_COLOR, company, legalRepresentativeEntity);
+	}
+
+	/**
+	 * 添加董事会秘书信息
+	 * @param secretaries
+	 * @param companyName
+	 * @param code
+	 * @param company
+	 * @param consumer
+	 */
+	private void addSecretaries(String secretaries, String companyName, String code, Map<String, Object> company,
+			OnyxStreamingConsumer consumer) {
+		if(StringUtils.isBlank(secretaries)){
+			return;
+		}
+		Map<String, Object> secretariesEntity = consumer.getContext().getEntityByProperty("people",
+				secretaries + ":" + code);
+		if (secretariesEntity == null) {
+			HashMap<String, Object> secretariesEntityProperties = new HashMap<String, Object>();
+			secretariesEntityProperties.put("挂牌公司", companyName);
+			secretariesEntityProperties.put("股票代码", code);
+			secretariesEntity = session.addEntity(this.kid, secretaries, Arrays.asList("董事会秘书"),
+					secretariesEntityProperties);
+			consumer.getContext().putEntityByProperty("people", secretaries + ":" + code, secretariesEntity);
+		}
+		else {
+			String eid = MapUtils.getString(secretariesEntity, "id");
+			session.addEntityLabels(eid, Arrays.asList("董事会秘书"));
+			HashMap<String, Object> secretariesEntityProperties = new HashMap<String, Object>();
+			secretariesEntityProperties.put("挂牌公司", companyName);
+			secretariesEntityProperties.put("股票代码", code);
+			session.addEntityProperties(eid, secretariesEntityProperties);
+		}
+		this.addLink("董事会秘书", ZBQS_COLOR, company, secretariesEntity);
+	}
+
+	/**
+	 * 添加关联
+	 * @param name
+	 * @param color
+	 * @param entity
+	 * @param brokerEntity
+	 */
 	private void addLink(String name, String color, Map<String, Object> entity, Map<String, Object> brokerEntity) {
 		String sourceid = MapUtils.getString(entity, "id");
 		String sourcename = MapUtils.getString(entity, "name");

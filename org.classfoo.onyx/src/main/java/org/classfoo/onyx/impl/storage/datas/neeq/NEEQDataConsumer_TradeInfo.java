@@ -58,19 +58,37 @@ public class NEEQDataConsumer_TradeInfo implements OnyxStreamingMessageListener 
 		String companyId = MapUtils.getString(company, "id");
 		this.session.addEvent(companyId, "交易", buyaccount + "从" + sellaccount + "买入：" + price + "元/股，" + amount + "股",
 				date, properties);
-		Map<String, Object> buyer = consumer.getContext().getEntityByProperty("people", buyaccount);
+		Map<String, Object> buyer = consumer.getContext().getEntityByProperty("people", buyaccount + ':' + code);
 		if (buyer == null) {
-			buyer = this.session.addEntity(this.kid, buyaccount, Arrays.asList("买家"), null);
-			consumer.getContext().putEntityByProperty("people", buyaccount, buyer);
+			HashMap<String, Object> buyerProperties = new HashMap<String, Object>();
+			buyerProperties.put("营业部", buybroker);
+			buyer = this.session.addEntity(this.kid, buyaccount, Arrays.asList("买家"), buyerProperties);
+			consumer.getContext().putEntityByProperty("people", buyaccount + ':' + code, buyer);
+		}
+		else {
+			String eid = MapUtils.getString(buyer, "id");
+			this.session.addEntityLabels(eid, Arrays.asList("买家"));
+			HashMap<String, Object> buyerProperties = new HashMap<String, Object>();
+			buyerProperties.put("营业部", buybroker);
+			this.session.addEntityProperties(eid, buyerProperties);
 		}
 		String buyerId = MapUtils.getString(buyer, "id");
 		this.session.addLink("股东", companyId, companyName, buyerId, buyaccount, null);
 		this.session.addEvent(buyerId, "交易",
 				"从" + sellaccount + "买入股票'" + companyName + "'：" + price + "元/股，" + amount + "股", date, properties);
-		Map<String, Object> seller = consumer.getContext().getEntityByProperty("people", sellaccount);
+		Map<String, Object> seller = consumer.getContext().getEntityByProperty("people", sellaccount + ':' + code);
 		if (seller == null) {
-			seller = this.session.addEntity(this.kid, sellaccount, Arrays.asList("卖家"), null);
-			consumer.getContext().putEntityByProperty("people", sellaccount, seller);
+			HashMap<String, Object> sellerProperties = new HashMap<String, Object>();
+			sellerProperties.put("营业部", sellbroker);
+			seller = this.session.addEntity(this.kid, sellaccount, Arrays.asList("卖家"), sellerProperties);
+			consumer.getContext().putEntityByProperty("people", sellaccount + ':' + code, seller);
+		}
+		else {
+			String eid = MapUtils.getString(seller, "id");
+			session.addEntityLabels(eid, Arrays.asList("卖家"));
+			HashMap<String, Object> sellerProperties = new HashMap<String, Object>();
+			sellerProperties.put("营业部", sellbroker);
+			session.addEntityProperties(eid, sellerProperties);
 		}
 		String sellerId = MapUtils.getString(seller, "id");
 		this.session.addLink("股东", companyId, companyName, sellerId, sellaccount, null);

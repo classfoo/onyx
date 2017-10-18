@@ -42,8 +42,8 @@ public class NEEQDataConsumer_TopTenHolders implements OnyxStreamingMessageListe
 		properties.put("变更股份", changeQty);
 		String date = line[1];
 		properties.put("日期", date);
-		String hqzqdm = line[2];
-		properties.put("股票代码", hqzqdm);
+		String code = line[2];
+		properties.put("股票代码", code);
 		String last_quantity = line[3];
 		properties.put("最近股份", last_quantity);
 		String limitedQuantity = line[4];
@@ -58,16 +58,21 @@ public class NEEQDataConsumer_TopTenHolders implements OnyxStreamingMessageListe
 		properties.put("占比", ratio);
 		String unlimitedQuantity = line[9];
 		properties.put("解禁股份", unlimitedQuantity);
-		Map<String, Object> entity = consumer.getContext().getEntityByProperty("people", name);
-		if(entity == null){
+		Map<String, Object> entity = consumer.getContext().getEntityByProperty("people", name + ":" + code);
+		if (entity == null) {
 			entity = session.addEntity(this.kid, name, Arrays.asList("股东"), properties);
-			consumer.getContext().putEntityByProperty("people", name, entity);
+			consumer.getContext().putEntityByProperty("people", name + ":" + code, entity);
+		}
+		else {
+			String eid = MapUtils.getString(entity, "id");
+			session.addEntityLabels(eid, Arrays.asList("股东"));
+			session.addEntityProperties(eid, properties);
 		}
 		String targetid = MapUtils.getString(entity, "id");
 		String targetname = MapUtils.getString(entity, "name");
-		Map<String, Object> target = consumer.getContext().getEntityByProperty("code", hqzqdm);
-		String sourceid = MapUtils.getString(target, "id");
-		String sourcename = MapUtils.getString(target, "name");
+		Map<String, Object> company = consumer.getContext().getEntityByProperty("code", code);
+		String sourceid = MapUtils.getString(company, "id");
+		String sourcename = MapUtils.getString(company, "name");
 		HashMap<String, Object> linkProperties = new HashMap<String, Object>(1);
 		linkProperties.put("color", color);
 		session.addLink("股东", sourceid, sourcename, targetid, targetname, linkProperties);
