@@ -2343,6 +2343,9 @@ define("onyx/ui/searchbox", [ "jquery", "require", "onyx/ui/widget",
 		this.dom = $("<div/>");
 		this.addClass(this.dom, "onyx-ui-searchbox");
 		this.dom.appendTo(pdom);
+		this.items = $("<div></div>");
+		this.addClass(this.items, "onyx-ui-searchbox", "items");
+		this.items.appendTo(this.dom);
 		this.input = $("<input type='text'></input>");
 		this.addClass(this.input, "onyx-ui-searchbox", "input");
 		this.input.appendTo(this.dom);
@@ -2352,9 +2355,18 @@ define("onyx/ui/searchbox", [ "jquery", "require", "onyx/ui/widget",
 		return this.dom;
 	}
 
+	SearchBox.prototype.addItem = function(text) {
+		var item = $("<div/>");
+		this.addClass(item, "onyx-ui-searchbox", "item");
+		item.text(text);
+		item.appendTo(this.items);
+	}
+
 	SearchBox.prototype.onChange = function(event) {
 		event.stopPropagation();
 		var text = this.input.val();
+		this.input.val("");
+		this.addItem(text);
 		this.fire("change", text);
 	}
 

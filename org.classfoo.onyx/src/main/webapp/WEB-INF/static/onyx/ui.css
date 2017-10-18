@@ -1134,12 +1134,28 @@ textarea {
 	position: relative;
 	width: 100%;
 	height: auto;
+	overflow:hidden;
 }
 
-/*Search Box*/
+.onyx-ui-searchbox-items {
+	display: inline;
+}
+
+.onyx-ui-searchbox-item {
+	display: inline;
+	background-color: #54CEF7;
+	color: white;
+	cursor: pointer;
+	margin-right: 5px;
+	margin-left: 5px;
+	padding-left:2px;
+	padding-right:2px;
+}
+
 .onyx-ui-searchbox-input {
 	position: relative;
-	width: 100%;
+	display: inline;
+	width: 100px;
 	height: 100%;
 	border: none;
 	border-radius: 3px;
@@ -1161,7 +1177,7 @@ textarea {
 	display: inline-block;
 	width: auto;
 	height: 100%;
-	line-height: 28px;
+	line-height: 24px;
 	font-weight: bold;
 	color: gray;
 	margin-left: 5px;
@@ -1179,7 +1195,7 @@ textarea {
 	display: inline-block;
 	width: auto;
 	height: 100%;
-	line-height: 28px;
+	line-height: 24px;
 	font-weight: bold;
 	color: #3095e2;
 	text-align: center;
