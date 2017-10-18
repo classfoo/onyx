@@ -2348,7 +2348,11 @@ define("onyx/ui/searchbox", [ "jquery", "require", "onyx/ui/widget",
 		this.items.appendTo(this.dom);
 		this.input = $("<input type='text'></input>");
 		this.addClass(this.input, "onyx-ui-searchbox", "input");
+		if (this.options.placeholder) {
+			this.input.attr("placeholder", this.options.placeholder);
+		}
 		this.input.appendTo(this.dom);
+		this.input.focus();
 		this.input.on("change", this.onChange.bind(this));
 		this.input.on("focus", this.onFocus.bind(this));
 		this.input.on("blur", this.onBlur.bind(this));
@@ -2487,164 +2491,168 @@ define("onyx/ui/image",
 /**
  * Onyx UI Framework ShowBoard
  */
-define(
-		"onyx/ui/showboard",
-		[ "jquery", "require", "masonry", "onyx/ui/widget", "onyx/utils",
-				"onyx/ui/showboard/item", "onyx/ui/showboard/item/base",
-				"onyx/ui/showboard/item/entity", "onyx/ui/showboard/item/label" ],
-		function($, require, Masonry) {
+define("onyx/ui/showboard", [ "jquery", "require", "masonry", "onyx/ui/widget",
+		"onyx/utils", "onyx/ui/showboard/item", "onyx/ui/showboard/item/base",
+		"onyx/ui/showboard/item/entity", "onyx/ui/showboard/item/label",
+		"onyx/ui/showboard/item/nameindex" ], function($, require, Masonry) {
 
-			var Widget = require("onyx/ui/widget");
+	var Widget = require("onyx/ui/widget");
 
-			var Utils = require("onyx/utils");
+	var Utils = require("onyx/utils");
 
-			var ShowBoardItem = require("onyx/ui/showboard/item");
+	var ShowBoardItem = require("onyx/ui/showboard/item");
 
-			var ShowBoardItem_Base = require("onyx/ui/showboard/item/base");
+	var ShowBoardItem_Base = require("onyx/ui/showboard/item/base");
 
-			var ShowBoardItem_Entity = require("onyx/ui/showboard/item/entity");
+	var ShowBoardItem_Entity = require("onyx/ui/showboard/item/entity");
 
-			var ShowBoardItem_Label = require("onyx/ui/showboard/item/label");
+	var ShowBoardItem_Label = require("onyx/ui/showboard/item/label");
 
-			function ShowBoard(options) {
-				Widget.call(this, options);
-				this.options = options;
-			}
+	var ShowBoardItem_NameIndex = require("onyx/ui/showboard/item/nameindex");
 
-			ShowBoard.prototype.build = function(pdom) {
-				this.dom = $("<div></div>");
-				this.addClass(this.dom, "onyx-ui-showboard");
-				this.dom.appendTo(pdom);
-				this.container = $("<div></div>");
-				this.addClass(this.container, "onyx-ui-showboard", "container");
-				this.container.appendTo(this.dom);
-				this.container.on("mouseover", this.onMouseOver.bind(this));
-				this.container.on("mouseout", this.onMouseOut.bind(this));
-				this.container.on("click", this.onClickItem.bind(this));
-				var self = this;
-				this.getDatas(this.options.datas).done(function(datas) {
-					self.buildData(datas);
-				});
-				return this.dom;
-			}
+	function ShowBoard(options) {
+		Widget.call(this, options);
+		this.options = options;
+	}
 
-			ShowBoard.prototype.buildData = function(datas) {
-				// calc the initial item width
-				var width = datas.width || 128;
-				var gap = datas.gap || 10;
-				var self = this;
-				$.each(datas, function(index, data) {
-					var type = data.type || self.options.type;
-					switch (type) {
-					case "base": {
-						var item = new ShowBoardItem_Base($.extend({
-							parent : self,
-							pdom : self.container,
-							width : width
-						}, data));
-						break;
-					}
-					case "entity": {
-						var item = new ShowBoardItem_Entity($.extend({
-							parent : self,
-							pdom : self.container,
-							width : width
-						}, data));
-						break;
-					}
-					case "label": {
-						var item = new ShowBoardItem_Label($.extend({
-							parent : self,
-							pdom : self.container,
-							width : width
-						}, data));
-						break;
-					}
-					default: {
-						var item = new ShowBoardItem({
-							parent : self,
-							pdom : self.container,
-							width : width,
-							data : data
-						});
-						break;
-					}
-					}
-				});
-				var msnry = new Masonry(this.container[0], {
-					itemSelector : ".onyx-ui-showboard-item",
-					columnWidth : width,
-					gutter : gap
-				});
-			}
-
-			ShowBoard.prototype.onMouseOver = function(event) {
-				var target = this.getEventTarget(event, "onyx-ui-showboard",
-						"item");
-				if (!target) {
-					return;
-				}
-				if (this.hoverGridItem && this.hoverGridItem != target) {
-					this.removeClass(this.hoverGridItem, "onyx-ui-showboard",
-							"item", "over");
-				}
-				this.hoverGridItem = target;
-				this.addClass(this.hoverGridItem, "onyx-ui-showboard", "item",
-						"over");
-			}
-
-			ShowBoard.prototype.onMouseOut = function(event) {
-				var target = this.getEventTarget(event, "onyx-ui-showboard",
-						"item");
-				if (!target) {
-					return;
-				}
-				if (this.hoverGridItem) {
-					this.removeClass(this.hoverGridItem, "onyx-ui-showboard",
-							"item", "over");
-				}
-			}
-
-			ShowBoard.prototype.onClickItem = function(event) {
-				var button = this.getEventTarget(event, "onyx-ui-button");
-				if (button) {
-					event.stopPropagation();
-					this.docmd(event, button);
-					return;
-				}
-				var target = this.getEventTarget(event, "onyx-ui-showboard",
-						"item");
-				if (!target) {
-					return;
-				}
-				var item = target.data();
-				if (item && item.show) {
-					item.show();
-				}
-				this.fire("clickitem", target);
-			}
-
-			ShowBoard.prototype.setData = function(datas) {
-				var children = this.container.children();
-				if (children) {
-					children.remove();
-				}
-				this.buildData(datas);
-			}
-
-			ShowBoard.prototype.refresh = function() {
-				this.container.children().remove();
-				var self = this;
-				this.getDatas(this.options.datas).done(function(datas) {
-					self.buildData(datas);
-				});
-				return this.dom;
-			}
-
-			Utils.inherits(ShowBoard, Widget);
-
-			return ShowBoard;
+	ShowBoard.prototype.build = function(pdom) {
+		this.dom = $("<div></div>");
+		this.addClass(this.dom, "onyx-ui-showboard");
+		this.dom.appendTo(pdom);
+		this.container = $("<div></div>");
+		this.addClass(this.container, "onyx-ui-showboard", "container");
+		this.container.appendTo(this.dom);
+		this.container.on("mouseover", this.onMouseOver.bind(this));
+		this.container.on("mouseout", this.onMouseOut.bind(this));
+		this.container.on("click", this.onClickItem.bind(this));
+		var self = this;
+		this.getDatas(this.options.datas).done(function(datas) {
+			self.buildData(datas);
 		});
+		return this.dom;
+	}
+
+	ShowBoard.prototype.buildData = function(datas) {
+		// calc the initial item width
+		var width = datas.width || 128;
+		var gap = datas.gap || 10;
+		var self = this;
+		$.each(datas, function(index, data) {
+			var type = data.type || self.options.type;
+			switch (type) {
+			case "base": {
+				var item = new ShowBoardItem_Base($.extend({
+					parent : self,
+					pdom : self.container,
+					width : width
+				}, data));
+				break;
+			}
+			case "entity": {
+				var item = new ShowBoardItem_Entity($.extend({
+					parent : self,
+					pdom : self.container,
+					width : width
+				}, data));
+				break;
+			}
+			case "label": {
+				var item = new ShowBoardItem_Label($.extend({
+					parent : self,
+					pdom : self.container,
+					width : width
+				}, data));
+				break;
+			}
+			case "nameindex": {
+				var item = new ShowBoardItem_NameIndex($.extend({
+					parent : self,
+					pdom : self.container,
+					width : width
+				}, data));
+				break;
+			}
+			default: {
+				var item = new ShowBoardItem({
+					parent : self,
+					pdom : self.container,
+					width : width,
+					data : data
+				});
+				break;
+			}
+			}
+		});
+		var msnry = new Masonry(this.container[0], {
+			itemSelector : ".onyx-ui-showboard-item",
+			columnWidth : width,
+			gutter : gap
+		});
+	}
+
+	ShowBoard.prototype.onMouseOver = function(event) {
+		var target = this.getEventTarget(event, "onyx-ui-showboard", "item");
+		if (!target) {
+			return;
+		}
+		if (this.hoverGridItem && this.hoverGridItem != target) {
+			this.removeClass(this.hoverGridItem, "onyx-ui-showboard", "item",
+					"over");
+		}
+		this.hoverGridItem = target;
+		this.addClass(this.hoverGridItem, "onyx-ui-showboard", "item", "over");
+	}
+
+	ShowBoard.prototype.onMouseOut = function(event) {
+		var target = this.getEventTarget(event, "onyx-ui-showboard", "item");
+		if (!target) {
+			return;
+		}
+		if (this.hoverGridItem) {
+			this.removeClass(this.hoverGridItem, "onyx-ui-showboard", "item",
+					"over");
+		}
+	}
+
+	ShowBoard.prototype.onClickItem = function(event) {
+		var button = this.getEventTarget(event, "onyx-ui-button");
+		if (button) {
+			event.stopPropagation();
+			this.docmd(event, button);
+			return;
+		}
+		var target = this.getEventTarget(event, "onyx-ui-showboard", "item");
+		if (!target) {
+			return;
+		}
+		var item = target.data();
+		if (item && item.show) {
+			item.show();
+		}
+		this.fire("clickitem", target);
+	}
+
+	ShowBoard.prototype.setData = function(datas) {
+		var children = this.container.children();
+		if (children) {
+			children.remove();
+		}
+		this.buildData(datas);
+	}
+
+	ShowBoard.prototype.refresh = function() {
+		this.container.children().remove();
+		var self = this;
+		this.getDatas(this.options.datas).done(function(datas) {
+			self.buildData(datas);
+		});
+		return this.dom;
+	}
+
+	Utils.inherits(ShowBoard, Widget);
+
+	return ShowBoard;
+});
 
 /**
  * Onyx UI Framework ShowBoard Item
@@ -2886,14 +2894,18 @@ define("onyx/ui/showboard/item/entity", [ "jquery", "require",
 		this.addClass(this.name, "onyx-ui-showboard-item-entity", "name");
 		this.name.appendTo(this.dom)
 		// entity labels;
-		this.labels = $("<div></div>");
-		this.addClass(this.labels, "onyx-ui-showboard-item-entity", "labels");
-		this.labels.appendTo(this.dom);
-		for (var i = 0; i < 3; i++) {
-			var label = $("<span/>");
-			this.addClass(label, "onyx-ui-showboard-item-entity", "label");
-			label.text("标签" + i);
-			label.appendTo(this.labels);
+		if (this.options.labels) {
+			this.labels = $("<div></div>");
+			this.addClass(this.labels, "onyx-ui-showboard-item-entity",
+					"labels");
+			this.labels.appendTo(this.dom);
+			for (var i = 0; i < this.options.labels.length; i++) {
+				var label = this.options.labels[i];
+				var labelDom = $("<span/>");
+				this.addClass(labelDom, "onyx-ui-showboard-item-entity", "label");
+				labelDom.text(label);
+				labelDom.appendTo(this.labels);
+			}
 		}
 		this.user = $("<div class='iconfont icon-user-circle'></div>");
 		this.addClass(this.user, "onyx-ui-showboard-item-entity", "user");
@@ -2955,6 +2967,96 @@ define("onyx/ui/showboard/item/label", [ "jquery", "require", "onyx/ui/widget",
 
 			return ShowBoardItem_Label;
 		});
+
+/**
+ * Onyx UI Framework ShowBoard Item Entity
+ */
+define("onyx/ui/showboard/item/nameindex", [ "jquery", "require",
+		"onyx/ui/widget", "onyx/utils", "onyx/ui/showboard/item" ], function($,
+		require, Masonry) {
+
+	var Widget = require("onyx/ui/widget");
+
+	var Utils = require("onyx/utils");
+
+	function ShowBoardItem_NameIndex(options) {
+		Widget.call(this, options);
+	}
+
+	ShowBoardItem_NameIndex.prototype.build = function(pdom) {
+		this.dom = $("<div/>");
+		this.dom.data(this.options);
+		this.addClass(this.dom, "onyx-ui-showboard-item");
+		this.addClass(this.dom, "onyx-ui-showboard-item-entity");
+		this.dom.css("width", "128px");
+		if (this.options.color) {
+			this.dom.css("background-color", this.options.color);
+		}
+		this.dom.appendTo(pdom);
+		// header
+		this.header = $("<div class='iconfont icon-hot'></div>");
+		this.addClass(this.header, "onyx-ui-showboard-item-entity", "header");
+		this.header.appendTo(this.dom);
+		// entity image
+		this.image = $("<div class='iconfont icon-knowledge'></div>");
+		this.addClass(this.image, "onyx-ui-showboard-item-entity", "image");
+		this.image.appendTo(this.dom);
+		// entity name
+		this.name = $("<div></div>");
+		this.name.text(this.options.name || this.options.caption);
+		this.addClass(this.name, "onyx-ui-showboard-item-entity", "name");
+		this.name.appendTo(this.dom)
+		// entity labels;
+		if (this.options.objects) {
+			this.labels = $("<div></div>");
+			this.addClass(this.labels, "onyx-ui-showboard-item-entity",
+					"labels");
+			this.labels.appendTo(this.dom);
+			var ignores = {};
+			for (var i = 0; i < this.options.objects.length; i++) {
+				var object = this.options.objects[i];
+				if(!object.labels){
+					continue;
+				}
+				for (var j = 0; j < object.labels.length; j++) {
+					var label = object.labels[j];
+					if (ignores[label]) {
+						continue;
+					}
+					ignores[label] = true;
+					var labelDom = $("<span/>");
+					this.addClass(labelDom, "onyx-ui-showboard-item-entity",
+							"label");
+					labelDom.text(label);
+					labelDom.appendTo(this.labels);
+				}
+			}
+		}
+		// tools
+		this.tools = $("<div></div>");
+		this.addClass(this.tools, "onyx-ui-showboard-item-entity", "tools");
+		this.tools.appendTo(this.dom);
+		// explore tool
+		this.explore = $("<span class='iconfont icon-discover'/>");
+		this.explore.text("探索");
+		this.addClass(this.explore, "onyx-ui-showboard-item-entity", "tool");
+		this.explore.appendTo(this.tools);
+		// graph tool
+		this.graph = $("<span class='iconfont icon-relation'/>");
+		this.graph.text("图谱");
+		this.addClass(this.graph, "onyx-ui-showboard-item-entity", "tool");
+		this.graph.appendTo(this.tools);
+		return this.dom;
+	}
+
+	ShowBoardItem_NameIndex.prototype.show = function() {
+		UI.redirect("/view/entity/" + this.options.id);
+	}
+
+	Utils.inherits(ShowBoardItem_NameIndex, Widget);
+
+	return ShowBoardItem_NameIndex;
+});
 
 /**
  * Onyx UI Framework EditBoard

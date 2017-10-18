@@ -1159,6 +1159,7 @@ textarea {
 	height: 100%;
 	border: none;
 	border-radius: 3px;
+	padding-left:3px;
 }
 
 .onyx-ui-searchbox-input:focus {

@@ -41,7 +41,8 @@ public class OnyxIndexSessionImpl implements OnyxIndexSession {
 		HashMap<String, Object> item = new HashMap<String, Object>(2);
 		item.put("name", id);
 		item.put("objects", Arrays.asList(object));
-		Script script = new Script("ctx._source.objects.add(params.object)");
+		Script script = new Script(
+				"if(!ctx._source.objects.contains(params.object))ctx._source.objects.add(params.object)");
 		HashMap<String, Object> scriptParams = new HashMap<String, Object>(1);
 		scriptParams.put("object", object);
 		UpdateRequest updateRequest = new UpdateRequest(index, type, id).script(script).scriptParams(
@@ -124,10 +125,10 @@ public class OnyxIndexSessionImpl implements OnyxIndexSession {
 		ArrayList<Map<String, Object>> result = new ArrayList<Map<String, Object>>(hitsArray.length);
 		for (int i = 0; i < hitsArray.length; i++) {
 			Map<String, Object> item = hitsArray[i].getSourceAsMap();
-			item.put("type", "entity");
+			item.put("type", "nameindex");
 			List<Map<String, Object>> objects = (List<Map<String, Object>>) item.get("objects");
 			String itemName = MapUtils.getString(item, "name");
-			item.put("name", itemName + objects.size());
+			item.put("name", itemName);
 			result.add(item);
 		}
 		return result;

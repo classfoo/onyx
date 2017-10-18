@@ -67,6 +67,12 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 	}
 
 	@Override
+	public List<Map<String, Object>> queryEntities() {
+		ResultSet value = this.executeQuery("select * from entities LIMIT 32");
+		return convertToList(value);
+	}
+
+	@Override
 	public List<Map<String, Object>> queryBaseEntities(String kid) {
 		ResultSet value = this.executeQuery("select * from base_entity where kid_=? LIMIT 32", kid);
 		return convertToList(value);
@@ -117,6 +123,12 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 	@Override
 	public List<Map<String, Object>> queryMaterials(String kid) {
 		ResultSet value = this.executeQuery("select * from materials");
+		return convertToList(value);
+	}
+
+	@Override
+	public List<Map<String, Object>> queryGraphs() {
+		ResultSet value = this.executeQuery("select * from graphs limit 32");
 		return convertToList(value);
 	}
 

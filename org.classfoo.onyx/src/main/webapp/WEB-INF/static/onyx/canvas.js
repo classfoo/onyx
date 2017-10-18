@@ -592,13 +592,7 @@ define(
 			Graph.prototype.renderNodes = function() {
 				for (var i = 0, node, n = this.nodes.length; i < n; ++i) {
 					node = this.nodes[i];
-					var type = node.type || 'node';
-					switch (type) {
-					case 'node': {
-						this.renderNode(node);
-						continue;
-					}
-					}
+					this.renderNode(node);
 				}
 			}
 

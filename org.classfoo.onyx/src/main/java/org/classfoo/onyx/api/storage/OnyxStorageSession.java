@@ -24,6 +24,8 @@ public interface OnyxStorageSession {
 	 */
 	public List<Map<String, Object>> queryBases();
 
+	public List<Map<String, Object>> queryEntities();
+
 	public List<Map<String, Object>> queryBaseEntities(String kid);
 
 	public Map<String, Object> queryEntity(String eid);
@@ -61,6 +63,8 @@ public interface OnyxStorageSession {
 	 * @return
 	 */
 	public Map<String, Object> queryLinkNodes(String eid, Map<String, Object> options);
+
+	public List<Map<String, Object>> queryGraphs();
 
 	/**
 	 * query graphs in base

@@ -49,20 +49,20 @@ public class OnyxApi_TimeLine extends OnyxApiImpl implements OnyxApi {
 			for (Map<String, Object> base : bases) {
 				base.put("type", "base");
 				result.add(base);
-				String kid = MapUtils.getString(base, "id");
-				List<Map<String, Object>> graphs = session.queryBaseGraphs(kid);
-				for(Map<String, Object> graph:graphs){
-					graph.put("color", OnyxUtils.getRandomColor());
-					graph.put("type", "graph");
-					result.add(graph);
-				}
-				List<Map<String, Object>> entities = session.queryBaseEntities(kid);
-				for (Map<String, Object> entity : entities) {
-					entity.put("color", OnyxUtils.getRandomColor());
-					entity.put("type", "entity");
-					result.add(entity);
-				}
 			}
+			List<Map<String, Object>> graphs = session.queryGraphs();
+			for(Map<String, Object> graph:graphs){
+				graph.put("color", OnyxUtils.getRandomColor());
+				graph.put("type", "graph");
+				result.add(graph);
+			}
+			List<Map<String, Object>> entities = session.queryEntities();
+			for (Map<String, Object> entity : entities) {
+				entity.put("color", OnyxUtils.getRandomColor());
+				entity.put("type", "entity");
+				result.add(entity);
+			}
+
 		}
 		finally {
 			session.close();
