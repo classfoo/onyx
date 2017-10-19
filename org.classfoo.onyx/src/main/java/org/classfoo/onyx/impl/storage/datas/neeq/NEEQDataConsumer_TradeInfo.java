@@ -1,5 +1,6 @@
 package org.classfoo.onyx.impl.storage.datas.neeq;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -11,6 +12,7 @@ import org.classfoo.onyx.api.storage.OnyxStorageSession;
 import org.classfoo.onyx.api.streaming.OnyxStreamingConsumer;
 import org.classfoo.onyx.api.streaming.OnyxStreamingMessage;
 import org.classfoo.onyx.api.streaming.OnyxStreamingMessageListener;
+import org.classfoo.onyx.impl.OnyxUtils;
 
 public class NEEQDataConsumer_TradeInfo implements OnyxStreamingMessageListener {
 
@@ -36,15 +38,15 @@ public class NEEQDataConsumer_TradeInfo implements OnyxStreamingMessageListener 
 		String[] line = (String[]) message.getBody();
 		HashMap<String, Object> properties = new HashMap<String, Object>();
 		//买方主办券商证券营业部	买方证券账户名称	交易日期	卖方主办券商证券营业部	卖方证券账户名称	成交价格（元）	成交数量（股）	证券代码	证券简称
-		String buybroker = line[0];
+		String buybroker = OnyxUtils.removeBlank(line[0]);
 		properties.put("买方营业部", buybroker);
-		String buyaccount = line[1];
+		String buyaccount = OnyxUtils.removeBlank(line[1]);
 		properties.put("买方账号", buyaccount);
 		String date = line[2];
 		properties.put("交易日期", date);
-		String sellbroker = line[3];
+		String sellbroker = OnyxUtils.removeBlank(line[3]);
 		properties.put("卖方营业部", sellbroker);
-		String sellaccount = line[4];
+		String sellaccount = OnyxUtils.removeBlank(line[4]);
 		properties.put("卖方账号", sellaccount);
 		String price = line[5];
 		properties.put("价格", price);

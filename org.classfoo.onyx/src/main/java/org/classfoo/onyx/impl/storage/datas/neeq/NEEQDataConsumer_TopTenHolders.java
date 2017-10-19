@@ -1,10 +1,12 @@
 package org.classfoo.onyx.impl.storage.datas.neeq;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.classfoo.onyx.api.OnyxService;
 import org.classfoo.onyx.api.storage.OnyxStorage;
 import org.classfoo.onyx.api.storage.OnyxStorageSession;
@@ -48,7 +50,7 @@ public class NEEQDataConsumer_TopTenHolders implements OnyxStreamingMessageListe
 		properties.put("最近股份", last_quantity);
 		String limitedQuantity = line[4];
 		properties.put("限制股份", limitedQuantity);
-		String name = line[5];
+		String name = OnyxUtils.removeBlank(line[5]);
 		properties.put("姓名", name);
 		String num = line[6];
 		properties.put("排名", num);
@@ -58,19 +60,24 @@ public class NEEQDataConsumer_TopTenHolders implements OnyxStreamingMessageListe
 		properties.put("占比", ratio);
 		String unlimitedQuantity = line[9];
 		properties.put("解禁股份", unlimitedQuantity);
+		Map<String, Object> company = consumer.getContext().getEntityByProperty("code", code);
+		String companyName = MapUtils.getString(company, "name");
 		Map<String, Object> entity = consumer.getContext().getEntityByProperty("people", name + ":" + code);
+		ArrayList<String> labels = new ArrayList<String>();
+		labels.add(companyName);
+		labels.add("股东");
 		if (entity == null) {
-			entity = session.addEntity(this.kid, name, Arrays.asList("股东"), properties);
+			entity = session.addEntity(this.kid, name, labels, properties);
 			consumer.getContext().putEntityByProperty("people", name + ":" + code, entity);
 		}
 		else {
 			String eid = MapUtils.getString(entity, "id");
-			session.addEntityLabels(eid, Arrays.asList("股东"));
+			session.addEntityLabels(eid, labels);
 			session.addEntityProperties(eid, properties);
 		}
 		String targetid = MapUtils.getString(entity, "id");
 		String targetname = MapUtils.getString(entity, "name");
-		Map<String, Object> company = consumer.getContext().getEntityByProperty("code", code);
+
 		String sourceid = MapUtils.getString(company, "id");
 		String sourcename = MapUtils.getString(company, "name");
 		HashMap<String, Object> linkProperties = new HashMap<String, Object>(1);

@@ -372,6 +372,24 @@ define("onyx/api/search", [ "jquery", "require" ], function($, require) {
 define("onyx/api/base", [ "jquery", "require" ], function($, require) {
 
 	function Base() {
+		this.bases = {};
+	}
+
+	/**
+	 * get Base resource
+	 */
+	Base.prototype.get = function(kid) {
+		var cache = this.bases[kid];
+		if (cache) {
+			return $.dfd(cache);
+		}
+		var dfd = $.Deferred();
+		var self = this;
+		Api.get("base/" + kid).done(function(base){
+			self.bases[kid] = base;
+			dfd.resolve(base);
+		});
+		return dfd.promise();
 	}
 
 	/**

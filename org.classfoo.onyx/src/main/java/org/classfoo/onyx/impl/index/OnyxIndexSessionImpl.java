@@ -10,6 +10,7 @@ import java.util.concurrent.ExecutionException;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.classfoo.onyx.api.index.OnyxIndexSession;
+import org.classfoo.onyx.impl.OnyxUtils;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
@@ -98,6 +99,7 @@ public class OnyxIndexSessionImpl implements OnyxIndexSession {
 		ArrayList<Map<String, Object>> result = new ArrayList<Map<String, Object>>(hitsArray.length);
 		for (int i = 0; i < hitsArray.length; i++) {
 			Map<String, Object> item = hitsArray[i].getSourceAsMap();
+			item.put("color", OnyxUtils.getRandomColor());
 			result.add(item);
 		}
 		return result;

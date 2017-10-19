@@ -1,5 +1,6 @@
 package org.classfoo.onyx.impl.storage.datas.neeq;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -58,21 +59,21 @@ public class NEEQDataConsumer_BaseInfo implements OnyxStreamingMessageListener {
 		properties.put("英文名", englishName);
 		String fax = line[6];
 		properties.put("传真", fax);
-		String industry = line[7];
+		String industry = OnyxUtils.removeBlank(line[7]);
 		properties.put("行业", industry);
-		String legalRepresentative = line[8];
+		String legalRepresentative = OnyxUtils.removeBlank(line[8]);
 		properties.put("法人代表", legalRepresentative);
 		String listingDate = line[9];
 		properties.put("挂牌时间", listingDate);
-		String name = line[10];
+		String name = OnyxUtils.removeBlank(line[10]);
 		properties.put("名称", name);
 		String phone = line[11];
 		properties.put("电话", phone);
 		String postcode = line[12];
 		properties.put("邮编", postcode);
-		String secretaries = line[13];
+		String secretaries = OnyxUtils.removeBlank(line[13]);
 		properties.put("董事会秘书", secretaries);
-		String shortname = line[14];
+		String shortname = OnyxUtils.removeBlank(line[14]);
 		properties.put("简称", shortname);
 		String totalStockEquity = line[15];
 		properties.put("总股本", totalStockEquity);
@@ -80,14 +81,21 @@ public class NEEQDataConsumer_BaseInfo implements OnyxStreamingMessageListener {
 		properties.put("交易方式", transferMode);
 		String website = line[17];
 		properties.put("网站", website);
-		Map<String, Object> company = session.addEntity(this.kid, shortname, Arrays.asList("挂牌公司"), properties);
+		String[] industries = StringUtils.split(industry, "、,， /／");
+		ArrayList<String> labels = new ArrayList<String>();
+		labels.add("挂牌公司");
+		labels.add(area);
+		if(industries != null){
+			labels.addAll(Arrays.asList(industries));
+		}
+		Map<String, Object> company = session.addEntity(this.kid, shortname, labels, properties);
 		consumer.getContext().putEntityByProperty("code", code, company);
 		//券商
 		this.addBroker(broker, company, consumer);
 		//董事长秘书
-		this.addSecretaries(secretaries, name, code, company, consumer);
+		this.addSecretaries(secretaries, shortname, code, company, consumer);
 		//法人代表
-		this.addLegalRepresentative(legalRepresentative, name, code, company, consumer);
+		this.addLegalRepresentative(legalRepresentative, shortname, code, company, consumer);
 	}
 
 	/**
@@ -119,7 +127,7 @@ public class NEEQDataConsumer_BaseInfo implements OnyxStreamingMessageListener {
 	 */
 	private void addLegalRepresentative(String legalRepresentative, String companyName, String code,
 			Map<String, Object> company, OnyxStreamingConsumer consumer) {
-		if(legalRepresentative == null){
+		if (legalRepresentative == null) {
 			return;
 		}
 		Map<String, Object> legalRepresentativeEntity = consumer.getContext().getEntityByProperty("people",
@@ -128,14 +136,14 @@ public class NEEQDataConsumer_BaseInfo implements OnyxStreamingMessageListener {
 			HashMap<String, Object> legalRepresentativeEntityProperties = new HashMap<String, Object>();
 			legalRepresentativeEntityProperties.put("挂牌公司", companyName);
 			legalRepresentativeEntityProperties.put("股票代码", code);
-			legalRepresentativeEntity = session.addEntity(this.kid, legalRepresentative, Arrays.asList("法人代表"),
-					legalRepresentativeEntityProperties);
+			legalRepresentativeEntity = session.addEntity(this.kid, legalRepresentative,
+					Arrays.asList(companyName, "法人代表"), legalRepresentativeEntityProperties);
 			consumer.getContext().putEntityByProperty("people", legalRepresentative + ":" + code,
 					legalRepresentativeEntity);
 		}
 		else {
 			String eid = MapUtils.getString(legalRepresentativeEntity, "id");
-			session.addEntityLabels(eid, Arrays.asList("法人代表"));
+			session.addEntityLabels(eid, Arrays.asList(companyName, "法人代表"));
 			HashMap<String, Object> legalRepresentativeEntityProperties = new HashMap<String, Object>();
 			legalRepresentativeEntityProperties.put("挂牌公司", companyName);
 			legalRepresentativeEntityProperties.put("股票代码", code);
@@ -154,7 +162,7 @@ public class NEEQDataConsumer_BaseInfo implements OnyxStreamingMessageListener {
 	 */
 	private void addSecretaries(String secretaries, String companyName, String code, Map<String, Object> company,
 			OnyxStreamingConsumer consumer) {
-		if(StringUtils.isBlank(secretaries)){
+		if (StringUtils.isBlank(secretaries)) {
 			return;
 		}
 		Map<String, Object> secretariesEntity = consumer.getContext().getEntityByProperty("people",
@@ -163,13 +171,13 @@ public class NEEQDataConsumer_BaseInfo implements OnyxStreamingMessageListener {
 			HashMap<String, Object> secretariesEntityProperties = new HashMap<String, Object>();
 			secretariesEntityProperties.put("挂牌公司", companyName);
 			secretariesEntityProperties.put("股票代码", code);
-			secretariesEntity = session.addEntity(this.kid, secretaries, Arrays.asList("董事会秘书"),
+			secretariesEntity = session.addEntity(this.kid, secretaries, Arrays.asList(companyName, "董事会秘书"),
 					secretariesEntityProperties);
 			consumer.getContext().putEntityByProperty("people", secretaries + ":" + code, secretariesEntity);
 		}
 		else {
 			String eid = MapUtils.getString(secretariesEntity, "id");
-			session.addEntityLabels(eid, Arrays.asList("董事会秘书"));
+			session.addEntityLabels(eid, Arrays.asList(companyName, "董事会秘书"));
 			HashMap<String, Object> secretariesEntityProperties = new HashMap<String, Object>();
 			secretariesEntityProperties.put("挂牌公司", companyName);
 			secretariesEntityProperties.put("股票代码", code);

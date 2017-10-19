@@ -8,6 +8,7 @@ import java.util.UUID;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,6 +122,13 @@ public class OnyxUtils {
 
 	private static String int2hex(int c) {
 		return COLORRGBS[c];
+	}
+
+	public static String removeBlank(String text) {
+		if(StringUtils.isBlank(text)){
+			return text;
+		}
+		return text.replaceAll("/s*", "");
 	}
 
 }

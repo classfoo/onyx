@@ -64,7 +64,7 @@ public class OnyxApi_Search extends OnyxApiImpl implements OnyxApi {
 		OnyxIndexService indexService = this.onyxService.getIndexService();
 		OnyxIndexSession session = indexService.openSession();
 		try {
-			return session.searchNameIndex(text);
+			return session.searchEntity(text);
 		}
 		finally {
 			session.close();

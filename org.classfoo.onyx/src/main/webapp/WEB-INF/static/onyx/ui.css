@@ -1134,7 +1134,7 @@ textarea {
 	position: relative;
 	width: 100%;
 	height: auto;
-	overflow:hidden;
+	overflow: hidden;
 }
 
 .onyx-ui-searchbox-items {
@@ -1148,8 +1148,8 @@ textarea {
 	cursor: pointer;
 	margin-right: 5px;
 	margin-left: 5px;
-	padding-left:2px;
-	padding-right:2px;
+	padding-left: 2px;
+	padding-right: 2px;
 }
 
 .onyx-ui-searchbox-input {
@@ -1159,7 +1159,7 @@ textarea {
 	height: 100%;
 	border: none;
 	border-radius: 3px;
-	padding-left:3px;
+	padding-left: 3px;
 }
 
 .onyx-ui-searchbox-input:focus {
@@ -1360,6 +1360,11 @@ textarea {
 /*ShowBoard Item Entity*/
 .onyx-ui-showboard-item-entity {
 	height: auto
+}
+
+.onyx-ui-showboard-item-entity-header {
+	text-align: left;
+	text-overflow: ellipsis;
 }
 
 .onyx-ui-showboard-item-entity-image {

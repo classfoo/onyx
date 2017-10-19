@@ -2884,6 +2884,10 @@ define("onyx/ui/showboard/item/entity", [ "jquery", "require",
 		this.header = $("<div class='iconfont icon-hot'></div>");
 		this.addClass(this.header, "onyx-ui-showboard-item-entity", "header");
 		this.header.appendTo(this.dom);
+		var self = this;
+		Api.base().get(this.options.kid).done(function(base){
+			self.header.text(base.name);
+		})
 		// entity image
 		this.image = $("<div class='iconfont icon-knowledge'></div>");
 		this.addClass(this.image, "onyx-ui-showboard-item-entity", "image");
@@ -3012,25 +3016,29 @@ define("onyx/ui/showboard/item/nameindex", [ "jquery", "require",
 			this.addClass(this.labels, "onyx-ui-showboard-item-entity",
 					"labels");
 			this.labels.appendTo(this.dom);
-			var ignores = {};
+			var summaries = new Map();
 			for (var i = 0; i < this.options.objects.length; i++) {
 				var object = this.options.objects[i];
-				if(!object.labels){
+				if (!object.kid) {
 					continue;
 				}
-				for (var j = 0; j < object.labels.length; j++) {
-					var label = object.labels[j];
-					if (ignores[label]) {
-						continue;
-					}
-					ignores[label] = true;
-					var labelDom = $("<span/>");
-					this.addClass(labelDom, "onyx-ui-showboard-item-entity",
-							"label");
-					labelDom.text(label);
-					labelDom.appendTo(this.labels);
+				var count = summaries.get(object.kid);
+				if(count){
+					summaries.set(object.kid, count+1);
+				}else{
+					summaries.set(object.kid, 1);
 				}
 			}
+			var self = this;
+			summaries.forEach(function(value, key,map){
+				var labelDom = $("<span/>");
+				self.addClass(labelDom, "onyx-ui-showboard-item-entity",
+						"label");
+				Api.base().get(key).done(function(base){
+					labelDom.text(base.name+"收录" + value + "条");
+					labelDom.appendTo(self.labels);
+				});
+			})
 		}
 		// tools
 		this.tools = $("<div></div>");
