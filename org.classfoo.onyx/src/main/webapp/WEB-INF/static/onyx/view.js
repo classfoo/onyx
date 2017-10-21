@@ -36,7 +36,9 @@ define("onyx/view", [ "jquery", "require", "css!./view.css", "onyx/utils",
 /**
  * Onyx Space Enter
  */
-define("onyx/view/entity", [ "jquery", "require", "onyx/utils", "onyx/ui" ],
+define(
+		"onyx/view/entity",
+		[ "jquery", "require", "onyx/utils", "onyx/ui" ],
 		function($, require) {
 
 			var Utils = require("onyx/utils");
@@ -64,25 +66,104 @@ define("onyx/view/entity", [ "jquery", "require", "onyx/utils", "onyx/ui" ],
 			Entity.prototype.buildHeader = function() {
 				this.header = $("<div class='onyx-view-entity-header'></div>");
 				this.header.appendTo(this.dom);
+				var container = $("<div class='onyx-view-entity-header-container'/>");
+				container.appendTo(this.header);
+				var left = $("<div class='onyx-view-entity-header-left'/>");
+				left.appendTo(container);
+				var right = $("<div class='onyx-view-entity-header-right'/>");
+				right.appendTo(container);
+				this.buildEntityLabels(left);
+				this.buildEntityInfo(left);
+			}
+
+			Entity.prototype.buildEntityLabels = function(pdom) {
+				var labels = $("<div class='onyx-view-entity-info-labels'/>");
+				labels.appendTo(pdom);
+				for (var i = 0; i < this.resource.labels.length; i++) {
+					var label = this.resource.labels[i];
+					var labelDom = $("<span class='onyx-view-entity-info-label'/>");
+					labelDom.text(label);
+					labelDom.appendTo(labels);
+				}
+			}
+
+			Entity.prototype.buildEntityInfo = function(pdom) {
+				var left = $("<div class='onyx-view-entity-info-left'/>");
+				left.appendTo(pdom);
+				var right = $("<div class='onyx-view-entity-info-right'/>");
+				right.appendTo(pdom);
+				var image = $("<span class='onyx-view-entity-info-image iconfont icon-man1'/>");
+				image.appendTo(left);
+				var name = $("<div class='onyx-view-entity-info-name'/>");
+				name.text(this.resource.name);
+				name.appendTo(right);
+				if (this.resource.description) {
+					var description = $("<div class='onyx-view-entity-info-description'/>");
+					description.text(this.resource.description);
+					description.appendTo(right);
+				} else {
+					var description = $("<div class='onyx-view-entity-info-description-empty'/>");
+					description.text("Oops，" + this.resource.name
+							+ "的概要描述不存在，我来添加一下...");
+					description.appendTo(right);
+				}
 			}
 
 			Entity.prototype.buildBody = function() {
 				this.body = $("<div class='onyx-view-entity-body'></div>");
 				this.body.appendTo(this.dom);
-				this.buildPage();
+				var container = $("<div class='onyx-view-entity-body-container'></div>");
+				container.appendTo(this.body);
+				this.buildPage(container);
+				this.buildPanels(container);
 			}
 
-			Entity.prototype.buildPage = function() {
-				this.page = $("<div class='onyx-view-entity-page'/>");
-				this.page.appendTo(this.body);
-				var paragraph = $("<div class='onyx-view-entity-paragraph'/>");
-				paragraph.appendTo(this.page);
-				paragraph.text(this.resource.name);
+			Entity.prototype.buildPanels = function(pdom) {
+				var panel = $("<div class='onyx-view-entity-panel shadow'/>");
+				panel.appendTo(pdom);
+				var panel = $("<div class='onyx-view-entity-panel shadow'/>");
+				panel.appendTo(pdom);
+			}
 
+			Entity.prototype.buildPage = function(pdom) {
+				var page = $("<div class='onyx-view-entity-page shadow'/>");
+				page.appendTo(pdom);
+				UI.createNavBar({
+					clazz : "onyx-view-entity-navbar",
+					theme : "horizon",
+					active : "basic",
+					items : [ {
+						id : "basic",
+						caption : "基本信息"
+					}, {
+						id : "basic",
+						caption : "关联"
+					}, {
+						id : "basic",
+						caption : "事件"
+					}, {
+						id : "basic",
+						caption : "资料"
+					} ],
+					pdom : page
+				});
+				var properties = this.resource.properties;
+				for ( var key in properties) {
+					var item = $("<div class='onyx-view-entity-property'/>");
+					item.appendTo(page);
+					var keydom = $("<span class='onyx-view-entity-property-key'/>");
+					keydom.text(key);
+					keydom.appendTo(item);
+					var value = properties[key];
+					var valuedom = $("<span class='onyx-view-entity-property-value'/>");
+					valuedom.text(value);
+					valuedom.appendTo(item);
+				}
 			}
 
 			Entity.prototype.buildFooter = function() {
 				this.footer = $("<div class='onyx-view-entity-footer'></div>");
+				this.footer.text("Copy Right @ XiaBai.com");
 				this.footer.appendTo(this.dom);
 			}
 
@@ -115,23 +196,29 @@ define("onyx/view/entity", [ "jquery", "require", "onyx/utils", "onyx/ui" ],
 			}
 
 			Entity.prototype.getPathes = function() {
-				return [ {
-					id : "home",
-					caption : "虾掰",
-					uri : "/"
-				}, {
-					id : "base",
-					caption : "知识库",
-					uri : "/space/base"
-				}, {
-					id : this.kid,
-					name : this.kid,
-					uri : "/base/knowledges/" + this.kid
-				}, {
-					id : this.eid,
-					name : this.resource.name,
-					uri : "/view/entity/" + this.eid
-				} ];
+				var dfd = $.Deferred();
+				var self = this;
+				Api.base().get(this.kid).done(function(base) {
+					dfd.resolve([ {
+						id : "home",
+						caption : "虾掰",
+						uri : "/"
+					}, {
+						id : "base",
+						caption : "知识库",
+						uri : "/space/base"
+					}, {
+						id : self.kid,
+						name : base.name,
+						uri : "/base/knowledges/" + self.kid
+					}, {
+						id : self.eid,
+						name : self.resource.name,
+						uri : "/view/entity/" + self.eid
+					} ]);
+				});
+				return dfd.promise();
+
 			}
 
 			return Entity;
@@ -219,7 +306,7 @@ define("onyx/view/label", [ "jquery", "require", "onyx/utils", "onyx/ui" ],
 			}
 
 			Label.prototype.getPathes = function() {
-				return [ {
+				return $.dfd([ {
 					id : "home",
 					caption : "虾掰",
 					uri : "/"
@@ -235,7 +322,7 @@ define("onyx/view/label", [ "jquery", "require", "onyx/utils", "onyx/ui" ],
 					id : this.eid,
 					name : this.resource.name,
 					uri : "/view/label/" + this.lid
-				} ];
+				} ]);
 			}
 
 			return Label;

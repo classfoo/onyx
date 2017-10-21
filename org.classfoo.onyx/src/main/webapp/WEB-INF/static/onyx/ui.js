@@ -2911,10 +2911,10 @@ define("onyx/ui/showboard/item/entity", [ "jquery", "require",
 				labelDom.appendTo(this.labels);
 			}
 		}
-		this.user = $("<div class='iconfont icon-user-circle'></div>");
-		this.addClass(this.user, "onyx-ui-showboard-item-entity", "user");
-		this.user.text("用户 2017年3月24日 12:33:23");
-		this.user.appendTo(this.dom);
+//		this.user = $("<div class='iconfont icon-user-circle'></div>");
+//		this.addClass(this.user, "onyx-ui-showboard-item-entity", "user");
+//		this.user.text("用户 2017年3月24日 12:33:23");
+//		this.user.appendTo(this.dom);
 		// tools
 		this.tools = $("<div></div>");
 		this.addClass(this.tools, "onyx-ui-showboard-item-entity", "tools");

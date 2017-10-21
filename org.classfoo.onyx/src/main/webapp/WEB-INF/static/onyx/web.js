@@ -138,8 +138,10 @@ define("onyx/web/topbar", [ "jquery", "require", "onyx/ui", "page/page" ],
 						|| !options.component.getPathes) {
 					return $.dfd(this);
 				}
-				var pathes = options.component.getPathes();
-				this.breadCrumb.setPathes(pathes);
+				var self = this;
+				options.component.getPathes().done(function(pathes){
+					self.breadCrumb.setPathes(pathes);
+				});
 				return $.dfd(this);
 			}
 

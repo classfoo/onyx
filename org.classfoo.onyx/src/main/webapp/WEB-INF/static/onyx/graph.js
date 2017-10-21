@@ -86,7 +86,7 @@ define("onyx/graph/base", [ "jquery", "require", "onyx/ui", "onyx/canvas" ],
 			}
 
 			Base.prototype.getPathes = function() {
-				return [ {
+				return $.dfd([ {
 					id : "home",
 					caption : "虾掰",
 					uri : "/"
@@ -102,7 +102,7 @@ define("onyx/graph/base", [ "jquery", "require", "onyx/ui", "onyx/canvas" ],
 					id : "graph",
 					name : "图谱",
 					uri : "/graph/base/" + this.kid
-				} ];
+				} ]);
 			}
 
 			return Base;

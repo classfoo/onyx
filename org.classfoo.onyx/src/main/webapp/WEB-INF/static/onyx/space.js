@@ -148,7 +148,7 @@ define("onyx/space/recommend", [ "jquery", "require", "onyx/ui" ], function($,
 	}
 
 	Recommend.prototype.getPathes = function() {
-		return [ {
+		return $.dfd([ {
 			id : "home",
 			caption : "虾掰",
 			uri : "/"
@@ -156,7 +156,7 @@ define("onyx/space/recommend", [ "jquery", "require", "onyx/ui" ], function($,
 			id : "recommend",
 			caption : "推荐",
 			uri : "/space/recommend"
-		} ];
+		} ]);
 	}
 
 	Recommend.prototype.docmd = function(cmd, event) {
@@ -200,7 +200,7 @@ define("onyx/space/base", [ "jquery", "require", "onyx/ui" ], function($,
 	}
 
 	Base.prototype.getPathes = function() {
-		return [ {
+		return $.dfd([ {
 			id : "home",
 			caption : "虾掰",
 			uri : "/"
@@ -208,7 +208,7 @@ define("onyx/space/base", [ "jquery", "require", "onyx/ui" ], function($,
 			id : "base",
 			caption : "知识库",
 			uri : "/space/base"
-		} ];
+		} ]);
 	}
 
 	Base.prototype.docmd = function(cmd, event) {
@@ -290,7 +290,7 @@ define("onyx/space/leak", [ "jquery", "require", "onyx/ui" ], function($,
 	}
 
 	Leak.prototype.getPathes = function() {
-		return [ {
+		return $.dfd([ {
 			id : "home",
 			caption : "虾掰",
 			uri : "/"
@@ -298,7 +298,7 @@ define("onyx/space/leak", [ "jquery", "require", "onyx/ui" ], function($,
 			id : "leak",
 			caption : "爆料",
 			uri : "/space/leak"
-		} ];
+		} ]);
 	}
 
 	Leak.prototype.docmd = function(cmd, event) {

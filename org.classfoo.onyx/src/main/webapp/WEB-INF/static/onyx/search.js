@@ -106,7 +106,7 @@ define("onyx/search/all", [ "jquery", "require", "onyx/ui" ], function($,
 	}
 
 	All.prototype.getPathes = function() {
-		return [ {
+		return $.dfd([ {
 			id : "home",
 			caption : "虾掰",
 			uri : "/"
@@ -118,7 +118,7 @@ define("onyx/search/all", [ "jquery", "require", "onyx/ui" ], function($,
 			id : "all",
 			caption : "所有",
 			uri : "/search/all"
-		} ];
+		} ]);
 	}
 
 	All.prototype.docmd = function(cmd, event) {

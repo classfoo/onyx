@@ -227,7 +227,7 @@ define("onyx/api", [ "jquery", "require", "onyx/api/label", "onyx/api/entity",
 			return $.dfd();// Api.user().single(resource);
 		}
 		case 'e': {
-			return Api.entity().single(resource);
+			return Api.entity().get(resource);
 		}
 		case 'm': {
 			return Api.material().single(resource);
