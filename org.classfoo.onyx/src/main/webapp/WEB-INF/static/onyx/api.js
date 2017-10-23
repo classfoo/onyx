@@ -459,9 +459,9 @@ define(
 								function(label) {
 									var icon = (label.properties && label.properties.icon)
 											|| "\ue66f";
-									var background = (label.properties && label.properties.background)
+									var color = (label.properties && label.properties.background)
 											|| "#C5DBF0";
-									var color = (label.properties && label.properties.color)
+									var background = (label.properties && label.properties.color)
 											|| "white";
 									var canvasOffscreen = document
 											.createElement('canvas');

@@ -35,7 +35,7 @@
 .onyx-base-home-header {
 	position: relative;
 	width: 100%;
-	background-color: #3095e2;
+	background-color: #FF0022;
 	text-align: center;
 }
 
@@ -67,22 +67,31 @@
 	width: 100%;
 }
 
-.onyx-base-home-header-nav .onyx-ui-navbar-item-active{
-	background-color:#F2F2F2;
+.onyx-base-home-header-nav .onyx-ui-navbar-item-active {
+	background-color: #F2F2F2;
 }
 
-.onyx-base-home-header-nav .onyx-ui-navbar-item-over{
-	background-color:#F2F2F2;
+.onyx-base-home-header-nav .onyx-ui-navbar-item-over {
+	background-color: #F2F2F2;
 }
 
 .onyx-base-home-body {
+	width: 100%;
+	height: auto;
+	background-color: #F2F2F2;
+}
+
+.onyx-base-home-body-container {
+	width: 300mm;
+	margin: 0 auto;
+	height: 192px;
+}
+
+.onyx-base-home-body-page {
 	position: relative;
 	width: 210mm;
 	min-height: 210mm;
-	left: 50%;
-	margin-left: -105mm;
 	padding: 5mm;
-	background-color: #F2F2F2;
 }
 
 .onyx-base-home-footer {

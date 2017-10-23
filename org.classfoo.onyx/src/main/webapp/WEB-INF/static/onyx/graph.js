@@ -47,41 +47,7 @@ define("onyx/graph/base", [ "jquery", "require", "onyx/ui", "onyx/canvas" ],
 			Base.prototype.build = function(pdom) {
 				this.dom = $("<div class='onyx-graph-base'></div>");
 				this.dom.appendTo(pdom);
-				this.canvas = new Canvas(this.resource);
-				this.canvas.build(this.dom);
-				// this.floatPanel = UI.createFloatPanel({
-				// pdom : this.dom,
-				// style : {
-				// position : "absolute",
-				// right : 5,
-				// top : 5,
-				// width : 100,
-				// height : 32,
-				// "border-radius" : 5,
-				// "background-color" : "rgba(100, 100, 100, 100)"
-				// }
-				// });
-				// this.closeIcon = UI.createIcon({
-				// icon : "icon-close",
-				// pdom : this.floatPanel.getDom(),
-				// style : {
-				// "font-size" : 12
-				// }
-				// });
-				// this.nextIcon = UI.createIcon({
-				// icon : "icon-next",
-				// pdom : this.floatPanel.getDom(),
-				// style : {
-				// "font-size" : 12
-				// }
-				// });
-				// this.preIcon = UI.createIcon({
-				// icon : "icon-pre",
-				// pdom : this.floatPanel.getDom(),
-				// style : {
-				// "font-size" : 12
-				// }
-				// });
+				this.canvas = new Canvas(this.dom, this.resource);
 				return this.dom;
 			}
 
@@ -106,4 +72,63 @@ define("onyx/graph/base", [ "jquery", "require", "onyx/ui", "onyx/canvas" ],
 			}
 
 			return Base;
+		});
+
+/**
+ * Onyx Graph Entity
+ */
+define("onyx/graph/entity", [ "jquery", "require", "onyx/ui", "onyx/canvas" ],
+		function($, require) {
+
+			var UI = require("onyx/ui");
+
+			var Canvas = require("onyx/canvas");
+
+			function Entity(options) {
+				this.options = options;
+				this.resource = this.options.resource;
+				this.kid = this.resource.kid;
+				this.build(options.pdom);
+			}
+
+			Entity.prototype.build = function(pdom) {
+				var self = this;
+				Api.base().get(this.kid).done(function(base) {
+					self.dom = $("<div class='onyx-graph-entity'></div>");
+					self.dom.appendTo(pdom);
+					self.canvas = new Canvas(self.dom, base, self.resource);
+				})
+				return this.dom;
+			}
+
+			Entity.prototype.getPathes = function() {
+				var dfd = $.Deferred();
+				var self = this;
+				Api.base().get(this.kid).done(function(base) {
+					dfd.resolve([ {
+						id : "home",
+						caption : "虾掰",
+						uri : "/"
+					}, {
+						id : "base",
+						caption : "知识库",
+						uri : "/space/base"
+					}, {
+						id : base.id,
+						name : base.name,
+						uri : "/base/home/" + base.kid
+					}, {
+						id : self.resource.id,
+						name : self.resource.name,
+						uri : "/view/entity/" + self.resource.id
+					}, {
+						id : "graph",
+						name : "图谱",
+						uri : "/graph/entity/" + self.resource.id
+					} ]);
+				})
+				return dfd.promise();
+			}
+
+			return Entity;
 		});

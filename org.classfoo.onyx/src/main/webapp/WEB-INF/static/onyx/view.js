@@ -119,8 +119,22 @@ define(
 			}
 
 			Entity.prototype.buildPanels = function(pdom) {
-				var panel = $("<div class='onyx-view-entity-panel shadow'/>");
-				panel.appendTo(pdom);
+				this.buildGraphPanel(pdom);
+				this.buildPanel(pdom);
+			}
+
+			Entity.prototype.buildGraphPanel = function(pdom) {
+				var graph = $("<div class='onyx-view-entity-panel shadow'/>");
+				graph.appendTo(pdom);
+				var icon = $("<div class='onyx-view-entity-panel-graph-icon iconfont icon-graph'>");
+				icon.appendTo(graph);
+				var self = this;
+				graph.on("click", function() {
+					UI.redirect("/graph/entity/" + self.resource.id);
+				});
+			}
+
+			Entity.prototype.buildPanel = function(pdom) {
 				var panel = $("<div class='onyx-view-entity-panel shadow'/>");
 				panel.appendTo(pdom);
 			}

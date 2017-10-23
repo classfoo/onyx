@@ -110,8 +110,12 @@ define("onyx/onyx", [ "jquery", "require", "css!./ui.css", "onyx/utils",
 						return;
 					}
 					var frameOptions = $.extend({}, pageOptions);
-					frameOptions.id = (resource && resource.id)
-							|| pageOptions.framename;
+					if (resource && resource.id) {
+						frameOptions.id = pageOptions.framename + '/'
+								+ resource.id
+					} else {
+						frameOptions.id = pageOptions.framename;
+					}
 					frameOptions.page = page.component;
 					frameOptions.compname = 'onyx/' + pageOptions.pagename
 							+ '/' + pageOptions.framename;

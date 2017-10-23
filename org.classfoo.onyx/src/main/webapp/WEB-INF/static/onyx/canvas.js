@@ -18,9 +18,15 @@ define(
 
 			var RightPanel = require("onyx/canvas/rightpanel");
 
-			function Canvas(resource) {
-				this.resource = resource;
-				this.kid = this.resource.id;
+			function Canvas(pdom, base, entity) {
+				this.base = base;
+				this.entity = entity;
+				this.id = (this.entity && this.entity.id) || this.base.id
+				this.kid = this.base.id;
+				this.build(pdom);
+				if(this.entity){
+					this.docmd("addnode", this.entity);
+				}
 			}
 
 			Canvas.prototype.build = function(pdom) {
@@ -33,10 +39,11 @@ define(
 				this.canvasDom = $("<canvas class='onyx-canvas-canvas'></canvas>");
 				this.canvasDom.attr("width", this.width);
 				this.canvasDom.attr("height", this.height);
+				this.canvasDom.attr("id", this.id);
 				this.canvasDom.appendTo(this.dom);
 				this.dom.on("contextmenu", this.onContextMenu.bind(this));
 				// init canvas
-				this.canvas = document.querySelector(".onyx-canvas-canvas");
+				this.canvas = this.canvasDom[0];
 				this.context = this.canvas.getContext("2d");
 				this.graph = new Graph(this);
 				this.rightPanel = new RightPanel(this);
@@ -68,6 +75,8 @@ define(
 
 			Canvas.prototype.render = function() {
 				this.context.clearRect(0, 0, this.width, this.height);
+				this.context.fillStyle="#F2F2F2"
+				this.context.fillRect(0,0,this.width,this.height);
 				this.graph.render();
 				console.log("render");
 			}
@@ -83,6 +92,9 @@ define(
 				case "save": {
 					return this.docmd_save(options);
 				}
+				case "addnode": {
+					return this.docmd_addnode(options);
+				}
 				}
 				return null;
 			}
@@ -93,6 +105,19 @@ define(
 
 			Canvas.prototype.docmd_add = function(options) {
 				this.searchPanel.show(options);
+			}
+
+			Canvas.prototype.docmd_addnode = function(options) {
+				var nodex = this.graph.getWidth() / 2 - this.graph.getX();
+				var nodey = this.graph.getHeight() / 2 - this.graph.getY();
+				var node = $.extend({
+					x : nodex,
+					y : nodey
+				}, options);
+				this.graph.addNode(node);
+				this.graph.expandNode(node);
+				this.searchPanel.hide();
+				this.rightPanel.hide();
 			}
 
 			Canvas.prototype.docmd_save = function(options) {
@@ -545,18 +570,20 @@ define(
 
 			Graph.prototype.renderLink = function(link) {
 				var name = link.name || "关系";
+				var color = (link.properties && link.properties.color)
+				|| "pink";
 				this.context.save();
 				// render line;
 				this.context.beginPath();
-				this.context.globalAlpha = 0.5;
+				//this.context.globalAlpha = 0.5;
 				var source = this.getNode(link.source);
 				var target = this.getNode(link.target);
 				this.context.moveTo(this.toScreenX(source.x), this
 						.toScreenY(source.y));
 				this.context.lineTo(this.toScreenX(target.x), this
 						.toScreenY(target.y));
-				this.context.lineWidth = 3;
-				this.context.strokeStyle = "white";
+				this.context.lineWidth = 2;
+				this.context.strokeStyle = color;
 				this.context.stroke();
 				// render text rectangle
 				var middlex = this.toScreenX((target.x + source.x) / 2);
@@ -566,8 +593,7 @@ define(
 				this.context.translate(middlex, middley);
 				this.context.rotate(angle);
 				this.context.globalAlpha = 1;
-				this.context.fillStyle = (link.properties && link.properties.color)
-						|| "pink";
+				this.context.fillStyle = color;
 				var width = name.length * 16;
 				this.context.moveTo(-width / 2, -8);
 				this.context.lineTo(-width / 2, 8);
@@ -633,20 +659,20 @@ define(
 				// draw circle
 				this.context.beginPath();
 				this.context.arc(nodex, nodey, radius + 1, 0, 2 * Math.PI);
-				this.context.lineWidth = 4;
-				this.context.globalAlpha = 0.5;
+				this.context.lineWidth = 2;
+				//this.context.globalAlpha = 0.5;
 				if (dragged) {
 					this.context.strokeStyle = "#C5DBF0";
 					this.context.setLineDash([ 3, 3 ]);
 				} else if (selected) {
 					this.context.setLineDash([ 3, 3 ]);
-					this.context.strokeStyle = "white";
+					this.context.strokeStyle = "#4543A8";
 				} else if (fixed) {
 					this.context.strokeStyle = "#FF0029";
 				} else if (mouseovered) {
-					this.context.strokeStyle = "white";
+					this.context.strokeStyle = "#4543A8";
 				} else {
-					this.context.strokeStyle = "#C5DBF0";
+					this.context.strokeStyle = "#4543A8";
 				}
 				this.context.stroke();
 				this.context.restore();
@@ -658,7 +684,7 @@ define(
 					this.context.font = "12px 微软雅黑";
 				}
 				this.context.textAlign = "center";
-				this.context.fillStyle = "#FFFFFF";
+				this.context.fillStyle = "#000000";
 				this.context.fillText(node.name || node.id, nodex, nodey
 						+ radius + 20);
 				this.context.restore();
@@ -2050,7 +2076,7 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 		var isActive = active && button.id === active.id;
 		arc.cornerRadius(isActive ? 2 : 4);
 		arc(d);
-		this.context.fillStyle = isActive ? "#FFFFFF" : this.getColor();
+		this.context.fillStyle = isActive ? "gray" : this.getColor();
 		this.context.fill();
 		var c = arc.centroid(d);
 		var angle = (d.startAngle + d.endAngle) / 2;
@@ -2061,7 +2087,7 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 			// draw text
 			this.context.font = "18px iconfont";
 			this.context.textAlign = "center"
-			this.context.fillStyle = isActive ? "#000000" : "#FFFFFF";
+			this.context.fillStyle = isActive ? "#FFFFFF" : "#FFFFFF";
 			this.context.fillText(button.icon, 0, -2);
 			this.context.font = "16px 微软雅黑";
 			this.context.textAlign = "center"
@@ -2073,7 +2099,7 @@ define("onyx/canvas/compass", [ "jquery", "require", "d3/d3" ], function($,
 			this.context.rotate(angle);
 			this.context.font = "18px iconfont";
 			this.context.textAlign = "center"
-			this.context.fillStyle = isActive ? "#000000" : "#FFFFFF";
+			this.context.fillStyle = isActive ? "#FFFFFF" : "#FFFFFF";
 			this.context.fillText(button.icon, 0, 14);
 			// draw text
 			this.context.font = "16px 微软雅黑";

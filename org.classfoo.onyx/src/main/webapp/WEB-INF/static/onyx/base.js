@@ -8,7 +8,8 @@ define("onyx/base", [ "jquery", "require", "css!./base.css", "onyx/ui" ],
 
 			function Base(options) {
 				this.options = options;
-				this.kid = this.options.resource.kid;
+				this.resource = this.options.resource;
+				this.kid = this.options.resource.id;
 				this.build(options);
 			}
 
@@ -170,28 +171,58 @@ define(
 			Home.prototype.buildBody = function() {
 				this.body = $("<div class='onyx-base-home-body'/>");
 				this.body.appendTo(this.dom);
-				this.buildSubmiter();
-				this.buildTimeLine();
+				var container = $("<div class='onyx-base-home-body-container'/>");
+				container.appendTo(this.body);
+				this.buildPage(container);
+				this.buildPanels(container);
 			}
 
-			Home.prototype.buildSubmiter = function() {
+			Home.prototype.buildPage = function(container) {
+				var page = $("<div class='onyx-base-home-body-page'/>");
+				page.appendTo(container);
+				this.buildSubmiter(page);
+				this.buildTimeLine(page);
+			}
+
+			Home.prototype.buildSubmiter = function(page) {
 				this.submiter = UI.createSubmiter({
 					on : {
 						submit : this.onSubmit.bind(this)
 					},
-					pdom : this.body
+					pdom : page
 				});
 			}
 
-			Home.prototype.buildTimeLine = function() {
-				this.timeline = UI.createTimeLine({
+			Home.prototype.buildTimeLine = function(page) {
+				this.timeline = UI.createDataList({
 					items : this.queryTimeLine.bind(this),
-					pdom : this.body
+					pdom : page
 				});
 			}
 
 			Home.prototype.queryTimeLine = function() {
 				return Api.timeline(this.kid).list();
+			}
+		
+			Home.prototype.buildPanels = function(container) {
+				this.buildGraphPanel(container);
+				this.buildPanel(container);
+			}
+
+			Home.prototype.buildGraphPanel = function(container) {
+				var graph = $("<div class='onyx-view-entity-panel shadow'/>");
+				graph.appendTo(container);
+				var icon = $("<div class='onyx-view-entity-panel-graph-icon iconfont icon-graph'>");
+				icon.appendTo(graph);
+				var self = this;
+				graph.on("click", function() {
+					UI.redirect("/graph/entity/" + self.resource.id);
+				});
+			}
+
+			Home.prototype.buildPanel = function(container) {
+				var panel = $("<div class='onyx-view-entity-panel shadow'/>");
+				panel.appendTo(container);
 			}
 
 			Home.prototype.buildFooter = function() {
@@ -210,7 +241,7 @@ define(
 			}
 
 			Home.prototype.getPathes = function() {
-				return [ {
+				return $.dfd([ {
 					id : "home",
 					caption : "虾掰",
 					uri : "/"
@@ -222,7 +253,7 @@ define(
 					id : this.kid,
 					name : this.resource.name,
 					uri : "/base/knowledges/" + this.kid
-				} ];
+				} ]);
 			}
 
 			return Home;
@@ -263,7 +294,7 @@ define("onyx/base/knowledges", [ "jquery", "require", "onyx/ui" ], function($,
 	}
 
 	Knowledges.prototype.getPathes = function() {
-		return [ {
+		return $.dfd([ {
 			id : "home",
 			caption : "虾掰",
 			uri : "/"
@@ -275,7 +306,7 @@ define("onyx/base/knowledges", [ "jquery", "require", "onyx/ui" ], function($,
 			id : this.kid,
 			name : this.resource.name,
 			uri : "/base/knowledges/" + this.kid
-		} ];
+		} ]);
 	}
 
 	return Knowledges;
@@ -315,7 +346,7 @@ define("onyx/base/labels", [ "jquery", "require", "onyx/ui" ], function($,
 	}
 
 	Labels.prototype.getPathes = function() {
-		return [ {
+		return $.dfd([ {
 			id : "home",
 			caption : "虾掰",
 			uri : "/"
@@ -327,7 +358,7 @@ define("onyx/base/labels", [ "jquery", "require", "onyx/ui" ], function($,
 			id : this.kid,
 			name : this.resource.name,
 			uri : "/base/labels/" + this.kid
-		} ];
+		} ]);
 	}
 
 	return Labels;
@@ -370,7 +401,7 @@ define("onyx/base/analysis", [ "jquery", "require", "onyx/ui" ], function($,
 	}
 
 	Analysis.prototype.getPathes = function() {
-		return [ {
+		return $.dfd([ {
 			id : "home",
 			caption : "虾掰",
 			uri : "/"
@@ -382,7 +413,7 @@ define("onyx/base/analysis", [ "jquery", "require", "onyx/ui" ], function($,
 			id : this.kid,
 			name : this.resource.name,
 			uri : "/base/analysis/" + this.kid
-		} ];
+		} ]);
 	}
 
 	return Analysis;
@@ -422,7 +453,7 @@ define("onyx/base/materials", [ "jquery", "require", "onyx/ui" ], function($,
 	}
 
 	Materials.prototype.getPathes = function() {
-		return [ {
+		return $.dfd([ {
 			id : "home",
 			caption : "虾掰",
 			uri : "/"
@@ -434,7 +465,7 @@ define("onyx/base/materials", [ "jquery", "require", "onyx/ui" ], function($,
 			id : this.kid,
 			name : this.resource.name,
 			uri : "/base/materials/" + this.kid
-		} ];
+		} ]);
 	}
 	return Materials;
 });
@@ -476,7 +507,7 @@ define("onyx/base/members", [ "jquery", "require", "onyx/ui" ], function($,
 	}
 
 	Members.prototype.getPathes = function() {
-		return [ {
+		return $.dfd([ {
 			id : "home",
 			caption : "虾掰",
 			uri : "/"
@@ -488,7 +519,7 @@ define("onyx/base/members", [ "jquery", "require", "onyx/ui" ], function($,
 			id : this.kid,
 			name : this.resource.name,
 			uri : "/base/members/" + this.kid
-		} ];
+		} ]);
 	}
 
 	return Members;
@@ -531,7 +562,7 @@ define("onyx/base/tasks", [ "jquery", "require", "onyx/ui" ], function($,
 	}
 
 	Tasks.prototype.getPathes = function() {
-		return [ {
+		return $.dfd([ {
 			id : "home",
 			caption : "虾掰",
 			uri : "/"
@@ -543,7 +574,7 @@ define("onyx/base/tasks", [ "jquery", "require", "onyx/ui" ], function($,
 			id : this.kid,
 			name : this.resource.name,
 			uri : "/base/tasks/" + this.kid
-		} ];
+		} ]);
 	}
 
 	return Tasks;
