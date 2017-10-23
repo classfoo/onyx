@@ -18,13 +18,14 @@ define(
 
 			var RightPanel = require("onyx/canvas/rightpanel");
 
-			function Canvas(pdom, base, entity) {
+			function Canvas(pdom, base, entity, edit) {
 				this.base = base;
 				this.entity = entity;
+				this.edit = edit;
 				this.id = (this.entity && this.entity.id) || this.base.id
 				this.kid = this.base.id;
 				this.build(pdom);
-				if(this.entity){
+				if (this.entity) {
 					this.docmd("addnode", this.entity);
 				}
 			}
@@ -48,8 +49,10 @@ define(
 				this.graph = new Graph(this);
 				this.rightPanel = new RightPanel(this);
 				this.searchPanel = new SearchPanel(this, this.graph);
-				this.connerButton = new CornerButton(this, this.graph,
+				if(this.edit){
+					this.connerButton = new CornerButton(this, this.graph,
 						this.searchPanel);
+				}
 				this.render();
 			}
 
@@ -75,8 +78,8 @@ define(
 
 			Canvas.prototype.render = function() {
 				this.context.clearRect(0, 0, this.width, this.height);
-				this.context.fillStyle="#F2F2F2"
-				this.context.fillRect(0,0,this.width,this.height);
+				//this.context.fillStyle = "#F2F2F2"
+				//this.context.fillRect(0, 0, this.width, this.height);
 				this.graph.render();
 				console.log("render");
 			}
@@ -571,11 +574,11 @@ define(
 			Graph.prototype.renderLink = function(link) {
 				var name = link.name || "关系";
 				var color = (link.properties && link.properties.color)
-				|| "pink";
+						|| "pink";
 				this.context.save();
 				// render line;
 				this.context.beginPath();
-				//this.context.globalAlpha = 0.5;
+				// this.context.globalAlpha = 0.5;
 				var source = this.getNode(link.source);
 				var target = this.getNode(link.target);
 				this.context.moveTo(this.toScreenX(source.x), this
@@ -660,7 +663,7 @@ define(
 				this.context.beginPath();
 				this.context.arc(nodex, nodey, radius + 1, 0, 2 * Math.PI);
 				this.context.lineWidth = 2;
-				//this.context.globalAlpha = 0.5;
+				// this.context.globalAlpha = 0.5;
 				if (dragged) {
 					this.context.strokeStyle = "#C5DBF0";
 					this.context.setLineDash([ 3, 3 ]);

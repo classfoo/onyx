@@ -203,30 +203,39 @@ define(
 			Home.prototype.queryTimeLine = function() {
 				return Api.timeline(this.kid).list();
 			}
-		
+
 			Home.prototype.buildPanels = function(container) {
 				this.buildGraphPanel(container);
 				this.buildPanel(container);
 			}
 
 			Home.prototype.buildGraphPanel = function(container) {
-				var graph = $("<div class='onyx-view-entity-panel shadow'/>");
+				var graph = $("<div class='onyx-base-home-body-panel shadow'/>");
 				graph.appendTo(container);
-				var icon = $("<div class='onyx-view-entity-panel-graph-icon iconfont icon-graph'>");
+				var header = $("<div class='onyx-base-home-body-panel-header'/>");
+				header.text("图谱分析");
+				header.appendTo(graph);
+				var icon = $("<div class='onyx-base-home-body-panel-graph-icon iconfont icon-graph'>");
 				icon.appendTo(graph);
 				var self = this;
 				graph.on("click", function() {
-					UI.redirect("/graph/entity/" + self.resource.id);
+					UI.redirect("/graph/base/" + self.kid);
 				});
+				
+				var footer = $("<div class='onyx-base-home-body-panel-footer'/>");
+				footer.text("图谱分析");
+				footer.appendTo(graph);
+
 			}
 
 			Home.prototype.buildPanel = function(container) {
-				var panel = $("<div class='onyx-view-entity-panel shadow'/>");
+				var panel = $("<div class='onyx-base-home-body-panel shadow'/>");
 				panel.appendTo(container);
 			}
 
 			Home.prototype.buildFooter = function() {
 				this.footer = $("<div class='onyx-base-home-footer'></div>");
+				this.footer.text("Copy Right @ 虾掰.com");
 				this.footer.appendTo(this.dom);
 			}
 

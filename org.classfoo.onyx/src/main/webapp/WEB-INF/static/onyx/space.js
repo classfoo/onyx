@@ -211,8 +211,7 @@ define("onyx/space/base", [ "jquery", "require", "onyx/ui" ], function($,
 		} ]);
 	}
 
-	Base.prototype.docmd = function(cmd, event) {
-		alert(cmd);
+	Base.prototype.docmd = function(cmd, event, item) {
 	}
 
 	return Base;

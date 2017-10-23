@@ -38,12 +38,14 @@ define("onyx/view", [ "jquery", "require", "css!./view.css", "onyx/utils",
  */
 define(
 		"onyx/view/entity",
-		[ "jquery", "require", "onyx/utils", "onyx/ui" ],
+		[ "jquery", "require", "onyx/utils", "onyx/ui", "onyx/canvas" ],
 		function($, require) {
 
 			var Utils = require("onyx/utils");
 
 			var UI = require("onyx/ui");
+
+			var Canvas = require("onyx/canvas");
 
 			function Entity(options) {
 				this.options = options;
@@ -126,12 +128,28 @@ define(
 			Entity.prototype.buildGraphPanel = function(pdom) {
 				var graph = $("<div class='onyx-view-entity-panel shadow'/>");
 				graph.appendTo(pdom);
-				var icon = $("<div class='onyx-view-entity-panel-graph-icon iconfont icon-graph'>");
-				icon.appendTo(graph);
-				var self = this;
-				graph.on("click", function() {
-					UI.redirect("/graph/entity/" + self.resource.id);
-				});
+				var header = $("<div class='onyx-view-entity-panel-header'/>");
+				header.text("查看图谱");
+				header.appendTo(graph);
+
+				var body = $("<div class='onyx-view-entity-panel-body'/>");
+				body.appendTo(graph);
+
+				var canvas = $("<div class='onyx-view-entity-panel-canvas'/>");
+				canvas.appendTo(body);
+				new Canvas(canvas, {
+					id : this.kid
+				}, this.resource);
+
+				// var icon = $("<div class='onyx-view-entity-panel-graph-icon
+				// iconfont icon-graph'>");
+				// icon.appendTo(body);
+				var footer = $("<div class='onyx-view-entity-panel-footer'/>");
+				footer.appendTo(graph);
+//				var self = this;
+//				graph.on("click", function() {
+//					UI.redirect("/graph/entity/" + self.resource.id);
+//				});
 			}
 
 			Entity.prototype.buildPanel = function(pdom) {

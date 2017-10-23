@@ -47,7 +47,7 @@ define("onyx/graph/base", [ "jquery", "require", "onyx/ui", "onyx/canvas" ],
 			Base.prototype.build = function(pdom) {
 				this.dom = $("<div class='onyx-graph-base'></div>");
 				this.dom.appendTo(pdom);
-				this.canvas = new Canvas(this.dom, this.resource);
+				this.canvas = new Canvas(this.dom, this.resource, null, true);
 				return this.dom;
 			}
 
@@ -96,7 +96,7 @@ define("onyx/graph/entity", [ "jquery", "require", "onyx/ui", "onyx/canvas" ],
 				Api.base().get(this.kid).done(function(base) {
 					self.dom = $("<div class='onyx-graph-entity'></div>");
 					self.dom.appendTo(pdom);
-					self.canvas = new Canvas(self.dom, base, self.resource);
+					self.canvas = new Canvas(self.dom, base, self.resource, true);
 				})
 				return this.dom;
 			}
