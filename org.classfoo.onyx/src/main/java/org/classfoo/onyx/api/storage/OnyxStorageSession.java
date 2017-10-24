@@ -50,6 +50,13 @@ public interface OnyxStorageSession {
 	public List<Map<String, Object>> queryMaterials(String kid);
 
 	/**
+	 * query all links of entity
+	 * @param id
+	 * @return
+	 */
+	public List<Map<String, Object>> queryLinks(String eid);
+
+	/**
 	 * query all link names of entity
 	 * @param eid
 	 * @return
@@ -134,7 +141,7 @@ public interface OnyxStorageSession {
 	 * @param eid
 	 * @param label
 	 */
-	public void addEntityLabels(String eid, List<String> labels);
+	public Map<String, Object> addEntityLabels(String eid, List<String> labels);
 
 	/**
 	 * add properties for entity

@@ -205,32 +205,137 @@ define(
 			}
 
 			Home.prototype.buildPanels = function(container) {
-				this.buildGraphPanel(container);
-				this.buildPanel(container);
+				this.buildConstructPanel(container);
+				this.buildContributorsPanel(container);
+				this.buildManagersPanel(container);
+				this.buildSimilarsPanel(container);
 			}
 
-			Home.prototype.buildGraphPanel = function(container) {
+			Home.prototype.buildConstructPanel = function(container) {
 				var graph = $("<div class='onyx-base-home-body-panel shadow'/>");
 				graph.appendTo(container);
 				var header = $("<div class='onyx-base-home-body-panel-header'/>");
-				header.text("图谱分析");
+				header.text("知识库");
 				header.appendTo(graph);
-				var icon = $("<div class='onyx-base-home-body-panel-graph-icon iconfont icon-graph'>");
-				icon.appendTo(graph);
+				var body = $("<div class='onyx-base-home-body-panel-body'/>");
+				body.appendTo(graph);
 				var self = this;
-				graph.on("click", function() {
+				this.buildContributePanelItem(body, "addgraph", "探索图谱",
+						"icon-graph").on("click", function() {
 					UI.redirect("/graph/base/" + self.kid);
 				});
-				
-				var footer = $("<div class='onyx-base-home-body-panel-footer'/>");
-				footer.text("图谱分析");
-				footer.appendTo(graph);
-
+				this.buildContributePanelItem(body, "adddoc", "深度解读",
+						"icon-doc").on("click", function() {
+					UI.redirect("/doc/new/" + self.kid);
+				});
+				this.buildContributePanelItem(body, "addentity", "添加实体",
+						"icon-entity").on(
+						"click",
+						function() {
+							var diloag = UI.createDialog({
+								modal : true,
+								title : "添加实体",
+								content : function(dialog) {
+									return UI.createForm({
+										fields : [ {
+											name : "name",
+											type : "onyx/ui/form/input"
+										} ],
+										pdom : dialog.pdom
+									});
+								},
+								buttons : [ "ok", "cancel" ],
+								on : {
+									"ok" : function(event, dialog) {
+										dialog.getContent().getData().done(
+												self.createEntity.bind(self));
+									}
+								}
+							});
+						});
+				this.buildContributePanelItem(body, "addlabel", "添加标签",
+						"icon-label").on("click", function() {
+					UI.createDialog({
+						title : "添加标签",
+						buttons : [ "ok", "cancel" ]
+					});
+				});
+				this.buildContributePanelItem(body, "addmaterial", "贡献资料",
+						"icon-material").on("click", function() {
+					UI.createDialog({
+						title : "贡献资料",
+						buttons : [ "ok", "cancel" ]
+					});
+				});
+				this.buildContributePanelItem(body, "addvote", "发起投票",
+						"icon-vote").on("click", function() {
+					UI.createDialog({
+						title : "发起投票",
+						buttons : [ "ok", "cancel" ]
+					});
+				});
 			}
 
-			Home.prototype.buildPanel = function(container) {
+			Home.prototype.createEntity = function(data) {
+				Api.entity(this.kid).create(data).done(function(entity) {
+					UI.redirect("/view/entity/" + entity.id);
+				});
+			}
+
+			Home.prototype.buildContributePanelItem = function(pdom, name,
+					caption, iconfont) {
+				var self = this;
+				var item = $("<div class='onyx-base-home-body-panel-body-item'/>");
+				item.appendTo(pdom);
+				var icon = $("<div class='onyx-base-home-body-panel-body-item-icon iconfont'/>");
+				icon.addClass(iconfont);
+				icon.appendTo(item);
+				var text = $("<div class='onyx-base-home-body-panel-body-item-text'/>");
+				text.text(caption);
+				text.appendTo(item);
+				return item;
+			}
+
+			Home.prototype.buildContributorsPanel = function(container) {
 				var panel = $("<div class='onyx-base-home-body-panel shadow'/>");
 				panel.appendTo(container);
+				var header = $("<div class='onyx-base-home-body-panel-header'/>");
+				header.text("股东");
+				header.appendTo(panel);
+				var body = $("<div class='onyx-base-home-body-panel-body'/>");
+				body.appendTo(panel);
+				UI.createList({
+					items : [ {}, {}, {}, {} ],
+					pdom : body
+				});
+			}
+
+			Home.prototype.buildManagersPanel = function(container) {
+				var panel = $("<div class='onyx-base-home-body-panel shadow'/>");
+				panel.appendTo(container);
+				var header = $("<div class='onyx-base-home-body-panel-header'/>");
+				header.text("管理团队");
+				header.appendTo(panel);
+				var body = $("<div class='onyx-base-home-body-panel-body'/>");
+				body.appendTo(panel);
+				UI.createList({
+					items : [ {}, {}, {}, {} ],
+					pdom : body
+				});
+			}
+
+			Home.prototype.buildSimilarsPanel = function(container) {
+				var panel = $("<div class='onyx-base-home-body-panel shadow'/>");
+				panel.appendTo(container);
+				var header = $("<div class='onyx-base-home-body-panel-header'/>");
+				header.text("相似知识库");
+				header.appendTo(panel);
+				var body = $("<div class='onyx-base-home-body-panel-body'/>");
+				body.appendTo(panel);
+				UI.createList({
+					items : [ {}, {}, {}, {} ],
+					pdom : body
+				});
 			}
 
 			Home.prototype.buildFooter = function() {

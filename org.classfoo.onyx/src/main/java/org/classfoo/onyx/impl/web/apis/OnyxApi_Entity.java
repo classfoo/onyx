@@ -1,15 +1,15 @@
 package org.classfoo.onyx.impl.web.apis;
 
-import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.collections.MapUtils;
 import org.classfoo.onyx.api.OnyxService;
-import org.classfoo.onyx.api.operate.OnyxOperateUpdateEntity;
 import org.classfoo.onyx.api.query.OnyxQueryEntities;
 import org.classfoo.onyx.api.query.OnyxQueryEntity;
+import org.classfoo.onyx.api.storage.OnyxStorage;
+import org.classfoo.onyx.api.storage.OnyxStorageService;
+import org.classfoo.onyx.api.storage.OnyxStorageSession;
 import org.classfoo.onyx.api.web.OnyxApi;
-import org.classfoo.onyx.impl.OnyxUtils;
 import org.classfoo.onyx.impl.web.OnyxApiImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -50,12 +50,15 @@ public class OnyxApi_Entity extends OnyxApiImpl implements OnyxApi {
 	@Override
 	public Object post(Map<String, Object> args) {
 		String kid = MapUtils.getString(args, "kid");
-		String eid = MapUtils.getString(args, "eid");
-		List<Map<String, Object>> modifies = OnyxUtils.readJson(args, "modifies", List.class);
-		OnyxOperateUpdateEntity updateEntity = this.onyxService.createOperate(OnyxOperateUpdateEntity.class);
-		updateEntity.setKnowledgeBase(kid);
-		updateEntity.setEntityId(eid);
-		updateEntity.setModifies(modifies);
-		return updateEntity.commit();
+		String name = MapUtils.getString(args, "name");
+		OnyxStorageService storageService = this.onyxService.getStorageService();
+		OnyxStorage storage = storageService.getStorage();
+		OnyxStorageSession session = storage.openSession();
+		try {
+			return session.addEntity(kid, name, null, null);
+		}
+		finally {
+			session.close();
+		}
 	}
 }

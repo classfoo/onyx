@@ -38,7 +38,9 @@ define("onyx/view", [ "jquery", "require", "css!./view.css", "onyx/utils",
  */
 define(
 		"onyx/view/entity",
-		[ "jquery", "require", "onyx/utils", "onyx/ui", "onyx/canvas" ],
+		[ "jquery", "require", "onyx/utils", "onyx/ui", "onyx/canvas",
+				"onyx/view/entitylabels", "onyx/view/entityproperties",
+				"onyx/view/entitylinks", "onyx/view/entityevents" ],
 		function($, require) {
 
 			var Utils = require("onyx/utils");
@@ -46,6 +48,14 @@ define(
 			var UI = require("onyx/ui");
 
 			var Canvas = require("onyx/canvas");
+
+			var EntityLabels = require("onyx/view/entitylabels");
+
+			var EntityProperties = require("onyx/view/entityproperties");
+
+			var EntityLinks = require("onyx/view/entitylinks");
+
+			var EntityEvents = require("onyx/view/entityevents");
 
 			function Entity(options) {
 				this.options = options;
@@ -79,14 +89,9 @@ define(
 			}
 
 			Entity.prototype.buildEntityLabels = function(pdom) {
-				var labels = $("<div class='onyx-view-entity-info-labels'/>");
-				labels.appendTo(pdom);
-				for (var i = 0; i < this.resource.labels.length; i++) {
-					var label = this.resource.labels[i];
-					var labelDom = $("<span class='onyx-view-entity-info-label'/>");
-					labelDom.text(label);
-					labelDom.appendTo(labels);
-				}
+				this.entityLabels = new EntityLabels($.extend(this.options, {
+					pdom : pdom
+				}));
 			}
 
 			Entity.prototype.buildEntityInfo = function(pdom) {
@@ -122,7 +127,7 @@ define(
 
 			Entity.prototype.buildPanels = function(pdom) {
 				this.buildGraphPanel(pdom);
-				this.buildPanel(pdom);
+				this.buildSuspectsPanel(pdom);
 			}
 
 			Entity.prototype.buildGraphPanel = function(pdom) {
@@ -139,58 +144,92 @@ define(
 				canvas.appendTo(body);
 				new Canvas(canvas, {
 					id : this.kid
-				}, this.resource);
+				}, this.resource, false);
 
 				// var icon = $("<div class='onyx-view-entity-panel-graph-icon
 				// iconfont icon-graph'>");
 				// icon.appendTo(body);
 				var footer = $("<div class='onyx-view-entity-panel-footer'/>");
 				footer.appendTo(graph);
-//				var self = this;
-//				graph.on("click", function() {
-//					UI.redirect("/graph/entity/" + self.resource.id);
-//				});
+				// var self = this;
+				// graph.on("click", function() {
+				// UI.redirect("/graph/entity/" + self.resource.id);
+				// });
 			}
 
-			Entity.prototype.buildPanel = function(pdom) {
+			Entity.prototype.buildSuspectsPanel = function(pdom) {
 				var panel = $("<div class='onyx-view-entity-panel shadow'/>");
 				panel.appendTo(pdom);
+				var header = $("<div class='onyx-view-entity-panel-header'/>");
+				header.text("疑似实体");
+				header.appendTo(panel);
 			}
 
 			Entity.prototype.buildPage = function(pdom) {
 				var page = $("<div class='onyx-view-entity-page shadow'/>");
 				page.appendTo(pdom);
-				UI.createNavBar({
+				var navbar = UI.createNavBar({
 					clazz : "onyx-view-entity-navbar",
 					theme : "horizon",
-					active : "basic",
+					active : "properties",
 					items : [ {
-						id : "basic",
+						id : "properties",
 						caption : "基本信息"
 					}, {
-						id : "basic",
+						id : "links",
 						caption : "关联"
 					}, {
-						id : "basic",
+						id : "events",
 						caption : "事件"
 					}, {
-						id : "basic",
+						id : "materials",
 						caption : "资料"
 					} ],
 					pdom : page
 				});
-				var properties = this.resource.properties;
-				for ( var key in properties) {
-					var item = $("<div class='onyx-view-entity-property'/>");
-					item.appendTo(page);
-					var keydom = $("<span class='onyx-view-entity-property-key'/>");
-					keydom.text(key);
-					keydom.appendTo(item);
-					var value = properties[key];
-					var valuedom = $("<span class='onyx-view-entity-property-value'/>");
-					valuedom.text(value);
-					valuedom.appendTo(item);
-				}
+				var multipage = UI.createMultiPage({
+					pdom : page
+				});
+				navbar.on("switch", this.switchPage.bind(this, multipage));
+				navbar.fire("switch", {
+					id : "properties",
+					caption : "基本信息"
+				});
+			}
+
+			Entity.prototype.switchPage = function(multipage, event, page) {
+				var self = this;
+				multipage.showPage(page).done(function(page) {
+					switch (page.id) {
+					case "properties": {
+						return self.switchPropertiesPage(page);
+					}
+					case "links": {
+						return self.switchLinksPage(page);
+					}
+					case "events": {
+						return self.switchEventsPage(page);
+					}
+					}
+				});
+			}
+
+			Entity.prototype.switchPropertiesPage = function(page) {
+				this.properties = new EntityProperties($.extend(this.options, {
+					pdom : page.dom
+				}));
+			}
+
+			Entity.prototype.switchLinksPage = function(page) {
+				this.links = new EntityLinks($.extend(this.options, {
+					pdom : page.dom
+				}));
+			}
+
+			Entity.prototype.switchEventsPage = function(page) {
+				this.links = new EntityEvents($.extend(this.options, {
+					pdom : page.dom
+				}));
 			}
 
 			Entity.prototype.buildFooter = function() {
@@ -254,6 +293,239 @@ define(
 			}
 
 			return Entity;
+		});
+
+/**
+ * Onyx Entity Labels
+ */
+define(
+		"onyx/view/entitylabels",
+		[ "jquery", "require", "onyx/utils", "onyx/ui" ],
+		function($, require) {
+
+			function EntityLabels(options) {
+				this.options = options;
+				this.resource = this.options.resource;
+				this.kid = this.resource.kid;
+				this.eid = this.resource.id;
+				this.build(this.options.pdom);
+			}
+
+			EntityLabels.prototype.build = function(pdom) {
+				this.labels = $("<div class='onyx-view-entity-info-labels'/>");
+				this.labels.appendTo(pdom);
+				for (var i = 0; i < this.resource.labels.length; i++) {
+					var label = this.resource.labels[i];
+					this.buildItem(label);
+				}
+				this.addButton = $("<span class='onyx-view-entity-info-label-add iconfont icon-add'/>");
+				this.addButton.text("添加");
+				this.addButton.appendTo(this.labels);
+				var self = this;
+				this.addButton.on("click", function() {
+					UI.createDialog({
+						title : "添加标签",
+						content : function(dialog) {
+							return UI.createForm({
+								fields : [ {
+									name : "name",
+									type : "onyx/ui/form/input"
+								} ],
+								pdom : dialog.pdom
+							});
+						},
+						buttons : [ "ok", "cancel" ],
+						on : {
+							"ok" : function(event, dialog) {
+								dialog.getContent().getData().done(
+										self.addLabel.bind(self));
+							}
+						}
+					});
+				});
+			}
+
+			EntityLabels.prototype.buildItem = function(label) {
+				var labelDom = $("<span class='onyx-view-entity-info-label'/>");
+				labelDom.text(label);
+				labelDom.appendTo(this.labels);
+			}
+
+			EntityLabels.prototype.appendItem = function(label) {
+				var labelDom = $("<span class='onyx-view-entity-info-label'/>");
+				labelDom.text(label);
+				labelDom.insertBefore(this.addButton);
+			}
+
+			EntityLabels.prototype.addLabel = function(data) {
+				var self = this;
+				Api.entity(this.kid).addLabel({
+					kid : this.resource.kid,
+					eid : this.resource.id,
+					name : data.name
+				}).done(function(label) {
+					for (var i = 0; i < label.labels.length; i++) {
+						self.appendItem(label.labels[i]);
+					}
+				});
+			}
+
+			return EntityLabels;
+		});
+
+/**
+ * Onyx Entity Properties
+ */
+define(
+		"onyx/view/entityproperties",
+		[ "jquery", "require", "onyx/utils", "onyx/ui" ],
+		function($, require) {
+
+			function EntityProperties(options) {
+				this.options = options;
+				this.resource = this.options.resource;
+				this.kid = this.resource.kid;
+				this.eid = this.resource.id;
+				this.build(this.options.pdom);
+			}
+
+			EntityProperties.prototype.build = function(pdom) {
+				this.dom = $("<div class='onyx-view-entity-properties'></div>");
+				this.dom.appendTo(pdom);
+				var toolbar = $("<div class='onyx-view-entity-properties-toolbar'></div>");
+				toolbar.appendTo(this.dom);
+				UI.createButton({
+					theme : "blue",
+					icon : "icon-add",
+					caption : "添加",
+					pdom : toolbar
+				});
+				UI.createButton({
+					theme : "blue",
+					icon : "icon-remove",
+					caption : "删除",
+					pdom : toolbar
+				});
+				UI.createSearchBox({
+					placeholder : "搜索",
+					pdom : toolbar
+				});
+				var properties = this.resource.properties;
+				for ( var key in properties) {
+					var item = $("<div class='onyx-view-entity-property'/>");
+					item.appendTo(this.dom);
+					var keydom = $("<span class='onyx-view-entity-property-key'/>");
+					keydom.text(key);
+					keydom.appendTo(item);
+					var value = properties[key];
+					var valuedom = $("<span class='onyx-view-entity-property-value'/>");
+					valuedom.text(value);
+					valuedom.appendTo(item);
+				}
+			}
+			return EntityProperties;
+		});
+
+/**
+ * Onyx Entity Links
+ */
+define(
+		"onyx/view/entitylinks",
+		[ "jquery", "require", "onyx/utils", "onyx/ui" ],
+		function($, require) {
+
+			function EntityLinks(options) {
+				this.options = options;
+				this.resource = this.options.resource;
+				this.kid = this.resource.kid;
+				this.eid = this.resource.id;
+				this.build(this.options.pdom);
+			}
+
+			EntityLinks.prototype.build = function(pdom) {
+				this.dom = $("<div class='onyx-view-entity-links'/>");
+				this.dom.appendTo(pdom);
+				this.toolbar = $("<div class='onyx-view-entity-links-toolbar'/>");
+				this.toolbar.appendTo(this.dom);
+				UI.createButton({
+					theme : "blue",
+					id : "add",
+					caption : "添加",
+					icon : "icon-add",
+					pdom : this.toolbar
+				});
+				var self = this;
+				Api
+						.entity(this.kid)
+						.links({
+							id : this.resource.id
+						})
+						.done(
+								function(links) {
+									for (var i = 0; i < links.length; i++) {
+										var link = links[i];
+										var item = $("<div class='onyx-view-entity-links-item'/>");
+										item.text(link.name);
+										item.appendTo(self.dom);
+									}
+								});
+				return this.dom;
+			}
+
+			return EntityLinks;
+		});
+
+/**
+ * Onyx Entity Events
+ */
+define("onyx/view/entityevents",
+		[ "jquery", "require", "onyx/utils", "onyx/ui" ], function($, require) {
+
+			function EntityEvents(options) {
+				this.options = options;
+				this.resource = this.options.resource;
+				this.kid = this.resource.kid;
+				this.eid = this.resource.id;
+				this.build(this.options.pdom);
+			}
+
+			EntityEvents.prototype.build = function(pdom) {
+				this.dom = $("<div class='onyx-view-entity-events'/>");
+				this.dom.appendTo(pdom);
+				var self = this;
+				Api.event().list(this.eid).done(function(events) {
+					self.buildEvents(events, self.dom);
+				});
+			}
+
+			EntityEvents.prototype.buildEvents = function(events, pdom) {
+				if (!events) {
+					return;
+				}
+				var items = [];
+				for (var i = 0; i < events.length; i++) {
+					var event = events[i];
+					var times = event.time.split("/");
+					var year = times[0];
+					var month = times[1];
+					var day = times[2];
+					items.push({
+						id : event.eid,
+						name : event.name,
+						details : event.properties,
+						year : year,
+						month : month,
+						day : day
+					});
+				}
+				UI.createTimeLine({
+					clazz : "onyx-view-entity-events-timeline",
+					datas : items,
+					pdom : pdom
+				});
+			}
+
+			return EntityEvents;
 		});
 
 /**

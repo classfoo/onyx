@@ -385,7 +385,7 @@ define("onyx/api/base", [ "jquery", "require" ], function($, require) {
 		}
 		var dfd = $.Deferred();
 		var self = this;
-		Api.get("base/" + kid).done(function(base){
+		Api.get("base/" + kid).done(function(base) {
 			self.bases[kid] = base;
 			dfd.resolve(base);
 		});
@@ -543,6 +543,35 @@ define("onyx/api/entity", [ "jquery", "require" ], function($, require) {
 	}
 
 	/**
+	 * create entity
+	 * 
+	 * @param kid
+	 * @param lid
+	 * @param modifies
+	 */
+	Entity.prototype.create = function(options) {
+		var entity = $.extend({
+			kid : this.kid
+		}, options);
+		return Api.post("entity", entity);
+	}
+
+	/**
+	 * add entity Label
+	 * 
+	 * @param kid
+	 * @param lid
+	 * @param modifies
+	 */
+	Entity.prototype.addLabel = function(options) {
+		return Api.post("entitylabel", {
+			kid : this.kid,
+			eid : options.eid,
+			name : options.name
+		});
+	}
+
+	/**
 	 * save entity modifies
 	 * 
 	 * @param kid
@@ -552,6 +581,16 @@ define("onyx/api/entity", [ "jquery", "require" ], function($, require) {
 	Entity.prototype.save = function(options) {
 		return Api.post("entity", options);
 	}
+
+	/**
+	 * query links
+	 * 
+	 * @param id
+	 */
+	Entity.prototype.links = function(options) {
+		return Api.get("link", options);
+	}
+
 	return Entity;
 });
 

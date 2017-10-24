@@ -15,8 +15,6 @@ define("onyx/settings", [ "jquery", "require", "css!./settings.css", "onyx/ui",
 	Settings.prototype.build = function(pdom) {
 		this.dom = $("<div class='onyx-settings'></div>");
 		this.dom.appendTo(pdom);
-		this.canvas = new Canvas();
-		this.canvas.build(this.dom);
 		var self = this;
 		return this.dom;
 	}

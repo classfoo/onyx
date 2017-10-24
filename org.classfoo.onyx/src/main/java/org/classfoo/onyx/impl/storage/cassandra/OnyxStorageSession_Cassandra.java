@@ -139,6 +139,18 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 	}
 
 	@Override
+	public List<Map<String, Object>> queryLinks(String eid) {
+		ResultSet sourceValue = this.executeQuery("select * from links_source where source_=?", eid);
+		List<Map<String, Object>> sources = this.convertToList(sourceValue);
+		ResultSet targetValue = this.executeQuery("select * from links_target where target_=?", eid);
+		List<Map<String, Object>> targets = this.convertToList(targetValue);
+		ArrayList<Map<String, Object>> result = new ArrayList<Map<String, Object>>();
+		result.addAll(sources);
+		result.addAll(targets);
+		return result;
+	}
+
+	@Override
 	public List<Map<String, Object>> queryLinkNames(String eid) {
 		ResultSet sourceValue = this.executeQuery("select name_ from links_source where source_=?", eid);
 		ArrayList<Map<String, Object>> linknames = new ArrayList<Map<String, Object>>(20);
@@ -435,8 +447,12 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 	}
 
 	@Override
-	public void addEntityLabels(String id, List<String> labels) {
+	public Map<String, Object> addEntityLabels(String id, List<String> labels) {
 		this.executeUpdate("update entities set labels_=labels_+? where id_=?", labels, id);
+		HashMap<String, Object> result = new HashMap<String, Object>();
+		result.put("eid", id);
+		result.put("labels", labels);
+		return result;
 	}
 
 	@Override

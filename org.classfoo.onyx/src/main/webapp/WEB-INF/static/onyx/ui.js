@@ -625,6 +625,11 @@ define("onyx/ui/dialog", [ "jquery", "require", "onyx/ui/widget", "onyx/utils",
 	}
 
 	Dialog.prototype.build = function(pdom) {
+		if (this.options.modal) {
+			this.modal = $("<div></div>");
+			this.addClass(this.modal, "onyx-ui-dialog", "modal");
+			this.modal.appendTo($("body"));
+		}
 		this.dom = $("<div></div>");
 		this.addClass(this.dom, "onyx-ui-dialog");
 		var width = this.options.width || 300;
@@ -724,22 +729,29 @@ define("onyx/ui/dialog", [ "jquery", "require", "onyx/ui/widget", "onyx/utils",
 	}
 
 	Dialog.prototype.onOkButtonClick = function() {
-		this.fire("ok");
+		this.fire("ok", this);
 		this.close();
 	}
 
 	Dialog.prototype.onCloseButtonClick = function() {
-		this.fire("close");
+		this.fire("close", this);
 		this.close();
 	}
 
 	Dialog.prototype.onCancelButtonClick = function(cmd) {
-		this.fire("cancel");
+		this.fire("cancel", this);
 		this.close();
 	}
 
 	Dialog.prototype.close = function() {
 		this.dom.remove();
+		if(this.modal){
+			this.modal.remove();
+		}
+	}
+
+	Dialog.prototype.getContent = function() {
+		return this.content;
 	}
 
 	Utils.inherits(Dialog, Widget);
@@ -2885,7 +2897,7 @@ define("onyx/ui/showboard/item/entity", [ "jquery", "require",
 		this.addClass(this.header, "onyx-ui-showboard-item-entity", "header");
 		this.header.appendTo(this.dom);
 		var self = this;
-		Api.base().get(this.options.kid).done(function(base){
+		Api.base().get(this.options.kid).done(function(base) {
 			self.header.text(base.name);
 		})
 		// entity image
@@ -2906,15 +2918,16 @@ define("onyx/ui/showboard/item/entity", [ "jquery", "require",
 			for (var i = 0; i < this.options.labels.length; i++) {
 				var label = this.options.labels[i];
 				var labelDom = $("<span/>");
-				this.addClass(labelDom, "onyx-ui-showboard-item-entity", "label");
+				this.addClass(labelDom, "onyx-ui-showboard-item-entity",
+						"label");
 				labelDom.text(label);
 				labelDom.appendTo(this.labels);
 			}
 		}
-//		this.user = $("<div class='iconfont icon-user-circle'></div>");
-//		this.addClass(this.user, "onyx-ui-showboard-item-entity", "user");
-//		this.user.text("用户 2017年3月24日 12:33:23");
-//		this.user.appendTo(this.dom);
+		// this.user = $("<div class='iconfont icon-user-circle'></div>");
+		// this.addClass(this.user, "onyx-ui-showboard-item-entity", "user");
+		// this.user.text("用户 2017年3月24日 12:33:23");
+		// this.user.appendTo(this.dom);
 		// tools
 		this.tools = $("<div></div>");
 		this.addClass(this.tools, "onyx-ui-showboard-item-entity", "tools");
@@ -3023,19 +3036,19 @@ define("onyx/ui/showboard/item/nameindex", [ "jquery", "require",
 					continue;
 				}
 				var count = summaries.get(object.kid);
-				if(count){
-					summaries.set(object.kid, count+1);
-				}else{
+				if (count) {
+					summaries.set(object.kid, count + 1);
+				} else {
 					summaries.set(object.kid, 1);
 				}
 			}
 			var self = this;
-			summaries.forEach(function(value, key,map){
+			summaries.forEach(function(value, key, map) {
 				var labelDom = $("<span/>");
 				self.addClass(labelDom, "onyx-ui-showboard-item-entity",
 						"label");
-				Api.base().get(key).done(function(base){
-					labelDom.text(base.name+"收录" + value + "条");
+				Api.base().get(key).done(function(base) {
+					labelDom.text(base.name + "收录" + value + "条");
 					labelDom.appendTo(self.labels);
 				});
 			})
