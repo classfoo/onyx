@@ -102,7 +102,11 @@ define("onyx/onyx", [ "jquery", "require", "css!./ui.css", "onyx/utils",
 		var pageOptions = $.extend({
 			resource : resource
 		}, options);
-		pageOptions.id = options.pagename;
+		if (resource && resource.id) {
+			pageOptions.id = options.pagename + '/' + resource.id;
+		} else {
+			pageOptions.id = options.pagename;
+		}
 		pageOptions.compname = 'onyx/' + options.pagename;
 		explorer.showPage(pageOptions).done(
 				function(page) {

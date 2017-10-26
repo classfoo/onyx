@@ -745,7 +745,7 @@ define("onyx/ui/dialog", [ "jquery", "require", "onyx/ui/widget", "onyx/utils",
 
 	Dialog.prototype.close = function() {
 		this.dom.remove();
-		if(this.modal){
+		if (this.modal) {
 			this.modal.remove();
 		}
 	}
@@ -2946,7 +2946,7 @@ define("onyx/ui/showboard/item/entity", [ "jquery", "require",
 	}
 
 	ShowBoardItem_Entity.prototype.show = function() {
-		UI.redirect("/view/entity/" + this.options.id);
+		UI.redirect("/entity/properties/" + this.options.id);
 	}
 
 	Utils.inherits(ShowBoardItem_Entity, Widget);
@@ -4104,79 +4104,72 @@ define("onyx/ui/resourcelist", [ "jquery", "require", "onyx/ui/widget",
 /**
  * Onyx UI Framework Form
  */
-define("onyx/ui/form", [ "jquery", "require", "onyx/ui/widget", "onyx/utils",
-		"onyx/ui/form/input", "onyx/ui/form/items" ], function($, require) {
+define("onyx/ui/form",
+		[ "jquery", "require", "onyx/ui/widget", "onyx/utils",
+				"onyx/ui/form/input", "onyx/ui/form/searchinput",
+				"onyx/ui/form/items" ], function($, require) {
 
-	var Widget = require("onyx/ui/widget");
+			var Widget = require("onyx/ui/widget");
 
-	var Utils = require("onyx/utils");
+			var Utils = require("onyx/utils");
 
-	function Form(options) {
-		Widget.call(this, options);
-	}
-
-	Form.prototype.build = function(pdom) {
-		this.dom = $("<form class='onyx-ui-form'></form>");
-		this.dom.appendTo(pdom);
-		var self = this;
-		this.fields = {};
-		this.buildFields(this.options.fields);
-		return this.dom;
-	}
-
-	Form.prototype.buildFields = function(fields) {
-		for (var i = 0; i < fields.length; i++) {
-			var row = $("<div></div>");
-			this.addClass(row, "onyx-ui-form", "row");
-			row.appendTo(this.dom);
-			var field = fields[i];
-			if (field.options && field.options.hidden) {
-				row.addClass("hidden");
+			function Form(options) {
+				Widget.call(this, options);
 			}
-			if (field.label) {
-				var label = $("<label></label>");
-				this.addClass(label, "onyx-ui-form", "label");
-				label.text(field.label + ":");
-				label.appendTo(row);
-			}
-			if (field.type) {
-				var component = $("<div></div>");
-				this.addClass(component, "onyx-ui-form", "component")
-				component.appendTo(row);
-				var Field = require(field.type);
-				this.fields[field.name] = new Field($.extend({
-					clazz : "onyx-ui-form-input",
-					pdom : component
-				}, field.options));
-			}
-		}
-	}
 
-	Form.prototype.getData = function() {
-		var data = {};
-		$.each(this.fields, function(k, v) {
-			data[k] = v.getValue();
+			Form.prototype.build = function(pdom) {
+				this.dom = $("<form class='onyx-ui-form'></form>");
+				this.dom.appendTo(pdom);
+				var self = this;
+				this.fields = {};
+				this.buildFields(this.options.fields);
+				return this.dom;
+			}
+
+			Form.prototype.buildFields = function(fields) {
+				for (var i = 0; i < fields.length; i++) {
+					var row = $("<div></div>");
+					this.addClass(row, "onyx-ui-form", "row");
+					row.appendTo(this.dom);
+					var field = fields[i];
+					if (field.options && field.options.hidden) {
+						row.addClass("hidden");
+					}
+					if (field.type) {
+						var Field = require(field.type);
+						this.fields[field.name] = new Field($.extend({
+							pdom : row
+						}, field));
+					}
+				}
+			}
+
+			Form.prototype.getData = function() {
+				var data = {};
+				$.each(this.fields, function(k, v) {
+					data[k] = v.getValue();
+				});
+				return $.dfd(data);
+			}
+
+			Form.prototype.setData = function(data) {
+				$.each(this.fields, function(name, field) {
+					var value = data[name];
+					field.setValue(value);
+				});
+			}
+
+			/**
+			 * refresh form with options
+			 */
+			Form.prototype.show = function(fields) {
+				this.buildFields(fields);
+			}
+
+			Utils.inherits(Form, Widget);
+
+			return Form;
 		});
-		return $.dfd(data);
-	}
-	Form.prototype.setData = function(data) {
-		$.each(this.fields, function(name, field) {
-			var value = data[name];
-			field.setValue(value);
-		});
-	}
-
-	/**
-	 * refresh form with options
-	 */
-	Form.prototype.show = function(fields) {
-		this.buildFields(fields);
-	}
-
-	Utils.inherits(Form, Widget);
-
-	return Form;
-});
 
 /**
  * Onyx UI Framework Form
@@ -4193,26 +4186,195 @@ define("onyx/ui/form/input", [ "jquery", "require", "onyx/ui/widget",
 	}
 
 	FormInput.prototype.build = function(pdom) {
-		this.dom = $("<input class='onyx-ui-form-input'></input>");
+		this.dom = $("<div class='onyx-ui-form-input'></div>");
 		this.dom.appendTo(pdom);
-		if (this.options.value) {
-			this.dom.val(this.options.value);
+		var fieldlabel = this.options.label || this.options.caption;
+		if (fieldlabel) {
+			this.name = $("<span class='onyx-ui-form-input-name'/>");
+			this.name.text(fieldlabel);
+			this.name.appendTo(this.dom);
 		}
+		this.value = $("<input class='onyx-ui-form-input-value'/>");
+		if (this.options.value) {
+			this.value.val(this.options.value);
+		}
+		this.value.appendTo(this.dom);
 		return this.dom;
 	}
 
 	FormInput.prototype.getValue = function() {
-		return this.dom.val();
+		return this.value.val();
 	}
 
 	FormInput.prototype.setValue = function(value) {
-		return this.dom.val(value);
+		return this.value.val(value);
 	}
 
 	Utils.inherits(FormInput, Widget);
 
 	return FormInput;
 });
+
+/**
+ * Onyx UI Framework Form Search Input
+ */
+define("onyx/ui/form/searchinput", [ "jquery", "require", "onyx/ui/widget",
+		"onyx/utils" ],
+		function($, require) {
+
+			var Widget = require("onyx/ui/widget");
+
+			var Utils = require("onyx/utils");
+
+			function FormSearchInput(options) {
+				Widget.call(this, options);
+				this.selects = {};
+			}
+
+			FormSearchInput.prototype.build = function(pdom) {
+				this.dom = $("<div/>");
+				this.addClass(this.dom, "onyx-ui-form-searchinput");
+				this.dom.appendTo(pdom);
+				this.header = $("<div/>");
+				this
+						.addClass(this.header, "onyx-ui-form-searchinput",
+								"header");
+				this.header.appendTo(this.dom);
+				var fieldlabel = this.options.label || this.options.caption;
+				if (fieldlabel) {
+					this.name = $("<span/>");
+					this
+							.addClass(this.name, "onyx-ui-form-searchinput",
+									"name");
+					this.name.text(fieldlabel);
+					this.name.appendTo(this.header);
+				}
+				this.value = $("<input/>");
+				this.addClass(this.value, "onyx-ui-form-searchinput", "value");
+				if (this.options.value) {
+					this.value.val(this.options.value);
+				}
+				this.value.appendTo(this.header);
+				this.value.on("change", this.onSearch.bind(this));
+				this.icon = $("<span class='iconfont icon-search'/>");
+				this.addClass(this.icon, "onyx-ui-form-searchinput", "icon");
+				this.icon.appendTo(this.header);
+				this.panel = $("<div/>");
+				this.addClass(this.panel, "onyx-ui-form-searchinput", "panel");
+				this.panel.text("搜索关联对象...");
+				this.panel.appendTo(this.dom);
+				this.panel.on("mouseover", this.onMouseOverPanel.bind(this));
+				this.panel.on("mouseout", this.onMouseOutPanel.bind(this));
+				this.panel.on("click", this.onClickPanel.bind(this));
+				return this.dom;
+			}
+
+			FormSearchInput.prototype.buildSearchPanel = function(items) {
+				this.panel.text("");
+				this.panel.children().remove();
+				for (var i = 0; i < items.length; i++) {
+					var item = items[i];
+					var itemdom = $("<div/>");
+					this.addClass(itemdom, "onyx-ui-form-searchinput", "panel",
+							"item");
+					itemdom.text(item.name);
+					itemdom.attr("id", item.id);
+					itemdom.data(item);
+					itemdom.appendTo(this.panel);
+				}
+			}
+
+			FormSearchInput.prototype.getValue = function() {
+				var result = [];
+				for(var id in this.selects){
+					var select = this.selects[id];
+					if(!select){
+						continue;
+					}
+					result.push(select);
+				}
+				return result;
+			}
+
+			FormSearchInput.prototype.setValue = function(value) {
+				//return this.value.val(value);
+			}
+
+			FormSearchInput.prototype.search = function() {
+
+			}
+
+			FormSearchInput.prototype.onSearch = function(event) {
+				var search = this.options.on["search"];
+				var self = this;
+				search.call(this, this.value.val()).done(function(items) {
+					self.buildSearchPanel(items);
+				});
+			}
+
+			FormSearchInput.prototype.onMouseOverPanel = function(event) {
+				var target = this.getEventTarget(event,
+						"onyx-ui-form-searchinput-panel", "item");
+				if (!target) {
+					return;
+				}
+				if (this.hoverItem) {
+					this.removeClass(this.hoverItem,
+							"onyx-ui-form-searchinput-panel", "item", "over");
+				}
+				this.hoverItem = target;
+				this.addClass(this.hoverItem, "onyx-ui-form-searchinput",
+						"panel-item", "over");
+			}
+
+			FormSearchInput.prototype.onMouseOutPanel = function(event) {
+				var target = this.getEventTarget(event,
+						"onyx-ui-form-searchinput-panel", "item");
+				if (!target) {
+					return;
+				}
+				if (this.hoverItem) {
+					this.removeClass(this.hoverItem,
+							"onyx-ui-form-searchinput-panel", "item", "over");
+				}
+			}
+
+			FormSearchInput.prototype.onClickPanel = function(event) {
+				var target = this.getEventTarget(event,
+						"onyx-ui-form-searchinput-panel", "item");
+				if (!target) {
+					return;
+				}
+				var item = target.data();
+				if (this.isSelected(item)) {
+					target.css("background-color", "#88B6D8");
+					this.unselect(item);
+				} else {
+					target.css("background-color", "red");
+					this.select(item);
+				}
+
+			}
+
+			FormSearchInput.prototype.isSelected = function(item) {
+				if (this.selects[item.id]) {
+					return true;
+				}
+				return false;
+			}
+
+			FormSearchInput.prototype.select = function(item) {
+				this.selects[item.id] = item;
+			}
+
+			FormSearchInput.prototype.unselect = function(item) {
+				this.selects[item.id] = null;
+			}
+
+			Utils.inherits(FormSearchInput, Widget);
+
+			return FormSearchInput;
+		});
 
 /**
  * Onyx UI Framework Form

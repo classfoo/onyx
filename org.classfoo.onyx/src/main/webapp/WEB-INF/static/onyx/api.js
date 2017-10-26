@@ -88,20 +88,20 @@ define("onyx/api", [ "jquery", "require", "onyx/api/label", "onyx/api/entity",
 		return labels[kid];
 	}
 
-	Api.entity = function(kid) {
+	Api.entity = function(kid, eid) {
 		if (!kid) {
 			if (entity) {
 				return entity;
 			}
 			var Entity = require("onyx/api/entity");
-			entity = new Entity();
+			entity = new Entity(null, eid);
 			return entity;
 		}
 		if (entities[kid]) {
 			return entities[kid];
 		}
 		var Entity = require("onyx/api/entity");
-		entities[kid] = new Entity(kid);
+		entities[kid] = new Entity(kid, eid);
 		return entities[kid];
 	}
 
@@ -515,8 +515,9 @@ define(
 
 define("onyx/api/entity", [ "jquery", "require" ], function($, require) {
 
-	function Entity(kid) {
+	function Entity(kid, eid) {
 		this.kid = kid;
+		this.id = eid;
 		this.entityNames = [];
 		this.entityMap = {};
 	}
@@ -611,6 +612,12 @@ define("onyx/api/link", [ "jquery", "require" ], function($, require) {
 		return Api.get("link", {
 			kid : this.kid,
 			eid : eid
+		});
+	}
+
+	Link.prototype.addLinks = function(links) {
+		return Api.post("link", {
+			links : links
 		});
 	}
 
