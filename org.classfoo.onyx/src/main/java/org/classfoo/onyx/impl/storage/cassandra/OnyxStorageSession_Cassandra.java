@@ -378,8 +378,13 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 	}
 
 	@Override
-	public void addBase(String kid, String name, String desc) {
+	public Map<String, Object> addBase(String kid, String name, String desc) {
 		this.executeUpdate("insert into bases (id_,name_,desc_) values(?,?,?)", kid, name, desc);
+		HashMap<String, Object> result = new HashMap<String, Object>(3);
+		result.put("id", kid);
+		result.put("name", name);
+		result.put("desc", desc);
+		return result;
 	}
 
 	@Override

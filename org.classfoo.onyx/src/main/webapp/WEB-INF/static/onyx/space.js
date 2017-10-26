@@ -35,7 +35,11 @@ define("onyx/space", [ "jquery", "require", "css!./space.css", "onyx/utils",
 			},
 			pdom : this.layout.getHeader()
 		});
+		this.buildButtons();
 		this.navbar = UI.createNavBar({
+			on : {
+				"switch" : this.onSwitchNavBar.bind(this)
+			},
 			theme : "horizon",
 			width : 72,
 			active : this.options.framename,
@@ -57,8 +61,17 @@ define("onyx/space", [ "jquery", "require", "css!./space.css", "onyx/utils",
 			} ],
 			pdom : this.headerLayout.getMiddle()
 		});
+		this.multipage = UI.createMultiPage({
+			clazz : "onyx-space-multipage",
+			pdom : this.layout.getBody()
+		});
+		return this.dom;
+	}
+
+	Space.prototype.buildButtons = function(options) {
 		this.refreshButton = UI.createButton({
 			id : "refresh",
+			hidden : true,
 			cmd : this.docmd.bind(this),
 			theme : "icon",
 			icon : "icon-refresh",
@@ -67,6 +80,7 @@ define("onyx/space", [ "jquery", "require", "css!./space.css", "onyx/utils",
 		});
 		this.addButton = UI.createButton({
 			id : "add",
+			hidden : true,
 			cmd : this.docmd.bind(this),
 			theme : "icon",
 			icon : "icon-add",
@@ -75,17 +89,19 @@ define("onyx/space", [ "jquery", "require", "css!./space.css", "onyx/utils",
 		});
 		this.leakButton = UI.createButton({
 			id : "leak",
+			hidden : true,
 			cmd : this.docmd.bind(this),
 			theme : "icon",
 			icon : "icon-leak",
 			caption : "我要爆料",
 			pdom : this.headerLayout.getRight()
 		});
-		this.multipage = UI.createMultiPage({
-			clazz : "onyx-space-multipage",
-			pdom : this.layout.getBody()
-		});
-		return this.dom;
+	}
+
+	Space.prototype.onSwitchNavBar = function(event, item) {
+		this.refreshButton.setVisible(item.id == "recommend");
+		this.addButton.setVisible(item.id == "base");
+		this.leakButton.setVisible(item.id == "leak");
 	}
 
 	Space.prototype.refresh = function(options) {
@@ -160,6 +176,7 @@ define("onyx/space/recommend", [ "jquery", "require", "onyx/ui" ], function($,
 	}
 
 	Recommend.prototype.docmd = function(cmd, event) {
+		debugger;
 	}
 	return Recommend;
 });
@@ -211,9 +228,40 @@ define("onyx/space/base", [ "jquery", "require", "onyx/ui" ], function($,
 		} ]);
 	}
 
-	Base.prototype.docmd = function(cmd, event, item) {
+	Base.prototype.docmd = function(cmd, event) {
+		UI.createDialog({
+			modal : true,
+			title : "创建知识库",
+			content : this.buildCreateBaseDialog.bind(this),
+			buttons : [ "ok", "cancel" ],
+			on : {
+				"ok" : this.createBase.bind(this)
+			}
+		});
 	}
 
+	Base.prototype.buildCreateBaseDialog = function(dialog) {
+		return UI.createForm({
+			fields : [ {
+				name : "name",
+				caption : "名称",
+				type : "onyx/ui/form/input"
+			}, {
+				name : "desc",
+				caption : "描述",
+				type : "onyx/ui/form/input"
+			} ],
+			pdom : dialog.pdom
+		});
+	}
+
+	Base.prototype.createBase = function(event, dialog) {
+		dialog.getContent().getData().done(function(data) {
+			Api.base().create(data).done(function(base) {
+				UI.redirect("/base/home/" + base.id);
+			});
+		})
+	}
 	return Base;
 });
 

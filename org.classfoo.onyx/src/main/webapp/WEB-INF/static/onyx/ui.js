@@ -282,6 +282,9 @@ define("onyx/ui/widget", [ "jquery", "require", "page/page" ], function($,
 		if (clazz != null) {
 			dom.addClass(clazz);
 		}
+		if (options.hidden) {
+			dom.css("display", "none");
+		}
 	}
 
 	Widget.prototype.initEvents = function() {
@@ -417,6 +420,18 @@ define("onyx/ui/widget", [ "jquery", "require", "page/page" ], function($,
 			}
 		}
 		return target;
+	}
+
+	Widget.prototype.setVisible = function(visbile) {
+		if (visbile) {
+			this.dom.css("display", "unset");
+		} else {
+			this.dom.css("display", "none");
+		}
+	}
+
+	Widget.prototype.show = function(id) {
+		this.id = id;
 	}
 
 	Widget.prototype.getId = function() {
@@ -4286,9 +4301,9 @@ define("onyx/ui/form/searchinput", [ "jquery", "require", "onyx/ui/widget",
 
 			FormSearchInput.prototype.getValue = function() {
 				var result = [];
-				for(var id in this.selects){
+				for ( var id in this.selects) {
 					var select = this.selects[id];
-					if(!select){
+					if (!select) {
 						continue;
 					}
 					result.push(select);
@@ -4297,7 +4312,7 @@ define("onyx/ui/form/searchinput", [ "jquery", "require", "onyx/ui/widget",
 			}
 
 			FormSearchInput.prototype.setValue = function(value) {
-				//return this.value.val(value);
+				// return this.value.val(value);
 			}
 
 			FormSearchInput.prototype.search = function() {

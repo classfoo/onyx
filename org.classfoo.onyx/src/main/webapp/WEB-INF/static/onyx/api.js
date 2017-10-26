@@ -409,6 +409,13 @@ define("onyx/api/base", [ "jquery", "require" ], function($, require) {
 		return Api.get("base/" + kid);
 	}
 
+	/**
+	 * create base
+	 */
+	Base.prototype.create = function(base) {
+		return Api.post("base", base);
+	}
+
 	return Base;
 });
 
@@ -805,9 +812,7 @@ define("onyx/api/image", [ "jquery", "require" ], function($, require) {
 		image.onerror = function() {
 			// 通过node.id获取类型信息，将icon绘制到canvas，然后取出image
 			Api.entity().get(id).done(function(entity) {
-				var kid = entity.kid;
-				var name = entity.labels[0];
-				Api.label(kid).image(name).done(function(image) {
+				Api.image().name(entity.name).done(function(image) {
 					dfd.resolve(image);
 				});
 			});
@@ -816,5 +821,27 @@ define("onyx/api/image", [ "jquery", "require" ], function($, require) {
 		return dfd.promise();
 	}
 
+	ImageApi.prototype.name = function(name) {
+		var icon = name.charAt(0);
+		var color = "gray";
+		var background = "white";
+		var canvasOffscreen = document.createElement('canvas');
+		canvasOffscreen.width = 64;
+		canvasOffscreen.height = 64;
+		var context = canvasOffscreen.getContext('2d');
+		context.save();
+		context.beginPath();
+		context.moveTo(0, 0);
+		context.rect(0, 0, 64, 64);
+		context.font = "48px 微软雅黑";
+		context.textAlign = "center";
+		context.fillStyle = background;
+		context.fill();
+		context.fillStyle = color;
+		context.fillText(icon, 32, 48);
+		context.closePath();
+		context.restore();
+		return $.dfd(canvasOffscreen);
+	}
 	return ImageApi;
 });

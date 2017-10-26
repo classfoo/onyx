@@ -85,8 +85,9 @@ public interface OnyxStorageSession {
 	 * @param kid
 	 * @param name
 	 * @param desc
+	 * @return 
 	 */
-	public void addBase(String kid, String name, String desc);
+	public Map<String, Object> addBase(String kid, String name, String desc);
 
 	/**
 	 * add new label
