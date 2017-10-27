@@ -4281,12 +4281,16 @@ define("onyx/ui/form/searchinput", [ "jquery", "require", "onyx/ui/widget",
 				this.panel.on("mouseover", this.onMouseOverPanel.bind(this));
 				this.panel.on("mouseout", this.onMouseOutPanel.bind(this));
 				this.panel.on("click", this.onClickPanel.bind(this));
+				this.search("");
 				return this.dom;
 			}
 
 			FormSearchInput.prototype.buildSearchPanel = function(items) {
 				this.panel.text("");
 				this.panel.children().remove();
+				if(!items){
+					return;
+				}
 				for (var i = 0; i < items.length; i++) {
 					var item = items[i];
 					var itemdom = $("<div/>");
@@ -4312,19 +4316,21 @@ define("onyx/ui/form/searchinput", [ "jquery", "require", "onyx/ui/widget",
 			}
 
 			FormSearchInput.prototype.setValue = function(value) {
-				// return this.value.val(value);
+				this.selects = value;
+				return $.dfd(this.selects);
 			}
 
-			FormSearchInput.prototype.search = function() {
-
+			FormSearchInput.prototype.search = function(text) {
+				var search = this.options.on["search"];
+				var self = this;
+				search.call(this, text).done(function(items) {
+					self.buildSearchPanel(items);
+				});
 			}
 
 			FormSearchInput.prototype.onSearch = function(event) {
-				var search = this.options.on["search"];
-				var self = this;
-				search.call(this, this.value.val()).done(function(items) {
-					self.buildSearchPanel(items);
-				});
+				var text = this.value.val();
+				this.search(text)
 			}
 
 			FormSearchInput.prototype.onMouseOverPanel = function(event) {
@@ -4368,7 +4374,6 @@ define("onyx/ui/form/searchinput", [ "jquery", "require", "onyx/ui/widget",
 					target.css("background-color", "red");
 					this.select(item);
 				}
-
 			}
 
 			FormSearchInput.prototype.isSelected = function(item) {

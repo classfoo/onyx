@@ -4,17 +4,18 @@
 define(
 		"onyx/entity",
 		[ "jquery", "require", "css!./entity.css", "onyx/utils", "onyx/ui",
-				"onyx/canvas", "onyx/entity/labels", "onyx/entity/properties",
-				"onyx/entity/links", "onyx/entity/events" ],
+				"onyx/entity/labels", , "onyx/entity/graph",
+				"onyx/entity/properties", "onyx/entity/links",
+				"onyx/entity/events" ],
 		function($, require) {
 
 			var Utils = require("onyx/utils");
 
 			var UI = require("onyx/ui");
 
-			var Canvas = require("onyx/canvas");
-
 			var EntityLabels = require("onyx/entity/labels");
+
+			var EntityGraph = require("onyx/entity/graph");
 
 			var EntityProperties = require("onyx/entity/properties");
 
@@ -106,22 +107,9 @@ define(
 			}
 
 			Entity.prototype.buildGraphPanel = function(pdom) {
-				var graph = $("<div class='onyx-entity-panel shadow'/>");
-				graph.appendTo(pdom);
-				var header = $("<div class='onyx-entity-panel-header'/>");
-				header.text("查看图谱");
-				header.appendTo(graph);
-
-				var body = $("<div class='onyx-entity-panel-body'/>");
-				body.appendTo(graph);
-
-				var canvas = $("<div class='onyx-entity-panel-canvas'/>");
-				canvas.appendTo(body);
-				new Canvas(canvas, {
-					id : this.kid
-				}, this.resource, false);
-				var footer = $("<div class='onyx-entity-panel-footer'/>");
-				footer.appendTo(graph);
+				this.entityGraph = new EntityGraph($.extend(this.options, {
+					pdom : pdom
+				}));
 			}
 
 			Entity.prototype.buildSuspectsPanel = function(pdom) {
@@ -353,6 +341,53 @@ define(
 		});
 
 /**
+ * Onyx Entity Graph Panel
+ */
+define("onyx/entity/graph", [ "jquery", "require", "onyx/utils", "onyx/ui",
+		"onyx/canvas" ], function($, require) {
+
+	var Canvas = require("onyx/canvas");
+
+	function EntityGraph(options) {
+		this.options = options;
+		this.resource = this.options.resource;
+		this.kid = this.resource.kid;
+		this.id = this.resource.id;
+		this.build(this.options.pdom);
+	}
+
+	EntityGraph.prototype.build = function(pdom) {
+		this.dom = $("<div class='onyx-entity-panel shadow'/>");
+		this.dom.appendTo(pdom);
+		var header = $("<div class='onyx-entity-panel-header'/>");
+		header.text("查看图谱");
+		header.appendTo(this.dom);
+
+		this.body = $("<div class='onyx-entity-panel-body'/>");
+		this.body.appendTo(this.dom);
+		this.buildCanvas(this.body);
+		var footer = $("<div class='onyx-entity-panel-footer'/>");
+		footer.appendTo(this.dom);
+	}
+
+	EntityGraph.prototype.buildCanvas = function(pdom) {
+		this.canvas = $("<div class='onyx-entity-panel-canvas'/>");
+		this.canvas.appendTo(pdom);
+		new Canvas(this.canvas, {
+			id : this.kid
+		}, this.resource, false);
+		return this.canvas;
+	}
+
+	EntityGraph.prototype.refresh = function() {
+		this.canvas.remove();
+		this.buildCanvas(this.body);
+	}
+
+	return EntityGraph;
+});
+
+/**
  * Onyx Entity Properties
  */
 define(
@@ -373,22 +408,13 @@ define(
 				this.dom.appendTo(pdom);
 				var toolbar = $("<div class='onyx-entity-properties-toolbar'></div>");
 				toolbar.appendTo(this.dom);
-				UI.createButton({
+				this.addButton = UI.createButton({
 					theme : "blue",
 					icon : "icon-add",
 					caption : "添加",
 					pdom : toolbar
 				});
-				UI.createButton({
-					theme : "blue",
-					icon : "icon-remove",
-					caption : "删除",
-					pdom : toolbar
-				});
-				// UI.createSearchBox({
-				// placeholder : "搜索",
-				// pdom : toolbar
-				// });
+				this.addButton.on("click", this.addProperty.bind(this));
 				var properties = this.resource.properties;
 				for ( var key in properties) {
 					var item = $("<div class='onyx-entity-property shadow'/>");
@@ -403,6 +429,68 @@ define(
 					valuedom.text(value);
 					valuedom.appendTo(item);
 				}
+			}
+
+			EntityProperties.prototype.addProperty = function(event) {
+				UI.createDialog({
+					modal : true,
+					width : 600,
+					height : 400,
+					title : "添加属性",
+					content : this.buildPropertyDialog.bind(this),
+					buttons : [ "ok", "cancel" ],
+					on : {
+						"ok" : this.onAddProperty.bind(this)
+					}
+				});
+			}
+
+			EntityProperties.prototype.buildPropertyDialog = function(dialog) {
+				return UI.createForm({
+					fields : [ {
+						name : "type",
+						caption : "类型",
+						type : "onyx/ui/form/searchinput",
+						on : {
+							"search" : function() {
+								return $.dfd();
+							}
+						}
+					}, {
+						name : "name",
+						caption : "名称",
+						type : "onyx/ui/form/input"
+					}, {
+						name : "value",
+						caption : "值",
+						type : "onyx/ui/form/input"
+					} ],
+					pdom : dialog.pdom
+				});
+			}
+
+			EntityProperties.prototype.onAddProperty = function(event, dialog) {
+				var self = this;
+				dialog.getContent().getData().done(function(data) {
+					Api.entity(self.kid, self.id).addProperty({
+						name : data.name,
+						value : data.value
+					}).done(function(result) {
+						var properties = self.options.resource.properties;
+						properties = $.extend(properties, result);
+						self._refresh(self.options);
+					});
+				})
+			}
+
+			EntityProperties.prototype._refresh = function(options) {
+				this.options = options;
+				this.resource = this.options.resource;
+				this.kid = this.resource.kid;
+				this.id = this.resource.id;
+				this.dom.remove();
+				this.build(this.options.pdom);
+				return $.dfd(this);
 			}
 
 			EntityProperties.prototype.getPathes = function() {
@@ -559,8 +647,21 @@ define(
 						}
 						links.push(link);
 					}
-					Api.link().addLinks(links);
+					Api.link().addLinks(links).done(function() {
+						self._refresh(self.options);
+					});
 				});
+			}
+
+			EntityLinks.prototype._refresh = function(options) {
+				this.options = options;
+				this.resource = this.options.resource;
+				this.kid = this.resource.kid;
+				this.id = this.resource.id;
+				this.dom.remove();
+				this.build(this.options.pdom);
+				options.page.entityGraph.refresh();
+				return $.dfd(this);
 			}
 
 			EntityLinks.prototype.getPathes = function() {

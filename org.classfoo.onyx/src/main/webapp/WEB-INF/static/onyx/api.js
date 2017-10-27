@@ -89,20 +89,17 @@ define("onyx/api", [ "jquery", "require", "onyx/api/label", "onyx/api/entity",
 	}
 
 	Api.entity = function(kid, eid) {
-		if (!kid) {
-			if (entity) {
-				return entity;
-			}
+		if (!kid && !eid) {
 			var Entity = require("onyx/api/entity");
-			entity = new Entity(null, eid);
-			return entity;
+			return new Entity();
 		}
-		if (entities[kid]) {
-			return entities[kid];
+		var key = kid + eid;
+		if (entities[key]) {
+			return entities[key];
 		}
 		var Entity = require("onyx/api/entity");
-		entities[kid] = new Entity(kid, eid);
-		return entities[kid];
+		entities[key] = new Entity(kid, eid);
+		return entities[key];
 	}
 
 	Api.link = function(kid) {
@@ -576,6 +573,21 @@ define("onyx/api/entity", [ "jquery", "require" ], function($, require) {
 			kid : this.kid,
 			eid : options.eid,
 			name : options.name
+		});
+	}
+
+	/**
+	 * add entity Label
+	 * 
+	 * @param kid
+	 * @param lid
+	 * @param modifies
+	 */
+	Entity.prototype.addProperty = function(options) {
+		return Api.post("entityproperty", {
+			id : this.id,
+			name : options.name,
+			value : options.value
 		});
 	}
 

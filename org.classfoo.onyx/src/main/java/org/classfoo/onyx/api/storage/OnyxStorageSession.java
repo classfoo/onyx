@@ -149,7 +149,7 @@ public interface OnyxStorageSession {
 	 * @param id
 	 * @param properties
 	 */
-	public void addEntityProperties(String id, Map<String, Object> properties);
+	public Map<String, Object> addEntityProperties(String id, Map<String, Object> properties);
 
 	/**
 	 * add event of entity

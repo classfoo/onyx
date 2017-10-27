@@ -461,8 +461,9 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 	}
 
 	@Override
-	public void addEntityProperties(String id, Map<String, Object> properties) {
+	public Map<String, Object> addEntityProperties(String id, Map<String, Object> properties) {
 		this.executeUpdate("update entities set properties_=properties_+? where id_=?", properties, id);
+		return properties;
 	}
 
 	@Override
