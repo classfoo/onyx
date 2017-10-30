@@ -4,6 +4,8 @@ import java.util.Map;
 
 import org.apache.commons.collections.MapUtils;
 import org.classfoo.onyx.api.OnyxService;
+import org.classfoo.onyx.api.index.OnyxIndexService;
+import org.classfoo.onyx.api.index.OnyxIndexSession;
 import org.classfoo.onyx.api.query.OnyxQueryEntities;
 import org.classfoo.onyx.api.query.OnyxQueryEntity;
 import org.classfoo.onyx.api.storage.OnyxStorage;
@@ -42,9 +44,14 @@ public class OnyxApi_Entity extends OnyxApiImpl implements OnyxApi {
 	@Override
 	public Object getList(Map<String, Object> args) {
 		String kid = MapUtils.getString(args, "kid");
-		OnyxQueryEntities queryEntities = this.onyxService.createQuery(OnyxQueryEntities.class);
-		queryEntities.setKid(kid);
-		return queryEntities.queryList();
+		OnyxIndexService indexService = this.onyxService.getIndexService();
+		OnyxIndexSession session = indexService.openSession();
+		try {
+			return session.searchBaseEntities(kid, null);
+		}
+		finally {
+			session.close();
+		}
 	}
 
 	@Override

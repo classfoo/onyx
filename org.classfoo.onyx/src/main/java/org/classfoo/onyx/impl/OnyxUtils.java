@@ -76,10 +76,22 @@ public class OnyxUtils {
 		}
 	}
 
+	/**
+	 * create random uuid with given prefix
+	 * @param prefix
+	 * @return
+	 */
 	public static String getRandomUUID(String prefix) {
 		return prefix + UUID.randomUUID().toString().replaceAll("-", "");
 	}
 
+	/**
+	 * read json object from web request parameter map
+	 * @param options
+	 * @param key
+	 * @param type
+	 * @return
+	 */
 	public static <T> T readJson(Map<String, Object> options, String key, Class<T> type) {
 		try {
 			String v = MapUtils.getString(options, key);
@@ -111,6 +123,10 @@ public class OnyxUtils {
 			"E4", "E5", "E6", "E7", "E8", "E9", "EA", "EB", "EC", "ED", "EE", "EF", "F0", "F1", "F2", "F3", "F4", "F5",
 			"F6", "F7", "F8", "F9", "FA", "FB", "FC", "FD", "FE", "FF" };
 
+	/**
+	 * get random color string for html css
+	 * @return
+	 */
 	public static final String getRandomColor() {
 		Random rand = new Random();
 		float r = rand.nextFloat();
@@ -124,11 +140,47 @@ public class OnyxUtils {
 		return COLORRGBS[c];
 	}
 
+	/**
+	 * remove blanks in text
+	 * @param text
+	 * @return
+	 */
 	public static String removeBlank(String text) {
-		if(StringUtils.isBlank(text)){
+		if (StringUtils.isBlank(text)) {
 			return text;
 		}
 		return text.replaceAll("/s*", "");
 	}
 
+	static int MAX_POWER_OF_TWO = 1 << (Integer.SIZE - 2); //Integer.SIZE = 32;
+
+	/**
+	 * Guaua like HashMap initialCapacity size，base on default 0.75 loadFactor，in order to avoid rehash
+	 * @param expectedSize
+	 * @return
+	 */
+	public static <K, V> HashMap<K, V> newHashMapWithExpectedSize(int expectedSize) {
+		return new HashMap<K, V>(capacity(expectedSize));
+	}
+
+	static int capacity(int expectedSize) {//expectedSize = 7,return 10
+		if (expectedSize < 3) {
+			checkNonnegative(expectedSize);
+			return expectedSize + 1;
+		}
+		if (expectedSize < MAX_POWER_OF_TWO) { //
+			// This is the calculation used in JDK8 to resize when a putAll  
+			// happens; it seems to be the most conservative calculation we  
+			// can make.  0.75 is the default load factor.  
+			return (int) ((float) expectedSize / 0.75F + 1.0F);
+		}
+		return Integer.MAX_VALUE; // any large value
+	}
+
+	private static int checkNonnegative(int expectedSize) {
+		if (expectedSize < 0) {
+			throw new RuntimeException("expectedSize<0!");
+		}
+		return expectedSize;
+	}
 }

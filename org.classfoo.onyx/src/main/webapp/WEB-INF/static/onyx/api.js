@@ -1,12 +1,18 @@
 /**
  * Onyx Api
  */
-define("onyx/api", [ "jquery", "require", "onyx/api/label", "onyx/api/entity",
-		"onyx/api/recommend", "onyx/api/base", "onyx/api/timeline",
-		"onyx/api/material", "onyx/api/file", "onyx/api/image",
-		"onyx/api/link", "onyx/api/linknames", "onyx/api/linknodes",
-		"onyx/api/search", "onyx/api/event", "onyx/api/graph" ], function($,
-		require) {
+define("onyx/api", [ "jquery", "require", "onyx/api/server", "onyx/api/label",
+		"onyx/api/entity", "onyx/api/recommend", "onyx/api/base",
+		"onyx/api/timeline", "onyx/api/material", "onyx/api/file",
+		"onyx/api/image", "onyx/api/link", "onyx/api/linknames",
+		"onyx/api/linknodes", "onyx/api/search", "onyx/api/event",
+		"onyx/api/graph" ], function($, require) {
+
+	var server;
+
+	var bases = {};
+
+	var base;
 
 	var searches = {};
 
@@ -49,9 +55,22 @@ define("onyx/api", [ "jquery", "require", "onyx/api/label", "onyx/api/entity",
 		return new Recommend();
 	}
 
-	Api.base = function() {
+	Api.server = function() {
+		if (server) {
+			return server;
+		}
+		var Server = require("onyx/api/server");
+		server = new Server();
+		return server;
+	}
+
+	Api.base = function(kid) {
+		if (bases[kid]) {
+			return bases[kid];
+		}
 		var Base = require("onyx/api/base");
-		return new Base();
+		bases[kid] = new Base(kid);
+		return bases[kid];
 	}
 
 	Api.search = function(kid) {
@@ -363,12 +382,51 @@ define("onyx/api/search", [ "jquery", "require" ], function($, require) {
 		});
 	}
 
+	Search.prototype.label = function(text, offset, limit) {
+		return Api.get("search", {
+			kid : this.kid,
+			type : "label",
+			text : text
+		});
+	}
+
 	return Search;
+});
+
+/**
+ * Onyx Server Api
+ */
+define("onyx/api/server", [ "jquery", "require" ], function($, require) {
+
+	function Server(kid) {
+		this.kid = kid;
+		this.bases = {};
+	}
+
+	/**
+	 * get Base list
+	 * 
+	 * @param offset
+	 * @param limit
+	 */
+	Server.prototype.listBases = function(offset, limit) {
+		return Api.get("base");
+	}
+
+	/**
+	 * create base
+	 */
+	Server.prototype.addBase = function(base) {
+		return Api.post("base", base);
+	}
+
+	return Server;
 });
 
 define("onyx/api/base", [ "jquery", "require" ], function($, require) {
 
-	function Base() {
+	function Base(kid) {
+		this.kid = kid;
 		this.bases = {};
 	}
 
@@ -413,9 +471,81 @@ define("onyx/api/base", [ "jquery", "require" ], function($, require) {
 		return Api.post("base", base);
 	}
 
+	/**
+	 * add label into base
+	 */
+	Base.prototype.addLabel = function(name) {
+		return Api.post("label", {
+			kid : this.kid,
+			name : name
+		});
+	}
+
+	/**
+	 * list labels in base
+	 */
+	Base.prototype.listLabels = function() {
+		return Api.get("label", {
+			kid : this.kid
+		});
+	}
+
+	/**
+	 * search labels in base
+	 */
+	Base.prototype.searchLabels = function(text, offset, limit) {
+		return Api.get("search", {
+			kid : this.kid,
+			type : "label",
+			text : text
+		});
+	}
+
+	/**
+	 * add entity into base
+	 */
+	Base.prototype.addEntity = function(options) {
+		var entity = $.extend({
+			kid : this.kid
+		}, options);
+		return Api.post("entity", entity);
+	}
+
+	/**
+	 * list entities in base
+	 */
+	Base.prototype.listEntities = function() {
+		return Api.get("entity", {
+			kid : this.kid
+		});
+	}
+
+	/**
+	 * search entities in base
+	 * 
+	 * @param offset
+	 * @param limit
+	 */
+	Base.prototype.searchEntities = function(text, offset, limit) {
+		return Api.get("search", {
+			kid : this.kid,
+			type : "entity",
+			text : text
+		});
+	}
+
+	Base.prototype.listGraphs = function() {
+		return Api.get("graph", {
+			kid : this.kid
+		});
+	}
+
 	return Base;
 });
 
+/**
+ * Onyx Label Api
+ */
 define(
 		"onyx/api/label",
 		[ "jquery", "require" ],
@@ -517,6 +647,9 @@ define(
 			return Label;
 		});
 
+/**
+ * Onyx Entity Api
+ */
 define("onyx/api/entity", [ "jquery", "require" ], function($, require) {
 
 	function Entity(kid, eid) {
@@ -568,11 +701,11 @@ define("onyx/api/entity", [ "jquery", "require" ], function($, require) {
 	 * @param lid
 	 * @param modifies
 	 */
-	Entity.prototype.addLabel = function(options) {
+	Entity.prototype.addLabels = function(options) {
 		return Api.post("entitylabel", {
 			kid : this.kid,
 			eid : options.eid,
-			name : options.name
+			labels : options.labels
 		});
 	}
 
@@ -614,6 +747,9 @@ define("onyx/api/entity", [ "jquery", "require" ], function($, require) {
 	return Entity;
 });
 
+/**
+ * Onyx Link Api
+ */
 define("onyx/api/link", [ "jquery", "require" ], function($, require) {
 
 	function Link(kid) {
@@ -643,6 +779,9 @@ define("onyx/api/link", [ "jquery", "require" ], function($, require) {
 	return Link;
 });
 
+/**
+ * Onyx Link Query Names
+ */
 define("onyx/api/linknames", [ "jquery", "require" ], function($, require) {
 
 	function LinkNames(kid) {
@@ -685,6 +824,9 @@ define("onyx/api/linknodes", [ "jquery", "require" ], function($, require) {
 	return LinkNodes;
 });
 
+/**
+ * Onyx Timeline Api
+ */
 define("onyx/api/timeline", [ "jquery", "require" ], function($, require) {
 
 	function TimeLine(kid) {
@@ -704,6 +846,9 @@ define("onyx/api/timeline", [ "jquery", "require" ], function($, require) {
 	return TimeLine;
 });
 
+/**
+ * Onyx Material Api
+ */
 define("onyx/api/material", [ "jquery", "require" ], function($, require) {
 
 	function Material(kid) {

@@ -1876,7 +1876,7 @@ textarea {
 	border: 1px dashed #d2d2d2;
 	text-align: center;
 	line-height: 182px;
-	overflow-y:scroll;
+	overflow-y: scroll;
 }
 
 .onyx-ui-form-searchinput-panel-item {
@@ -2012,4 +2012,53 @@ textarea {
 
 .onyx-ui-submiter-multipage-page .onyx-ui-textarea-area {
 	font-size: 14px;
+}
+
+/*Onyx Label Card*/
+.onyx-ui-labelcard {
+	position: absolute;
+	width: 400px;
+	height: 300px;
+	border-radius: 2px;
+	padding: 10px;
+	background-color: white;
+	z-index: 1000;
+	background-color: white;
+}
+
+.onyx-ui-labelcard-header {
+	width: 100%;
+	height: 72px;
+	border-bottom: 1px solid #F2F2F2;
+}
+
+.onyx-ui-labelcard-icon {
+	width: 64px;
+	height: 64px;
+	font-size: 32px;
+	line-height: 64px;
+	border-radius: 5px;
+	color: white;
+	background-color: blue;
+	float: left;
+}
+
+.onyx-ui-labelcard-title {
+	width: 100%;
+	height: 64px;
+	padding-left: 72px;
+	color: black;
+	line-height: 64px;
+	text-align:left;
+}
+
+.onyx-ui-labelcard-body {
+	width: 100%;
+	height: 128px;
+}
+
+.onyx-ui-labelcard-footer {
+	width: 100%;
+	height: 72px;
+	border-top: 1px solid #F2F2F2;
 }

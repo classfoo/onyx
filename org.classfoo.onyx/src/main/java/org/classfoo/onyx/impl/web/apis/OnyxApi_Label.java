@@ -13,6 +13,9 @@ import org.classfoo.onyx.api.operate.OnyxOperateSaveLabel;
 import org.classfoo.onyx.api.operate.OnyxOperateUpdateLabel;
 import org.classfoo.onyx.api.query.OnyxQueryLabel;
 import org.classfoo.onyx.api.query.OnyxQueryLabels;
+import org.classfoo.onyx.api.storage.OnyxStorage;
+import org.classfoo.onyx.api.storage.OnyxStorageService;
+import org.classfoo.onyx.api.storage.OnyxStorageSession;
 import org.classfoo.onyx.api.web.OnyxApi;
 import org.classfoo.onyx.impl.OnyxUtils;
 import org.classfoo.onyx.impl.web.OnyxApiImpl;
@@ -51,41 +54,36 @@ public class OnyxApi_Label extends OnyxApiImpl implements OnyxApi {
 
 	@Override
 	public Object getList(Map<String, Object> args) {
-		OnyxQueryLabels queryLabels = onyxService.createQuery(OnyxQueryLabels.class);
-		String kid = MapUtils.getString(args, "kid");
-		queryLabels.setKid(kid);
-		return queryLabels.queryList();
+		OnyxStorageService storageService = this.onyxService.getStorageService();
+		OnyxStorage storage = storageService.getStorage();
+		OnyxStorageSession session = storage.openSession();
+		try {
+			String kid = MapUtils.getString(args, "kid");
+			List<Map<String, Object>> labels = session.queryBaseLabels(kid);
+			for (Map<String, Object> label : labels) {
+				label.put("type", "label");
+			}
+			return labels;
+		}
+		finally {
+			session.close();
+		}
 	}
 
 	@Override
 	public Object post(Map<String, Object> args) {
 		String kid = OnyxUtils.readJson(args, "kid", String.class);
-		String lid = OnyxUtils.readJson(args, "lid", String.class);
 		String name = OnyxUtils.readJson(args, "name", String.class);
-		List<Map<String, Object>> modifies = OnyxUtils.readJson(args, "modifies", List.class);
-		OnyxOperateSaveLabel saveLabel = onyxService.createOperate(OnyxOperateSaveLabel.class);
-		saveLabel.setKid(kid);
-		saveLabel.setLid(lid);
-		saveLabel.setName(name);
-		saveLabel.setModifies(modifies);
-		return saveLabel.commit();
+		OnyxStorageService storageService = this.onyxService.getStorageService();
+		OnyxStorage storage = storageService.getStorage();
+		OnyxStorageSession session = storage.openSession();
+		try {
+			String lid = OnyxUtils.getRandomUUID("l");
+			return session.addLabel(kid, lid, name, null);
+		}
+		finally {
+			session.close();
+		}
 	}
 
-	@Override
-	public Object put(Map<String, Object> args) {
-		String kid = OnyxUtils.readJson(args, "kid", String.class);
-		String lid = OnyxUtils.readJson(args, "lid", String.class);
-		String name = OnyxUtils.readJson(args, "name", String.class);
-		List<String> properties = OnyxUtils.readJson(args, "properties", List.class);
-		List<String> parents = OnyxUtils.readJson(args, "parents", List.class);
-		List<String> links = OnyxUtils.readJson(args, "links", List.class);
-		OnyxOperateUpdateLabel updateLabel = onyxService.createOperate(OnyxOperateUpdateLabel.class);
-		updateLabel.setKnowledgeBase(kid);
-		updateLabel.setLabelId(lid);
-		updateLabel.setLabelName(name);
-		updateLabel.setParents(parents);
-		updateLabel.setLinks(links);
-		updateLabel.setProperties(properties);
-		return updateLabel.commit();
-	}
 }

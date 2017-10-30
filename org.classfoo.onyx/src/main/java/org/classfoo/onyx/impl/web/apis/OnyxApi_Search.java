@@ -49,7 +49,19 @@ public class OnyxApi_Search extends OnyxApiImpl implements OnyxApi {
 			OnyxIndexService indexService = this.onyxService.getIndexService();
 			OnyxIndexSession session = indexService.openSession();
 			try {
-				List<Map<String, Object>> result = session.searchEntity(text);
+				List<Map<String, Object>> result = session.searchEntities(text);
+				return result;
+			}
+			finally {
+				session.close();
+			}
+		}
+		if ("label".equals(type)) {
+			String text = MapUtils.getString(args, "text");
+			OnyxIndexService indexService = this.onyxService.getIndexService();
+			OnyxIndexSession session = indexService.openSession();
+			try {
+				List<Map<String, Object>> result = session.searchLabels(text);
 				return result;
 			}
 			finally {
@@ -64,7 +76,7 @@ public class OnyxApi_Search extends OnyxApiImpl implements OnyxApi {
 		OnyxIndexService indexService = this.onyxService.getIndexService();
 		OnyxIndexSession session = indexService.openSession();
 		try {
-			return session.searchEntity(text);
+			return session.searchEntities(text);
 		}
 		finally {
 			session.close();

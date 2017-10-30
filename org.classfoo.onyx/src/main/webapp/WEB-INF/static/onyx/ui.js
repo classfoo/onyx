@@ -11,244 +11,249 @@ define("onyx/ui", [ "jquery", "require", "css!./ui.css", "onyx/utils",
 		"onyx/ui/explorer", "onyx/ui/text", "onyx/ui/textarea",
 		"onyx/ui/pagelayout", "onyx/ui/editlayout", "onyx/ui/resourcebrowser",
 		"onyx/ui/dialog", "onyx/ui/form", "onyx/ui/form/input",
-		"onyx/ui/form/items", "onyx/ui/form/item", "onyx/ui/submiter" ],
-		function($, require) {
+		"onyx/ui/form/items", "onyx/ui/form/item", "onyx/ui/submiter",
+		"onyx/ui/labelcard" ], function($, require) {
 
-			var Utils = require("onyx/utils");
+	var Utils = require("onyx/utils");
 
-			var Page = require("page/page");
+	var Page = require("page/page");
 
-			function UI() {
+	function UI() {
 
-			}
+	}
 
-			/**
-			 * Redirect to uri
-			 */
-			UI.redirect = function(uri) {
-				Page(uri);
-			}
+	/**
+	 * Redirect to uri
+	 */
+	UI.redirect = function(uri) {
+		Page(uri);
+	}
 
-			/**
-			 * create Layout
-			 */
-			UI.createLayout = function(options) {
-				var Layout = require("onyx/ui/layout");
-				return new Layout(options);
-			};
+	/**
+	 * create Layout
+	 */
+	UI.createLayout = function(options) {
+		var Layout = require("onyx/ui/layout");
+		return new Layout(options);
+	};
 
-			/**
-			 * create Page Layout
-			 */
-			UI.createPageLayout = function(options) {
-				var PageLayout = require("onyx/ui/pagelayout");
-				return new PageLayout(options);
-			};
+	/**
+	 * create Page Layout
+	 */
+	UI.createPageLayout = function(options) {
+		var PageLayout = require("onyx/ui/pagelayout");
+		return new PageLayout(options);
+	};
 
-			/**
-			 * create Edit Layout
-			 */
-			UI.createEditLayout = function(options) {
-				var EditLayout = require("onyx/ui/editlayout");
-				return new EditLayout(options);
-			};
+	/**
+	 * create Edit Layout
+	 */
+	UI.createEditLayout = function(options) {
+		var EditLayout = require("onyx/ui/editlayout");
+		return new EditLayout(options);
+	};
 
-			/**
-			 * create Navbar
-			 */
-			UI.createDialog = function(options) {
-				var Dialog = require("onyx/ui/dialog");
-				return new Dialog(options);
-			}
+	/**
+	 * create Navbar
+	 */
+	UI.createDialog = function(options) {
+		var Dialog = require("onyx/ui/dialog");
+		return new Dialog(options);
+	}
 
-			/**
-			 * create Form
-			 */
-			UI.createForm = function(options) {
-				var Form = require("onyx/ui/form");
-				return new Form(options);
-			}
+	/**
+	 * create Form
+	 */
+	UI.createForm = function(options) {
+		var Form = require("onyx/ui/form");
+		return new Form(options);
+	}
 
-			/**
-			 * create Form Input
-			 */
-			UI.createFormInput = function(options) {
-				var FormInput = require("onyx/ui/form/input");
-				return new FormInput(options);
-			}
+	/**
+	 * create Form Input
+	 */
+	UI.createFormInput = function(options) {
+		var FormInput = require("onyx/ui/form/input");
+		return new FormInput(options);
+	}
 
-			/**
-			 * create Form Item
-			 */
-			UI.createFormItem = function(options) {
-				var FormItem = require("onyx/ui/form/item");
-				return new FormItem(options);
-			}
+	/**
+	 * create Form Item
+	 */
+	UI.createFormItem = function(options) {
+		var FormItem = require("onyx/ui/form/item");
+		return new FormItem(options);
+	}
 
-			/**
-			 * create Form Items
-			 */
-			UI.createFormItems = function(options) {
-				var FormItems = require("onyx/ui/form/items");
-				return new FormItems(options);
-			}
+	/**
+	 * create Form Items
+	 */
+	UI.createFormItems = function(options) {
+		var FormItems = require("onyx/ui/form/items");
+		return new FormItems(options);
+	}
 
-			/**
-			 * create Text
-			 */
-			UI.createText = function(options) {
-				var Text = require("onyx/ui/text");
-				return new Text(options);
-			}
+	/**
+	 * create Text
+	 */
+	UI.createText = function(options) {
+		var Text = require("onyx/ui/text");
+		return new Text(options);
+	}
 
-			/**
-			 * create TextArea
-			 */
-			UI.createTextArea = function(options) {
-				var TextArea = require("onyx/ui/textarea");
-				return new TextArea(options);
-			}
+	/**
+	 * create TextArea
+	 */
+	UI.createTextArea = function(options) {
+		var TextArea = require("onyx/ui/textarea");
+		return new TextArea(options);
+	}
 
-			/**
-			 * create Navbar
-			 */
-			UI.createNavBar = function(options) {
-				var NavBar = require("onyx/ui/navbar");
-				return new NavBar(options);
-			}
+	/**
+	 * create Navbar
+	 */
+	UI.createNavBar = function(options) {
+		var NavBar = require("onyx/ui/navbar");
+		return new NavBar(options);
+	}
 
-			/**
-			 * create NavPanel
-			 */
-			UI.createNavPanel = function(options) {
-				var NavPanel = require("onyx/ui/navpanel");
-				return new NavPanel(options);
-			}
+	/**
+	 * create NavPanel
+	 */
+	UI.createNavPanel = function(options) {
+		var NavPanel = require("onyx/ui/navpanel");
+		return new NavPanel(options);
+	}
 
-			/**
-			 * create MultiPage
-			 */
-			UI.createMultiPage = function(options) {
-				var MultiPage = require("onyx/ui/multipage");
-				return new MultiPage(options);
-			}
+	/**
+	 * create MultiPage
+	 */
+	UI.createMultiPage = function(options) {
+		var MultiPage = require("onyx/ui/multipage");
+		return new MultiPage(options);
+	}
 
-			/**
-			 * create Toolbar
-			 */
-			UI.createToolBar = function(options) {
-				var ToolBar = require("onyx/ui/toolbar");
-				return new ToolBar(options);
-			};
+	/**
+	 * create Toolbar
+	 */
+	UI.createToolBar = function(options) {
+		var ToolBar = require("onyx/ui/toolbar");
+		return new ToolBar(options);
+	};
 
-			/**
-			 * create Button
-			 */
-			UI.createButton = function(options) {
-				var Button = require("onyx/ui/button");
-				return new Button(options);
-			};
+	/**
+	 * create Button
+	 */
+	UI.createButton = function(options) {
+		var Button = require("onyx/ui/button");
+		return new Button(options);
+	};
 
-			/**
-			 * create Icon
-			 */
-			UI.createIcon = function(options) {
-				var Icon = require("onyx/ui/icon");
-				return new Icon(options);
-			};
+	/**
+	 * create Icon
+	 */
+	UI.createIcon = function(options) {
+		var Icon = require("onyx/ui/icon");
+		return new Icon(options);
+	};
 
-			/**
-			 * create SearchBox
-			 */
-			UI.createSearchBox = function(options) {
-				var SearchBox = require("onyx/ui/searchbox");
-				return new SearchBox(options);
-			};
+	/**
+	 * create SearchBox
+	 */
+	UI.createSearchBox = function(options) {
+		var SearchBox = require("onyx/ui/searchbox");
+		return new SearchBox(options);
+	};
 
-			/**
-			 * create BreadCrumb
-			 */
-			UI.createBreadCrumb = function(options) {
-				var BreadCrumb = require("onyx/ui/breadcrumb");
-				return new BreadCrumb(options);
-			};
+	/**
+	 * create BreadCrumb
+	 */
+	UI.createBreadCrumb = function(options) {
+		var BreadCrumb = require("onyx/ui/breadcrumb");
+		return new BreadCrumb(options);
+	};
 
-			/**
-			 * create List
-			 */
-			UI.createList = function(options) {
-				var List = require("onyx/ui/list");
-				return new List(options);
-			}
+	/**
+	 * create List
+	 */
+	UI.createList = function(options) {
+		var List = require("onyx/ui/list");
+		return new List(options);
+	}
 
-			/**
-			 * create DataList
-			 */
-			UI.createDataList = function(options) {
-				var DataList = require("onyx/ui/datalist");
-				return new DataList(options);
-			}
+	/**
+	 * create DataList
+	 */
+	UI.createDataList = function(options) {
+		var DataList = require("onyx/ui/datalist");
+		return new DataList(options);
+	}
 
-			/**
-			 * create TimeLine
-			 */
-			UI.createTimeLine = function(options) {
-				var TimeLine = require("onyx/ui/timeline");
-				return new TimeLine(options);
-			}
+	/**
+	 * create TimeLine
+	 */
+	UI.createTimeLine = function(options) {
+		var TimeLine = require("onyx/ui/timeline");
+		return new TimeLine(options);
+	}
 
-			UI.createImage = function(options) {
-				var Image = require("onyx/ui/image");
-				return new Image(options);
-			}
+	UI.createImage = function(options) {
+		var Image = require("onyx/ui/image");
+		return new Image(options);
+	}
 
-			UI.createShowBoard = function(options) {
-				var ShowBoard = require("onyx/ui/showboard");
-				return new ShowBoard(options);
-			}
+	UI.createShowBoard = function(options) {
+		var ShowBoard = require("onyx/ui/showboard");
+		return new ShowBoard(options);
+	}
 
-			UI.createEditBoard = function(options) {
-				var EditBoard = require("onyx/ui/editboard");
-				return new EditBoard(options);
-			}
+	UI.createEditBoard = function(options) {
+		var EditBoard = require("onyx/ui/editboard");
+		return new EditBoard(options);
+	}
 
-			UI.createSlideBoard = function(options) {
-				var SlideBoard = require("onyx/ui/slideboard");
-				return new SlideBoard(options);
-			}
+	UI.createSlideBoard = function(options) {
+		var SlideBoard = require("onyx/ui/slideboard");
+		return new SlideBoard(options);
+	}
 
-			UI.createUploadBoard = function(options) {
-				var UploadBoard = require("onyx/ui/uploadboard");
-				return new UploadBoard(options);
-			}
+	UI.createUploadBoard = function(options) {
+		var UploadBoard = require("onyx/ui/uploadboard");
+		return new UploadBoard(options);
+	}
 
-			UI.createFloatPanel = function(options) {
-				var FloatPanel = require("onyx/ui/floatpanel");
-				return new FloatPanel(options);
-			}
+	UI.createFloatPanel = function(options) {
+		var FloatPanel = require("onyx/ui/floatpanel");
+		return new FloatPanel(options);
+	}
 
-			UI.createMenu = function(options) {
-				var Menu = require("onyx/ui/menu");
-				return new Menu(options);
-			}
+	UI.createMenu = function(options) {
+		var Menu = require("onyx/ui/menu");
+		return new Menu(options);
+	}
 
-			UI.createExplorer = function(options) {
-				var Explorer = require("onyx/ui/explorer");
-				return new Explorer(options);
-			}
+	UI.createExplorer = function(options) {
+		var Explorer = require("onyx/ui/explorer");
+		return new Explorer(options);
+	}
 
-			UI.createResourceBrowser = function(options) {
-				var ResourceBrowser = require("onyx/ui/resourcebrowser");
-				return new ResourceBrowser(options);
-			}
+	UI.createResourceBrowser = function(options) {
+		var ResourceBrowser = require("onyx/ui/resourcebrowser");
+		return new ResourceBrowser(options);
+	}
 
-			UI.createSubmiter = function(options) {
-				var createSubmiter = require("onyx/ui/submiter");
-				return new createSubmiter(options);
-			}
+	UI.createSubmiter = function(options) {
+		var createSubmiter = require("onyx/ui/submiter");
+		return new createSubmiter(options);
+	}
 
-			return UI;
-		});
+	UI.createLabelCard = function(options) {
+		var LabelCard = require("onyx/ui/labelcard");
+		return new LabelCard(options);
+	}
+
+	return UI;
+});
 
 /**
  * Onyx UI Framework Widget
@@ -2987,6 +2992,7 @@ define("onyx/ui/showboard/item/label", [ "jquery", "require", "onyx/ui/widget",
 			ShowBoardItem_Label.prototype.build = function(pdom) {
 				this.dom = $("<div class='iconfont icon-doc'/>");
 				this.addClass(this.dom, "onyx-ui-showboard-item");
+				this.dom.text(this.options.name);
 				this.dom.appendTo(pdom);
 				return this.dom;
 			}
@@ -4234,167 +4240,174 @@ define("onyx/ui/form/input", [ "jquery", "require", "onyx/ui/widget",
  * Onyx UI Framework Form Search Input
  */
 define("onyx/ui/form/searchinput", [ "jquery", "require", "onyx/ui/widget",
-		"onyx/utils" ],
-		function($, require) {
+		"onyx/utils" ], function($, require) {
 
-			var Widget = require("onyx/ui/widget");
+	var Widget = require("onyx/ui/widget");
 
-			var Utils = require("onyx/utils");
+	var Utils = require("onyx/utils");
 
-			function FormSearchInput(options) {
-				Widget.call(this, options);
-				this.selects = {};
+	function FormSearchInput(options) {
+		Widget.call(this, options);
+		this.selects = {};
+	}
+
+	FormSearchInput.prototype.build = function(pdom) {
+		this.dom = $("<div/>");
+		this.addClass(this.dom, "onyx-ui-form-searchinput");
+		this.dom.appendTo(pdom);
+		this.header = $("<div/>");
+		this.addClass(this.header, "onyx-ui-form-searchinput", "header");
+		this.header.appendTo(this.dom);
+		var fieldlabel = this.options.label || this.options.caption;
+		if (fieldlabel) {
+			this.name = $("<span/>");
+			this.addClass(this.name, "onyx-ui-form-searchinput", "name");
+			this.name.text(fieldlabel);
+			this.name.appendTo(this.header);
+		}
+		this.value = $("<input/>");
+		this.addClass(this.value, "onyx-ui-form-searchinput", "value");
+		if (this.options.value) {
+			this.value.val(this.options.value);
+		}
+		this.value.appendTo(this.header);
+		this.value.on("change", this.onSearch.bind(this));
+		this.icon = $("<span class='iconfont icon-search'/>");
+		this.addClass(this.icon, "onyx-ui-form-searchinput", "icon");
+		this.icon.appendTo(this.header);
+		this.panel = $("<div/>");
+		this.addClass(this.panel, "onyx-ui-form-searchinput", "panel");
+		this.panel.text("搜索关联对象...");
+		this.panel.appendTo(this.dom);
+		this.panel.on("mouseover", this.onMouseOverPanel.bind(this));
+		this.panel.on("mouseout", this.onMouseOutPanel.bind(this));
+		this.panel.on("click", this.onClickPanel.bind(this));
+		this.search("");
+		return this.dom;
+	}
+
+	FormSearchInput.prototype.buildSearchPanel = function(text, items) {
+		this.panel.text("");
+		this.panel.children().remove();
+		if (!items) {
+			return;
+		}
+		// TODO if not exists
+		if (text && text != "") {
+			var dom = this.buildSearchPanelItem({
+				id : null,
+				name : text
+			});
+			dom.css("background-color", "blue");
+		}
+		for (var i = 0; i < items.length; i++) {
+			var item = items[i];
+			this.buildSearchPanelItem(item);
+		}
+	}
+
+	FormSearchInput.prototype.buildSearchPanelItem = function(item) {
+		var itemdom = $("<div/>");
+		this.addClass(itemdom, "onyx-ui-form-searchinput", "panel", "item");
+		itemdom.text(item.name);
+		itemdom.attr("id", item.id);
+		itemdom.data(item);
+		itemdom.appendTo(this.panel);
+		return itemdom;
+	}
+
+	FormSearchInput.prototype.getValue = function() {
+		var result = [];
+		for ( var id in this.selects) {
+			var select = this.selects[id];
+			if (!select) {
+				continue;
 			}
+			result.push(select);
+		}
+		return result;
+	}
 
-			FormSearchInput.prototype.build = function(pdom) {
-				this.dom = $("<div/>");
-				this.addClass(this.dom, "onyx-ui-form-searchinput");
-				this.dom.appendTo(pdom);
-				this.header = $("<div/>");
-				this
-						.addClass(this.header, "onyx-ui-form-searchinput",
-								"header");
-				this.header.appendTo(this.dom);
-				var fieldlabel = this.options.label || this.options.caption;
-				if (fieldlabel) {
-					this.name = $("<span/>");
-					this
-							.addClass(this.name, "onyx-ui-form-searchinput",
-									"name");
-					this.name.text(fieldlabel);
-					this.name.appendTo(this.header);
-				}
-				this.value = $("<input/>");
-				this.addClass(this.value, "onyx-ui-form-searchinput", "value");
-				if (this.options.value) {
-					this.value.val(this.options.value);
-				}
-				this.value.appendTo(this.header);
-				this.value.on("change", this.onSearch.bind(this));
-				this.icon = $("<span class='iconfont icon-search'/>");
-				this.addClass(this.icon, "onyx-ui-form-searchinput", "icon");
-				this.icon.appendTo(this.header);
-				this.panel = $("<div/>");
-				this.addClass(this.panel, "onyx-ui-form-searchinput", "panel");
-				this.panel.text("搜索关联对象...");
-				this.panel.appendTo(this.dom);
-				this.panel.on("mouseover", this.onMouseOverPanel.bind(this));
-				this.panel.on("mouseout", this.onMouseOutPanel.bind(this));
-				this.panel.on("click", this.onClickPanel.bind(this));
-				this.search("");
-				return this.dom;
-			}
+	FormSearchInput.prototype.setValue = function(value) {
+		this.selects = value;
+		return $.dfd(this.selects);
+	}
 
-			FormSearchInput.prototype.buildSearchPanel = function(items) {
-				this.panel.text("");
-				this.panel.children().remove();
-				if(!items){
-					return;
-				}
-				for (var i = 0; i < items.length; i++) {
-					var item = items[i];
-					var itemdom = $("<div/>");
-					this.addClass(itemdom, "onyx-ui-form-searchinput", "panel",
-							"item");
-					itemdom.text(item.name);
-					itemdom.attr("id", item.id);
-					itemdom.data(item);
-					itemdom.appendTo(this.panel);
-				}
-			}
-
-			FormSearchInput.prototype.getValue = function() {
-				var result = [];
-				for ( var id in this.selects) {
-					var select = this.selects[id];
-					if (!select) {
-						continue;
-					}
-					result.push(select);
-				}
-				return result;
-			}
-
-			FormSearchInput.prototype.setValue = function(value) {
-				this.selects = value;
-				return $.dfd(this.selects);
-			}
-
-			FormSearchInput.prototype.search = function(text) {
-				var search = this.options.on["search"];
-				var self = this;
-				search.call(this, text).done(function(items) {
-					self.buildSearchPanel(items);
-				});
-			}
-
-			FormSearchInput.prototype.onSearch = function(event) {
-				var text = this.value.val();
-				this.search(text)
-			}
-
-			FormSearchInput.prototype.onMouseOverPanel = function(event) {
-				var target = this.getEventTarget(event,
-						"onyx-ui-form-searchinput-panel", "item");
-				if (!target) {
-					return;
-				}
-				if (this.hoverItem) {
-					this.removeClass(this.hoverItem,
-							"onyx-ui-form-searchinput-panel", "item", "over");
-				}
-				this.hoverItem = target;
-				this.addClass(this.hoverItem, "onyx-ui-form-searchinput",
-						"panel-item", "over");
-			}
-
-			FormSearchInput.prototype.onMouseOutPanel = function(event) {
-				var target = this.getEventTarget(event,
-						"onyx-ui-form-searchinput-panel", "item");
-				if (!target) {
-					return;
-				}
-				if (this.hoverItem) {
-					this.removeClass(this.hoverItem,
-							"onyx-ui-form-searchinput-panel", "item", "over");
-				}
-			}
-
-			FormSearchInput.prototype.onClickPanel = function(event) {
-				var target = this.getEventTarget(event,
-						"onyx-ui-form-searchinput-panel", "item");
-				if (!target) {
-					return;
-				}
-				var item = target.data();
-				if (this.isSelected(item)) {
-					target.css("background-color", "#88B6D8");
-					this.unselect(item);
-				} else {
-					target.css("background-color", "red");
-					this.select(item);
-				}
-			}
-
-			FormSearchInput.prototype.isSelected = function(item) {
-				if (this.selects[item.id]) {
-					return true;
-				}
-				return false;
-			}
-
-			FormSearchInput.prototype.select = function(item) {
-				this.selects[item.id] = item;
-			}
-
-			FormSearchInput.prototype.unselect = function(item) {
-				this.selects[item.id] = null;
-			}
-
-			Utils.inherits(FormSearchInput, Widget);
-
-			return FormSearchInput;
+	FormSearchInput.prototype.search = function(text) {
+		var search = this.options.on["search"];
+		var self = this;
+		search.call(this, text).done(function(items) {
+			self.buildSearchPanel(text, items);
 		});
+	}
+
+	FormSearchInput.prototype.onSearch = function(event) {
+		var text = this.value.val();
+		this.search(text)
+	}
+
+	FormSearchInput.prototype.onMouseOverPanel = function(event) {
+		var target = this.getEventTarget(event,
+				"onyx-ui-form-searchinput-panel", "item");
+		if (!target) {
+			return;
+		}
+		if (this.hoverItem) {
+			this.removeClass(this.hoverItem, "onyx-ui-form-searchinput-panel",
+					"item", "over");
+		}
+		this.hoverItem = target;
+		this.addClass(this.hoverItem, "onyx-ui-form-searchinput", "panel-item",
+				"over");
+	}
+
+	FormSearchInput.prototype.onMouseOutPanel = function(event) {
+		var target = this.getEventTarget(event,
+				"onyx-ui-form-searchinput-panel", "item");
+		if (!target) {
+			return;
+		}
+		if (this.hoverItem) {
+			this.removeClass(this.hoverItem, "onyx-ui-form-searchinput-panel",
+					"item", "over");
+		}
+	}
+
+	FormSearchInput.prototype.onClickPanel = function(event) {
+		var target = this.getEventTarget(event,
+				"onyx-ui-form-searchinput-panel", "item");
+		if (!target) {
+			return;
+		}
+		var item = target.data();
+		if (this.isSelected(item)) {
+			target.css("background-color", "#88B6D8");
+			this.unselect(item);
+		} else {
+			target.css("background-color", "red");
+			this.select(item);
+		}
+	}
+
+	FormSearchInput.prototype.isSelected = function(item) {
+		if (this.selects[item.id]) {
+			return true;
+		}
+		return false;
+	}
+
+	FormSearchInput.prototype.select = function(item) {
+		this.selects[item.id] = item;
+	}
+
+	FormSearchInput.prototype.unselect = function(item) {
+		this.selects[item.id] = null;
+	}
+
+	Utils.inherits(FormSearchInput, Widget);
+
+	return FormSearchInput;
+});
 
 /**
  * Onyx UI Framework Form
@@ -4609,3 +4622,65 @@ define(
 
 			return Submiter;
 		});
+
+/**
+ * Onyx UI Framework Float Label Card
+ */
+define("onyx/ui/labelcard", [ "jquery", "require", "onyx/ui/widget",
+		"onyx/utils" ], function($, require) {
+
+	var Widget = require("onyx/ui/widget");
+
+	var Utils = require("onyx/utils");
+
+	function LabelCard(options) {
+		Widget.call(this, options);
+		this.options = options;
+	}
+
+	LabelCard.prototype.build = function(pdom) {
+		this.dom = $("<div class='shadow'/>");
+		this.addClass(this.dom, "onyx-ui-labelcard");
+		this.dom.css("left", this.options.left);
+		this.dom.css("top", this.options.top);
+		this.dom.appendTo(pdom);
+		var self = this;
+		Api.label(this.options.kid).get(this.options.name).done(
+				function(label) {
+					self.buildCard(label, self.dom);
+				});
+		this.dom.on("mouseleave", this.onMouseLeave.bind(this));
+		return this.dom;
+	}
+
+	LabelCard.prototype.buildCard = function(label, pdom) {
+		var header = $("<div/>");
+		this.addClass(header, "onyx-ui-labelcard", "header");
+		header.appendTo(pdom);
+
+		var icon = $("<div class='iconfont icon-label'/>");
+		this.addClass(icon, "onyx-ui-labelcard", "icon");
+		icon.appendTo(header);
+
+		var title = $("<div/>");
+		this.addClass(title, "onyx-ui-labelcard", "title");
+		title.text(label.name || label);
+		title.appendTo(header);
+
+		var body = $("<div/>");
+		this.addClass(body, "onyx-ui-labelcard", "body");
+		body.appendTo(pdom);
+
+		var footer = $("<div/>");
+		this.addClass(footer, "onyx-ui-labelcard", "footer");
+		footer.appendTo(pdom);
+	}
+
+	LabelCard.prototype.onMouseLeave = function(event) {
+		this.dom.remove();
+	}
+
+	Utils.inherits(LabelCard, Widget);
+
+	return LabelCard;
+});

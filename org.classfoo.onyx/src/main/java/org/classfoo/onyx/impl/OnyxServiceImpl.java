@@ -16,6 +16,8 @@ import org.classfoo.onyx.api.query.OnyxQueryService;
 import org.classfoo.onyx.api.storage.OnyxStorageService;
 import org.classfoo.onyx.api.streaming.OnyxStreamingService;
 import org.classfoo.onyx.api.web.OnyxApi;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -28,6 +30,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
  */
 @Component
 public class OnyxServiceImpl implements OnyxService, InitializingBean {
+
+	private static final Logger logger = LoggerFactory.getLogger(OnyxServiceImpl.class);
 
 	@Autowired
 	private OnyxApi[] onyxApis;
@@ -106,6 +110,7 @@ public class OnyxServiceImpl implements OnyxService, InitializingBean {
 			error.put("type", "error");
 			error.put("message", ExceptionUtils.getMessage(e));
 			error.put("details", ExceptionUtils.getFullStackTrace(e));
+			logger.error("API请求失败！", e);
 			return error;
 		}
 	}

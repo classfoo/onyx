@@ -388,9 +388,23 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 	}
 
 	@Override
-	public void addLabel(String kid, String lid, String name, Map<String, Object> properties) {
+	public Map<String, Object> addLabel(String kid, String lid, String name, Map<String, Object> properties) {
 		this.executeUpdate("insert into labels (kid_,id_,name_,properties_) values(?,?,?,?)", kid, lid, name,
 				properties);
+		this.executeUpdate("insert into base_label (kid_,id_,name_) values(?,?,?)", kid, lid, name);
+		Map<String, Object> label = new HashMap<String, Object>(10);
+		label.put("kid", kid);
+		label.put("id", lid);
+		label.put("name", name);
+		label.put("properties", properties);
+		this.addLabelIndex(name, label);
+		return label;
+	}
+
+	private void addLabelIndex(String name, Map<String, Object> label) {
+		OnyxIndexService indexService = this.onyxService.getIndexService();
+		OnyxIndexThread indexThread = indexService.getIndexThread();
+		indexThread.addIndex(OnyxIndexThread.INSERT, "onyx", "label", name, label);
 	}
 
 	@Override
@@ -448,16 +462,24 @@ public class OnyxStorageSession_Cassandra implements OnyxStorageSession {
 		OnyxIndexService indexService = this.onyxService.getIndexService();
 		OnyxIndexThread indexThread = indexService.getIndexThread();
 		indexThread.addIndex(OnyxIndexThread.INSERT, "onyx", "entity", id, entity);
-		indexThread.addIndex(OnyxIndexThread.MERGE, "global", "entity", name, entity);
 	}
 
 	@Override
 	public Map<String, Object> addEntityLabels(String id, List<String> labels) {
 		this.executeUpdate("update entities set labels_=labels_+? where id_=?", labels, id);
 		HashMap<String, Object> result = new HashMap<String, Object>();
-		result.put("eid", id);
+		result.put("id", id);
 		result.put("labels", labels);
+		this.updateEntityLabelsIndex(id, labels);
 		return result;
+	}
+
+	private void updateEntityLabelsIndex(String id, List<String> labels) {
+		OnyxIndexService indexService = this.onyxService.getIndexService();
+		OnyxIndexThread indexThread = indexService.getIndexThread();
+		HashMap<String, Object> entity = new HashMap<String, Object>();
+		entity.put("labels", labels);
+		indexThread.addIndex(OnyxIndexThread.UPSERT, "onyx", "entity", id, entity);
 	}
 
 	@Override

@@ -96,7 +96,7 @@ public interface OnyxStorageSession {
 	 * @param name
 	 * @param properties
 	 */
-	public void addLabel(String kid, String lid, String name, Map<String, Object> properties);
+	public Map<String, Object> addLabel(String kid, String lid, String name, Map<String, Object> properties);
 
 	public Map<String, Object> saveLabelModifies(String kid, String lid, String labelName,
 			List<Map<String, Object>> modifies);

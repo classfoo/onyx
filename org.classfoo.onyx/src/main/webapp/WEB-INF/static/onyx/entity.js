@@ -292,11 +292,17 @@ define(
 				this.addButton.on("click", function() {
 					UI.createDialog({
 						title : "添加标签",
+						width : 600,
+						height : 400,
 						content : function(dialog) {
 							return UI.createForm({
 								fields : [ {
-									name : "name",
-									type : "onyx/ui/form/input"
+									name : "labels",
+									caption : "标签名",
+									type : "onyx/ui/form/searchinput",
+									on : {
+										"search" : self.onSearch.bind(this)
+									}
 								} ],
 								pdom : dialog.pdom
 							});
@@ -316,6 +322,8 @@ define(
 				var labelDom = $("<span class='onyx-entity-info-label'/>");
 				labelDom.text(label);
 				labelDom.appendTo(this.labels);
+				labelDom.on("mouseover", this.onMouseOver.bind(this));
+				labelDom.on("mouseout", this.onMouseOver.bind(this));
 			}
 
 			EntityLabels.prototype.appendItem = function(label) {
@@ -326,15 +334,46 @@ define(
 
 			EntityLabels.prototype.addLabel = function(data) {
 				var self = this;
-				Api.entity(this.kid).addLabel({
+				var labels = data.labels;
+				var names = [];
+				for (var i = 0; i < labels.length; i++) {
+					var label = labels[i];
+					var id = label.id;
+					var name = label.name;
+					if (!label.id) {
+						Api.base(this.kid).addLabel(name);
+					}
+					names.push(name);
+				}
+				Api.entity(this.kid, this.id).addLabels({
 					kid : this.resource.kid,
 					eid : this.resource.id,
-					name : data.name
+					labels : names
 				}).done(function(label) {
 					for (var i = 0; i < label.labels.length; i++) {
 						self.appendItem(label.labels[i]);
 					}
 				});
+			}
+
+			EntityLabels.prototype.onMouseOver = function(event) {
+				var target = $(event.target);
+				if (!target.hasClass("onyx-entity-info-label")) {
+					return;
+				}
+				var name = target.text();
+				this.labelCard = UI.createLabelCard({
+					kid : this.kid,
+					name : name,
+					pdom : target
+				});
+			}
+
+			EntityLabels.prototype.onMouseOut = function(event) {
+			}
+
+			EntityLabels.prototype.onSearch = function(event, text) {
+				return Api.base(this.kid).searchLabels(text);
 			}
 
 			return EntityLabels;
@@ -628,7 +667,7 @@ define(
 			}
 
 			EntityLinks.prototype.onSearchEntity = function(text) {
-				return Api.search(this.kid).searchEntities(text);
+				return Api.base(this.kid).searchEntities(text);
 			}
 
 			EntityLinks.prototype.onAddLink = function(event, dialog) {

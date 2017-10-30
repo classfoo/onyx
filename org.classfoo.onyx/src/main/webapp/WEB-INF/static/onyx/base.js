@@ -452,7 +452,7 @@ define("onyx/base/labels", [ "jquery", "require", "onyx/ui" ], function($,
 	}
 
 	Labels.prototype.querylabels = function(kid) {
-		return Api.label(this.kid).list();
+		return Api.base(this.kid).listLabels();
 	}
 
 	Labels.prototype.refresh = function(options) {
@@ -504,10 +504,7 @@ define("onyx/base/analysis", [ "jquery", "require", "onyx/ui" ], function($,
 	}
 
 	Analysis.prototype.getDatas = function(kid) {
-		return $.dfd([ {
-			id : "fx1",
-			name : "分析文档1"
-		} ]);
+		return Api.base(kid).listGraphs();
 	}
 
 	Analysis.prototype.refresh = function(options) {

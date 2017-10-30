@@ -57,21 +57,41 @@ public interface OnyxIndexSession {
 	 * @param name
 	 * @return
 	 */
-	public List<Map<String, Object>> searchEntity(String name);
+	public List<Map<String, Object>> searchEntities(String name);
 
 	/**
-	 * Add entity with same name into one index item
-	 * @param name
-	 * @param json
-	 */
-	public void addNameIndex(String name, Map<String, Object> json);
-
-	/**
-	 * search entity with same name
-	 * @param name
+	 * search entities by base
+	 * @param kid
 	 * @return
 	 */
-	public List<Map<String, Object>> searchNameIndex(String name);
+	public List<Map<String, Object>> searchBaseEntities(String kid, String name);
+
+	/**
+	 * add label index
+	 * @param json
+	 */
+	public void addLabelIndex(Map<String, Object> json);
+
+	/**
+	 * search labels by name
+	 * @param text
+	 * @return
+	 */
+	public List<Map<String, Object>> searchLabels(String name);
+
+	//	/**
+	//	 * Add entity with same name into one index item
+	//	 * @param name
+	//	 * @param json
+	//	 */
+	//	public void addNameIndex(String name, Map<String, Object> json);
+	//
+	//	/**
+	//	 * search entity with same name
+	//	 * @param name
+	//	 * @return
+	//	 */
+	//	public List<Map<String, Object>> searchNameIndex(String name);
 
 	/**
 	 * clear all indexes

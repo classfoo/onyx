@@ -31,6 +31,19 @@ public class OnyxApi_Graph extends OnyxApiImpl implements OnyxApi {
 	}
 
 	@Override
+	public Object getList(Map<String, Object> args) throws IOException {
+		OnyxStorage storage = onyxService.getStorageService().getStorage();
+		OnyxStorageSession session = storage.openSession();
+		try {
+			String kid = MapUtils.getString(args, "kid");
+			return session.queryGraphs();
+		}
+		finally {
+			session.close();
+		}
+	}
+
+	@Override
 	public Object post(Map<String, Object> args) throws IOException {
 		OnyxStorage storage = onyxService.getStorageService().getStorage();
 		OnyxStorageSession session = storage.openSession();

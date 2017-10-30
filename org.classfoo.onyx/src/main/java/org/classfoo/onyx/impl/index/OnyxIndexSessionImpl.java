@@ -78,12 +78,10 @@ public class OnyxIndexSessionImpl implements OnyxIndexSession {
 	public void addEntityIndex(Map<String, Object> entity) {
 		String id = MapUtils.getString(entity, "id");
 		this.addIndex("onyx", "entity", id, entity);
-		String name = MapUtils.getString(entity, "name");
-		this.addNameIndex(name, entity);
 	}
 
 	@Override
-	public List<Map<String, Object>> searchEntity(String name) {
+	public List<Map<String, Object>> searchEntities(String name) {
 		SearchRequestBuilder builder = client.prepareSearch("onyx");
 		builder.setTypes("entity");
 		builder.setSearchType(SearchType.DFS_QUERY_THEN_FETCH);
@@ -106,14 +104,39 @@ public class OnyxIndexSessionImpl implements OnyxIndexSession {
 	}
 
 	@Override
-	public void addNameIndex(String name, Map<String, Object> json) {
-		this.mergeIndex("onyx", "name", name, json);
+	public List<Map<String, Object>> searchBaseEntities(String kid, String name) {
+		SearchRequestBuilder builder = client.prepareSearch("onyx");
+		builder.setTypes("entity");
+		builder.setSearchType(SearchType.DFS_QUERY_THEN_FETCH);
+		if (StringUtils.isNotBlank(name)) {
+			builder.setQuery(QueryBuilders.matchQuery("name", name));
+		}
+		if (StringUtils.isNotBlank(kid)) {
+			builder.setQuery(QueryBuilders.matchQuery("kid", kid));
+		}
+		builder.setFrom(0);
+		builder.setSize(32);
+		builder.setExplain(true);
+		SearchResponse response = builder.get();
+		SearchHits hits = response.getHits();
+		SearchHit[] hitsArray = hits.getHits();
+		ArrayList<Map<String, Object>> result = new ArrayList<Map<String, Object>>(hitsArray.length);
+		for (int i = 0; i < hitsArray.length; i++) {
+			Map<String, Object> item = hitsArray[i].getSourceAsMap();
+			item.put("color", OnyxUtils.getRandomColor());
+			result.add(item);
+		}
+		return result;
 	}
 
 	@Override
-	public List<Map<String, Object>> searchNameIndex(String name) {
-		SearchRequestBuilder builder = client.prepareSearch("global");
-		builder.setTypes("entity");
+	public void addLabelIndex(Map<String, Object> json) {
+	}
+
+	@Override
+	public List<Map<String, Object>> searchLabels(String name) {
+		SearchRequestBuilder builder = client.prepareSearch("onyx");
+		builder.setTypes("label");
 		builder.setSearchType(SearchType.DFS_QUERY_THEN_FETCH);
 		if (StringUtils.isNotBlank(name)) {
 			builder.setQuery(QueryBuilders.matchQuery("name", name));
@@ -127,10 +150,7 @@ public class OnyxIndexSessionImpl implements OnyxIndexSession {
 		ArrayList<Map<String, Object>> result = new ArrayList<Map<String, Object>>(hitsArray.length);
 		for (int i = 0; i < hitsArray.length; i++) {
 			Map<String, Object> item = hitsArray[i].getSourceAsMap();
-			item.put("type", "nameindex");
-			List<Map<String, Object>> objects = (List<Map<String, Object>>) item.get("objects");
-			String itemName = MapUtils.getString(item, "name");
-			item.put("name", itemName);
+			item.put("color", OnyxUtils.getRandomColor());
 			result.add(item);
 		}
 		return result;
