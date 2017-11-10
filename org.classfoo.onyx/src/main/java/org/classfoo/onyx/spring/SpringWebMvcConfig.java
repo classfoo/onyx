@@ -1,8 +1,11 @@
 package org.classfoo.onyx.spring;
 
+import java.io.IOException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
 
+import org.apache.cassandra.service.EmbeddedCassandraService;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.node.InternalSettingsPreparer;
 import org.elasticsearch.node.Node;
@@ -13,23 +16,24 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.multipart.commons.CommonsMultipartResolver;
+import org.springframework.web.servlet.ViewResolver;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+import org.springframework.web.servlet.view.InternalResourceViewResolver;
+import org.springframework.web.servlet.view.JstlView;
 
 @Configuration
 @EnableWebMvc
-@ComponentScan(basePackages = "org.classfoo")
-public class SpringWebMvcConfig extends WebMvcConfigurerAdapter {
+@ComponentScan(basePackages = "org.classfoo.onyx.impl")
+public class SpringWebMvcConfig {
 
-	//	@Bean(name = "SpringAnnotation")
-	//	public ViewResolver viewResolver() {
-	//
-	//		InternalResourceViewResolver view = new InternalResourceViewResolver();
-	//		view.setViewClass(JstlView.class);
-	//		view.setPrefix("/WEB-INF/views/");
-	//		view.setSuffix(".jsp");
-	//		return view;
-	//	}
+	@Bean(name = "SpringAnnotation")
+	public ViewResolver viewResolver() {
+		InternalResourceViewResolver view = new InternalResourceViewResolver();
+		view.setViewClass(JstlView.class);
+		view.setPrefix("/WEB-INF/views/");
+		view.setSuffix(".jsp");
+		return view;
+	}
 
 	@Bean(name = "multipartResolver")
 	public CommonsMultipartResolver multipartResolver() {
@@ -54,4 +58,14 @@ public class SpringWebMvcConfig extends WebMvcConfigurerAdapter {
 		}
 	}
 
+	@Bean
+	public EmbeddedCassandraService getCassandraServer() throws IOException {
+		URL res = SpringWebMvcConfig.class.getResource("cassandra.yaml");
+		System.setProperty("cassandra.config", res.toString());
+		System.setProperty("cassandra.storagedir", "data/cassandra");
+		System.setProperty("cassandra.ignore_corrupted_schema_tables", "true");
+		EmbeddedCassandraService service = new EmbeddedCassandraService();
+		service.start();
+		return service;
+	}
 }
