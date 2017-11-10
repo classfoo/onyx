@@ -1,34 +1,21 @@
 package org.classfoo.onyx.impl.streaming;
 
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.collections.MapUtils;
 import org.classfoo.onyx.api.OnyxService;
 import org.classfoo.onyx.api.operate.OnyxOperateService;
-import org.classfoo.onyx.api.storage.OnyxStorage;
 import org.classfoo.onyx.api.storage.OnyxStorageService;
-import org.classfoo.onyx.api.storage.OnyxStorageSession;
 import org.classfoo.onyx.api.streaming.OnyxStreamingConsumer;
 import org.classfoo.onyx.api.streaming.OnyxStreamingMessage;
 import org.classfoo.onyx.api.streaming.OnyxStreamingProducer;
 import org.classfoo.onyx.api.streaming.OnyxStreamingService;
-import org.eclipse.jetty.util.thread.ThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import au.com.bytecode.opencsv.CSVReader;
 
 /**
  * @see OnyxStreamingService
