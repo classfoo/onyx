@@ -11,12 +11,15 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.classfoo.onyx.api.index.OnyxIndexSession;
 import org.classfoo.onyx.impl.OnyxUtils;
+import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequest;
+import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.index.VersionType;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.script.Script;
@@ -65,7 +68,7 @@ public class OnyxIndexSessionImpl implements OnyxIndexSession {
 	@Override
 	public void upsertIndex(String index, String type, String id, Map<String, Object> object) {
 		IndexRequest indexRequest = new IndexRequest(index, type, id).source(object);
-		UpdateRequest updateRequest = new UpdateRequest(index, type, id).doc(object).upsert(indexRequest);
+		UpdateRequest updateRequest = new UpdateRequest(index, type, id).doc(object).upsert(indexRequest).retryOnConflict(5);
 		try {
 			client.update(updateRequest).get();
 		}
@@ -158,8 +161,10 @@ public class OnyxIndexSessionImpl implements OnyxIndexSession {
 
 	@Override
 	public void clearIndexes() {
-		DeleteByQueryAction.INSTANCE.newRequestBuilder(client).filter(QueryBuilders.matchAllQuery()).source("onyx",
-				"global").get();
+		IndicesExistsRequest inExistsRequest = new IndicesExistsRequest("onyx");
+		client.admin().indices().exists(inExistsRequest).actionGet();
+		//		DeleteByQueryAction.INSTANCE.newRequestBuilder(client).filter(QueryBuilders.matchAllQuery()).source("onyx",
+		//				"global").get();
 	}
 
 	@Override

@@ -46,6 +46,7 @@ public class OnyxStorage_Cassandra extends OnyxStorageImpl implements OnyxStorag
 	}
 
 	private void init(Cluster cluster) {
+		this.createKeySpace(cluster);
 		this.clearIndexes();
 		Session session = cluster.connect("onyx");
 		try {
@@ -58,6 +59,17 @@ public class OnyxStorage_Cassandra extends OnyxStorageImpl implements OnyxStorag
 		}
 		catch (Exception e) {
 			logger.error("Error while initialize cassandra tables!", e);
+		}
+		finally {
+			session.close();
+		}
+	}
+
+	private void createKeySpace(Cluster cluster) {
+		Session session = cluster.connect();
+		try {
+			session.execute(
+					"create keyspace IF NOT EXISTS onyx WITH replication = {'class':'SimpleStrategy', 'replication_factor' : 3}");
 		}
 		finally {
 			session.close();
