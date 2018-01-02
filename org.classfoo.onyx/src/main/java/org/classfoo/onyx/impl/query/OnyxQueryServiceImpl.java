@@ -17,35 +17,40 @@ import org.classfoo.onyx.api.query.OnyxQueryMaterials;
 import org.classfoo.onyx.api.query.OnyxQueryService;
 import org.springframework.stereotype.Component;
 
+/**
+ * @see OnyxQueryService
+ * @author ClassFoo
+ * @createdate 20180102
+ */
 @Component
 public class OnyxQueryServiceImpl implements OnyxQueryService {
 
-	private static final Map<Class, Class> map = new HashMap<Class, Class>(100);
+    private static final Map<Class, Class> MAP = new HashMap<Class, Class>(100);
 
-	static {
-		map.put(OnyxQueryKnowledgeBase.class, OnyxQueryKnowledgeBaseImpl.class);
-		map.put(OnyxQueryKnowledgeBases.class, OnyxQueryKnowledgeBasesImpl.class);
-		map.put(OnyxQueryEntity.class, OnyxQueryEntityImpl.class);
-		map.put(OnyxQueryEntities.class, OnyxQueryEntitiesImpl.class);
-		map.put(OnyxQueryLabel.class, OnyxQueryLabelImpl.class);
-		map.put(OnyxQueryLabels.class, OnyxQueryLabelsImpl.class);
-		map.put(OnyxQueryMaterial.class, OnyxQueryMaterialImpl.class);
-		map.put(OnyxQueryMaterials.class, OnyxQueryMaterialsImpl.class);
-	}
+    static {
+        MAP.put(OnyxQueryKnowledgeBase.class, OnyxQueryKnowledgeBaseImpl.class);
+        MAP.put(OnyxQueryKnowledgeBases.class, OnyxQueryKnowledgeBasesImpl.class);
+        MAP.put(OnyxQueryEntity.class, OnyxQueryEntityImpl.class);
+        MAP.put(OnyxQueryEntities.class, OnyxQueryEntitiesImpl.class);
+        MAP.put(OnyxQueryLabel.class, OnyxQueryLabelImpl.class);
+        MAP.put(OnyxQueryLabels.class, OnyxQueryLabelsImpl.class);
+        MAP.put(OnyxQueryMaterial.class, OnyxQueryMaterialImpl.class);
+        MAP.put(OnyxQueryMaterials.class, OnyxQueryMaterialsImpl.class);
+    }
 
-	@Override
-	public <T extends OnyxQuery> T createQuery(OnyxService onyxService, Class<T> type) {
-		Class<T> query = map.get(type);
-		if (query == null) {
-			throw new RuntimeException();
-		}
-		try {
-			Constructor<T> constructor = query.getConstructor(OnyxService.class);
-			return constructor.newInstance(onyxService);
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
+    @Override
+    public <T extends OnyxQuery> T createQuery(OnyxService onyxService, Class<T> type) {
+        Class<T> query = MAP.get(type);
+        if (query == null) {
+            throw new RuntimeException();
+        }
+        try {
+            Constructor<T> constructor = query.getConstructor(OnyxService.class);
+            return constructor.newInstance(onyxService);
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 }

@@ -16,54 +16,54 @@ import org.classfoo.onyx.api.streaming.OnyxStreamingService;
  */
 public class OnyxStreamingProducerImpl implements OnyxStreamingProducer {
 
-	private OnyxService onyxService;
+    private OnyxService onyxService;
 
-	private OnyxStreamingService streamingService;
+    private OnyxStreamingService streamingService;
 
-	private String name;
+    private String name;
 
-	public OnyxStreamingProducerImpl(OnyxService onyxService, String name) {
-		this.onyxService = onyxService;
-		this.streamingService = this.onyxService.getStreamingService();
-		this.name = name;
-	}
+    public OnyxStreamingProducerImpl(OnyxService onyxService, String name) {
+        this.onyxService = onyxService;
+        this.streamingService = this.onyxService.getStreamingService();
+        this.name = name;
+    }
 
-	@Override
-	public void start() {
-		List<OnyxStreamingConsumer> consumers = streamingService.getConsumers(this.name);
-		if (consumers == null || consumers.isEmpty()) {
-			return;
-		}
-		for (OnyxStreamingConsumer consumer : consumers) {
-			consumer.start();
-		}
-	}
+    @Override
+    public void start() {
+        List<OnyxStreamingConsumer> consumers = streamingService.getConsumers(this.name);
+        if (consumers == null || consumers.isEmpty()) {
+            return;
+        }
+        for (OnyxStreamingConsumer consumer : consumers) {
+            consumer.start();
+        }
+    }
 
-	@Override
-	public void send(OnyxStreamingMessage message) {
-		List<OnyxStreamingConsumer> consumers = streamingService.getConsumers(this.name);
-		if (consumers == null || consumers.isEmpty()) {
-			return;
-		}
-		for (OnyxStreamingConsumer consumer : consumers) {
-			consumer.consumer(message);
-		}
-	}
+    @Override
+    public void send(OnyxStreamingMessage message) {
+        List<OnyxStreamingConsumer> consumers = streamingService.getConsumers(this.name);
+        if (consumers == null || consumers.isEmpty()) {
+            return;
+        }
+        for (OnyxStreamingConsumer consumer : consumers) {
+            consumer.consumer(message);
+        }
+    }
 
-	@Override
-	public void send(OnyxStreamingMessage message, OnyxStreamingSendCallBack callback) {
+    @Override
+    public void send(OnyxStreamingMessage message, OnyxStreamingSendCallBack callback) {
 
-	}
+    }
 
-	@Override
-	public void shutdown() {
-		List<OnyxStreamingConsumer> consumers = streamingService.getConsumers(this.name);
-		if (consumers == null || consumers.isEmpty()) {
-			return;
-		}
-		for (OnyxStreamingConsumer consumer : consumers) {
-			consumer.shutdown();
-		}
-	}
+    @Override
+    public void shutdown() {
+        List<OnyxStreamingConsumer> consumers = streamingService.getConsumers(this.name);
+        if (consumers == null || consumers.isEmpty()) {
+            return;
+        }
+        for (OnyxStreamingConsumer consumer : consumers) {
+            consumer.shutdown();
+        }
+    }
 
 }

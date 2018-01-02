@@ -7,16 +7,16 @@ package org.classfoo.onyx.api.index;
  */
 public interface OnyxIndexService {
 
-	/**
-	 * open onyx index session
-	 * @return
-	 */
-	public OnyxIndexSession openSession();
+    /**
+     * open onyx index session
+     * @return
+     */
+    public OnyxIndexSession openSession();
 
-	/**
-	 * get onyx indexing thread
-	 * @return
-	 */
-	public OnyxIndexThread getIndexThread();
+    /**
+     * get onyx indexing thread
+     * @return
+     */
+    public OnyxIndexThread getIndexThread();
 
 }

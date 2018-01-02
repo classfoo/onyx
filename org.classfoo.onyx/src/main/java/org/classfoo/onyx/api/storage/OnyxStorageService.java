@@ -7,9 +7,9 @@ package org.classfoo.onyx.api.storage;
  */
 public interface OnyxStorageService {
 
-	/**
-	 * get Onyx Storage
-	 * @return
-	 */
-	public OnyxStorage getStorage();
+    /**
+     * get Onyx Storage
+     * @return
+     */
+    public OnyxStorage getStorage();
 }

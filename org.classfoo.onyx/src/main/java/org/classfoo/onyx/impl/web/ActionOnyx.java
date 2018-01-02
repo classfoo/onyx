@@ -15,9 +15,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 public class ActionOnyx {
 
-	@RequestMapping(path = { "/", "/space/**", "/base/**", "/entity/**", "/personal/**", "/settings/**", "/material/**",
-			"/edit/**", "/view/**", "/graph/**", "/search/**" })
-	public String execute(HttpServletRequest request, HttpServletResponse response, Model model) {
-		return "index";
-	}
+    @RequestMapping(path = { "/", "/space/**", "/base/**", "/entity/**", "/personal/**", "/settings/**", "/material/**",
+            "/edit/**", "/view/**", "/graph/**", "/search/**" })
+    public String execute(HttpServletRequest request, HttpServletResponse response, Model model) {
+        return "index";
+    }
 }

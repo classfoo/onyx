@@ -2,18 +2,47 @@ package org.classfoo.onyx.api.operate;
 
 import java.util.List;
 
+/**
+ * update label
+ * @author ClassFoo
+ * @createdate 20180102
+ */
 public interface OnyxOperateUpdateLabel extends OnyxOperate {
 
-	void setKnowledgeBase(String kid);
+    /**
+     * set Knowledge Base id
+     * @param kid
+     */
+    void setKnowledgeBase(String kid);
 
-	void setLabelId(String lid);
+    /**
+     * set Label id
+     * @param lid
+     */
+    void setLabelId(String lid);
 
-	void setLabelName(String name);
+    /**
+     * set Label name
+     * @param name
+     */
+    void setLabelName(String name);
 
-	void setParents(List<String> parents);
+    /**
+     * set Label Parents
+     * @param parents
+     */
+    void setParents(List<String> parents);
 
-	void setLinks(List<String> links);
+    /**
+     * set Label links
+     * @param links
+     */
+    void setLinks(List<String> links);
 
-	void setProperties(List<String> properties);
+    /**
+     * set Label properties
+     * @param properties
+     */
+    void setProperties(List<String> properties);
 
 }

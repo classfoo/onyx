@@ -3,7 +3,7 @@ package org.classfoo.onyx.impl.storage;
 import org.classfoo.onyx.api.OnyxService;
 import org.classfoo.onyx.api.storage.OnyxStorage;
 import org.classfoo.onyx.api.storage.OnyxStorageService;
-import org.classfoo.onyx.impl.storage.cassandra.OnyxStorage_Cassandra;
+import org.classfoo.onyx.impl.storage.cassandra.OnyxStorageCassandra;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -15,16 +15,16 @@ import org.springframework.stereotype.Component;
 @Component
 public class OnyxStorageServiceImpl implements OnyxStorageService {
 
-	@Autowired
-	private OnyxService onyxService;
+    @Autowired
+    private OnyxService onyxService;
 
-	private OnyxStorage_Cassandra storage = null;
+    private OnyxStorageCassandra storage = null;
 
-	@Override
-	public OnyxStorage getStorage() {
-		if (storage == null) {
-			storage = new OnyxStorage_Cassandra(onyxService);
-		}
-		return storage;
-	}
+    @Override
+    public OnyxStorage getStorage() {
+        if (storage == null) {
+            storage = new OnyxStorageCassandra(onyxService);
+        }
+        return storage;
+    }
 }

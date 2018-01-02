@@ -14,17 +14,13 @@ import org.springframework.stereotype.Component;
 @Component
 public class OnyxCacheServiceImpl implements OnyxCacheService {
 
-	private ConcurrentHashMap<Object, Object> cache = new ConcurrentHashMap<Object, Object>(10000);
+    private ConcurrentHashMap<Object, Object> cache = new ConcurrentHashMap<Object, Object>(10000);
 
-	@Override
-	public <T> T query(Object key, OnyxCacheQuery<T> onyxCacheQuery) {
-//		Object value = cache.get(key);
-//		if (value != null) {
-//			return (T) value;
-//		}
-		T result = onyxCacheQuery.query();
-		cache.put(key, result);
-		return result;
-	}
+    @Override
+    public <T> T query(Object key, OnyxCacheQuery<T> onyxCacheQuery) {
+        T result = onyxCacheQuery.query();
+        cache.put(key, result);
+        return result;
+    }
 
 }

@@ -7,6 +7,6 @@ import org.classfoo.onyx.api.storage.OnyxStorage;
  * @author ClassFoo
  *
  */
-public abstract class OnyxStorageImpl implements OnyxStorage {
+public abstract class AbstractOnyxStorage implements OnyxStorage {
 
 }

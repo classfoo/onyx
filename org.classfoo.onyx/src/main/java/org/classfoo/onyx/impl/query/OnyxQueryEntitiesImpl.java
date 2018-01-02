@@ -9,30 +9,35 @@ import org.classfoo.onyx.api.storage.OnyxStorage;
 import org.classfoo.onyx.api.storage.OnyxStorageService;
 import org.classfoo.onyx.api.storage.OnyxStorageSession;
 
-public class OnyxQueryEntitiesImpl extends OnyxQueryListImpl<Map<String, Object>> implements OnyxQueryEntities {
+/**
+ * @see OnyxQueryEntities
+ * @author ClassFoo
+ * @createdate 20180102
+ */
+public class OnyxQueryEntitiesImpl extends AbstractOnyxQueryList<Map<String, Object>> implements OnyxQueryEntities {
 
-	private String kid;
+    private String kid;
 
-	public OnyxQueryEntitiesImpl(OnyxService onyxService) {
-		super(onyxService);
-	}
+    public OnyxQueryEntitiesImpl(OnyxService onyxService) {
+        super(onyxService);
+    }
 
-	@Override
-	public void setKid(String kid) {
-		this.kid = kid;
-	}
+    @Override
+    public void setKid(String kid) {
+        this.kid = kid;
+    }
 
-	@Override
-	public List<Map<String, Object>> queryList(long limit) {
-		OnyxStorageService storageService = this.onyxService.getStorageService();
-		OnyxStorage storage = storageService.getStorage();
-		OnyxStorageSession session = storage.openSession();
-		try {
-			return session.queryBaseEntities(kid);
-		}
-		finally {
-			session.close();
-		}
-	}
+    @Override
+    public List<Map<String, Object>> queryList(long limit) {
+        OnyxStorageService storageService = this.onyxService.getStorageService();
+        OnyxStorage storage = storageService.getStorage();
+        OnyxStorageSession session = storage.openSession();
+        try {
+            return session.queryBaseEntities(kid);
+        }
+        finally {
+            session.close();
+        }
+    }
 
 }

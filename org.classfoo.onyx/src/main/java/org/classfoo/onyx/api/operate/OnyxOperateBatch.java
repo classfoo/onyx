@@ -9,19 +9,19 @@ import org.classfoo.onyx.api.OnyxService;
  */
 public interface OnyxOperateBatch extends OnyxOperate {
 
-	/**
-	 * Add Operate to Batch
-	 * @param operate
-	 * @return
-	 */
-	public OnyxOperateBatch addOperate(OnyxOperate operate);
+    /**
+     * Add Operate to Batch
+     * @param operate
+     * @return
+     */
+    public OnyxOperateBatch addOperate(OnyxOperate operate);
 
-	/**
-	 * Create Operate and add to Batch
-	 * @param onyxService
-	 * @param type
-	 * @return
-	 */
-	public <T extends OnyxOperate> T createOperate(OnyxService onyxService, Class<T> type);
+    /**
+     * Create Operate and add to Batch
+     * @param onyxService
+     * @param type
+     * @return
+     */
+    public <T extends OnyxOperate> T createOperate(OnyxService onyxService, Class<T> type);
 
 }

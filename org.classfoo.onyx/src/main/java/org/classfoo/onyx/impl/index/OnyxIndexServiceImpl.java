@@ -50,32 +50,32 @@ import org.springframework.stereotype.Component;
 @Component
 public class OnyxIndexServiceImpl implements OnyxIndexService {
 
-	@Autowired
-	private OnyxService onyxService;
+    @Autowired
+    private OnyxService onyxService;
 
-	private TransportClient client;
+    private TransportClient client;
 
-	private OnyxIndexThreadImpl indexThread;
+    private OnyxIndexThreadImpl indexThread;
 
-	@Override
-	public OnyxIndexSession openSession() {
-		try {
-			if (this.client == null) {
-				this.client = new PreBuiltTransportClient(Settings.EMPTY).addTransportAddress(
-						new InetSocketTransportAddress(InetAddress.getByName("localhost"), 9300));
-			}
-			return new OnyxIndexSessionImpl(this.client);
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
+    @Override
+    public OnyxIndexSession openSession() {
+        try {
+            if (this.client == null) {
+                this.client = new PreBuiltTransportClient(Settings.EMPTY).addTransportAddress(
+                        new InetSocketTransportAddress(InetAddress.getByName("localhost"), 9300));
+            }
+            return new OnyxIndexSessionImpl(this.client);
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-	@Override
-	public OnyxIndexThread getIndexThread() {
-		if (this.indexThread == null) {
-			this.indexThread = new OnyxIndexThreadImpl(this.onyxService);
-		}
-		return this.indexThread;
-	}
+    @Override
+    public OnyxIndexThread getIndexThread() {
+        if (this.indexThread == null) {
+            this.indexThread = new OnyxIndexThreadImpl(this.onyxService);
+        }
+        return this.indexThread;
+    }
 }

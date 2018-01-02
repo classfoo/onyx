@@ -18,55 +18,55 @@ import org.springframework.web.bind.annotation.RequestMethod;
  */
 public interface OnyxService {
 
-	/**
-	 * create query object
-	 * @param type
-	 * @return
-	 */
-	public <T extends OnyxQuery> T createQuery(Class<T> type);
+    /**
+     * create query object
+     * @param type
+     * @return
+     */
+    public <T extends OnyxQuery> T createQuery(Class<T> type);
 
-	/**
-	 * create operate object
-	 * @param type
-	 * @return
-	 */
-	public <T extends OnyxOperate> T createOperate(Class<T> type);
+    /**
+     * create operate object
+     * @param type
+     * @return
+     */
+    public <T extends OnyxOperate> T createOperate(Class<T> type);
 
-	/**
-	 * Handle Web Api Request
-	 * @param method 
-	 * @param args
-	 * @return
-	 */
-	public Object service(RequestMethod method, Map<String, Object> args);
+    /**
+     * Handle Web Api Request
+     * @param method 
+     * @param args
+     * @return
+     */
+    public Object service(RequestMethod method, Map<String, Object> args);
 
-	/**
-	 * get onyx storage service
-	 * @return
-	 */
-	public OnyxStorageService getStorageService();
+    /**
+     * get onyx storage service
+     * @return
+     */
+    public OnyxStorageService getStorageService();
 
-	/**
-	 * get onyx cache service
-	 * @return
-	 */
-	public OnyxCacheService getCacheService();
+    /**
+     * get onyx cache service
+     * @return
+     */
+    public OnyxCacheService getCacheService();
 
-	/**
-	 * get onyx file service
-	 * @return
-	 */
-	public OnyxFileService getFileService();
+    /**
+     * get onyx file service
+     * @return
+     */
+    public OnyxFileService getFileService();
 
-	/**
-	 * get onyx streaming service
-	 * @return
-	 */
-	public OnyxStreamingService getStreamingService();
+    /**
+     * get onyx streaming service
+     * @return
+     */
+    public OnyxStreamingService getStreamingService();
 
-	/**
-	 * get onyx index service
-	 * @return
-	 */
-	public OnyxIndexService getIndexService();
+    /**
+     * get onyx index service
+     * @return
+     */
+    public OnyxIndexService getIndexService();
 }

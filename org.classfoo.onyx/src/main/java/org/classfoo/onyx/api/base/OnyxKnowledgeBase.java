@@ -9,5 +9,9 @@ import java.util.Map;
  */
 public interface OnyxKnowledgeBase {
 
-	public Map<String, Object> toJson();
+    /**
+     * get knowledge base json
+     * @return
+     */
+    public Map<String, Object> toJson();
 }

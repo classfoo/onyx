@@ -8,30 +8,35 @@ import org.classfoo.onyx.api.storage.OnyxStorage;
 import org.classfoo.onyx.api.storage.OnyxStorageService;
 import org.classfoo.onyx.api.storage.OnyxStorageSession;
 
-public class OnyxQueryKnowledgeBaseImpl extends OnyxQuerySingleImpl<Map<String, Object>> implements OnyxQueryKnowledgeBase {
+/**
+ * @see OnyxQueryKnowledgeBase
+ * @author ClassFoo
+ * @createdate 20180102
+ */
+public class OnyxQueryKnowledgeBaseImpl extends AbstractOnyxQuerySingle<Map<String, Object>> implements OnyxQueryKnowledgeBase {
 
-	private String kid;
+    private String kid;
 
-	public OnyxQueryKnowledgeBaseImpl(OnyxService onyxService) {
-		super(onyxService);
-	}
+    public OnyxQueryKnowledgeBaseImpl(OnyxService onyxService) {
+        super(onyxService);
+    }
 
-	@Override
-	public void setKid(String kid) {
-		this.kid = kid;
-	}
+    @Override
+    public void setKid(String kid) {
+        this.kid = kid;
+    }
 
-	@Override
-	public Map<String, Object> querySingle() {
-		OnyxStorageService storageService = this.onyxService.getStorageService();
-		OnyxStorage storage = storageService.getStorage();
-		OnyxStorageSession session = storage.openSession();
-		try {
-			return session.queryBase(kid);
-		}
-		finally {
-			session.close();
-		}
-	}
+    @Override
+    public Map<String, Object> querySingle() {
+        OnyxStorageService storageService = this.onyxService.getStorageService();
+        OnyxStorage storage = storageService.getStorage();
+        OnyxStorageSession session = storage.openSession();
+        try {
+            return session.queryBase(kid);
+        }
+        finally {
+            session.close();
+        }
+    }
 
 }

@@ -10,12 +10,28 @@ import java.util.Map;
  */
 public interface OnyxOperateAddEntity extends OnyxOperate {
 
-	void setKnowledgeBase(String kid);
+    /**
+     * set knowledge base id
+     * @param kid
+     */
+    void setKnowledgeBase(String kid);
 
-	void setName(String name);
+    /**
+     * set entity name
+     * @param name
+     */
+    void setName(String name);
 
-	void setLabels(List<String> labels);
+    /**
+     * set entity labels
+     * @param labels
+     */
+    void setLabels(List<String> labels);
 
-	void setProperties(Map<String, Object> properties);
+    /**
+     * set entity properties
+     * @param properties
+     */
+    void setProperties(Map<String, Object> properties);
 
 }

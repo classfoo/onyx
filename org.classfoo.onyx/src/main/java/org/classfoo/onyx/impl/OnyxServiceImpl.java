@@ -31,112 +31,113 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @Component
 public class OnyxServiceImpl implements OnyxService, InitializingBean {
 
-	private static final Logger logger = LoggerFactory.getLogger(OnyxServiceImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(OnyxServiceImpl.class);
 
-	@Autowired
-	private OnyxApi[] onyxApis;
+    @Autowired
+    private OnyxApi[] onyxApis;
 
-	@Autowired
-	private OnyxStorageService storageService;
+    @Autowired
+    private OnyxStorageService storageService;
 
-	@Autowired
-	private OnyxCacheService cacheService;
+    @Autowired
+    private OnyxCacheService cacheService;
 
-	@Autowired
-	private OnyxQueryService queryService;
+    @Autowired
+    private OnyxQueryService queryService;
 
-	@Autowired
-	private OnyxOperateService operateService;
+    @Autowired
+    private OnyxOperateService operateService;
 
-	@Autowired
-	private OnyxFileService fileService;
+    @Autowired
+    private OnyxFileService fileService;
 
-	@Autowired
-	private OnyxStreamingService streamingService;
+    @Autowired
+    private OnyxStreamingService streamingService;
 
-	@Autowired
-	private OnyxIndexService indexService;
+    @Autowired
+    private OnyxIndexService indexService;
 
-	private Map<String, OnyxApi> onyxApiMap;
+    private Map<String, OnyxApi> onyxApiMap;
 
-	@Override
-	public void afterPropertiesSet() throws Exception {
-		this.onyxApiMap = new HashMap<String, OnyxApi>(this.onyxApis.length);
-		for (OnyxApi onyxApi : this.onyxApis) {
-			String action = onyxApi.getResource();
-			this.onyxApiMap.put(action, onyxApi);
-		}
-		//		JanusGraph graph = JanusGraphFactory.open("berkeleyje:/tmp/graph");
-		//		JanusGraphManagement mgr = graph.openManagement();
-	}
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        this.onyxApiMap = new HashMap<String, OnyxApi>(this.onyxApis.length);
+        for (OnyxApi onyxApi : this.onyxApis) {
+            String action = onyxApi.getResource();
+            this.onyxApiMap.put(action, onyxApi);
+        }
+        //		JanusGraph graph = JanusGraphFactory.open("berkeleyje:/tmp/graph");
+        //		JanusGraphManagement mgr = graph.openManagement();
+    }
 
-	@Override
-	public <T extends OnyxOperate> T createOperate(Class<T> type) {
-		return operateService.createOperate(this, type);
-	}
+    @Override
+    public <T extends OnyxOperate> T createOperate(Class<T> type) {
+        return operateService.createOperate(this, type);
+    }
 
-	@Override
-	public <T extends OnyxQuery> T createQuery(Class<T> type) {
-		return queryService.createQuery(this, type);
-	}
+    @Override
+    public <T extends OnyxQuery> T createQuery(Class<T> type) {
+        return queryService.createQuery(this, type);
+    }
 
-	@Override
-	public Object service(RequestMethod method, Map<String, Object> args) {
-		String resource = MapUtils.getString(args, "resource");
-		OnyxApi api = this.onyxApiMap.get(resource);
-		try {
-			switch (method) {
-				case DELETE:
-					return api.delete(args);
-				case GET:
-					return api.get(args);
-				case HEAD:
-					return api.head(args);
-				case OPTIONS:
-					return api.options(args);
-				case PATCH:
-					return api.patch(args);
-				case POST:
-					return api.post(args);
-				case PUT:
-					return api.put(args);
-				case TRACE:
-					return api.trace(args);
-			}
-			return api.get(args);
-		}
-		catch (Exception e) {
-			HashMap<String, Object> error = new HashMap<String, Object>(3);
-			error.put("type", "error");
-			error.put("message", ExceptionUtils.getMessage(e));
-			error.put("details", ExceptionUtils.getFullStackTrace(e));
-			logger.error("API请求失败！", e);
-			return error;
-		}
-	}
+    @Override
+    public Object service(RequestMethod method, Map<String, Object> args) {
+        String resource = MapUtils.getString(args, "resource");
+        OnyxApi api = this.onyxApiMap.get(resource);
+        try {
+            switch (method) {
+                case DELETE:
+                    return api.delete(args);
+                case GET:
+                    return api.get(args);
+                case HEAD:
+                    return api.head(args);
+                case OPTIONS:
+                    return api.options(args);
+                case PATCH:
+                    return api.patch(args);
+                case POST:
+                    return api.post(args);
+                case PUT:
+                    return api.put(args);
+                case TRACE:
+                    return api.trace(args);
+                default:
+                    return api.get(args);
+            }
+        }
+        catch (Exception e) {
+            HashMap<String, Object> error = new HashMap<String, Object>(3);
+            error.put("type", "error");
+            error.put("message", ExceptionUtils.getMessage(e));
+            error.put("details", ExceptionUtils.getFullStackTrace(e));
+            logger.error("API请求失败！", e);
+            return error;
+        }
+    }
 
-	@Override
-	public OnyxStorageService getStorageService() {
-		return this.storageService;
-	}
+    @Override
+    public OnyxStorageService getStorageService() {
+        return this.storageService;
+    }
 
-	@Override
-	public OnyxCacheService getCacheService() {
-		return this.cacheService;
-	}
+    @Override
+    public OnyxCacheService getCacheService() {
+        return this.cacheService;
+    }
 
-	@Override
-	public OnyxFileService getFileService() {
-		return this.fileService;
-	}
+    @Override
+    public OnyxFileService getFileService() {
+        return this.fileService;
+    }
 
-	@Override
-	public OnyxStreamingService getStreamingService() {
-		return this.streamingService;
-	}
+    @Override
+    public OnyxStreamingService getStreamingService() {
+        return this.streamingService;
+    }
 
-	@Override
-	public OnyxIndexService getIndexService() {
-		return this.indexService;
-	}
+    @Override
+    public OnyxIndexService getIndexService() {
+        return this.indexService;
+    }
 }

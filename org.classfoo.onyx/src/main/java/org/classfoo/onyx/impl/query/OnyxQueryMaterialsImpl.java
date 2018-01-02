@@ -7,57 +7,62 @@ import org.apache.commons.lang3.StringUtils;
 import org.classfoo.onyx.api.OnyxService;
 import org.classfoo.onyx.api.cache.OnyxCacheQuery;
 import org.classfoo.onyx.api.cache.OnyxCacheService;
-import org.classfoo.onyx.api.query.OnyxQueryLabels;
 import org.classfoo.onyx.api.query.OnyxQueryMaterials;
 import org.classfoo.onyx.api.storage.OnyxStorage;
 import org.classfoo.onyx.api.storage.OnyxStorageService;
 import org.classfoo.onyx.api.storage.OnyxStorageSession;
 
-public class OnyxQueryMaterialsImpl extends OnyxQueryListImpl<Map<String, Object>> implements OnyxQueryMaterials {
+/**
+ * @see OnyxQueryMaterials
+ * @author ClassFoo
+ * @createdate 20180102
+ */
+public class OnyxQueryMaterialsImpl extends AbstractOnyxQueryList<Map<String, Object>> implements OnyxQueryMaterials {
 
-	private String kid;
+    private String kid;
 
-	public OnyxQueryMaterialsImpl(OnyxService onyxService) {
-		super(onyxService);
-	}
+    public OnyxQueryMaterialsImpl(OnyxService onyxService) {
+        super(onyxService);
+    }
 
-	@Override
-	public void setKid(String kid) {
-		this.kid = kid;
-	}
+    @Override
+    public void setKid(String kid) {
+        this.kid = kid;
+    }
 
-	@Override
-	public int hashCode() {
-		return this.kid == null ? -1 : this.kid.hashCode();
-	}
+    @Override
+    public int hashCode() {
+        return this.kid == null ? -1 : this.kid.hashCode();
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (!(obj instanceof OnyxQueryMaterialsImpl)) {
-			return false;
-		}
-		OnyxQueryMaterialsImpl queryLabels = (OnyxQueryMaterialsImpl) obj;
-		return StringUtils.equals(this.kid, queryLabels.kid);
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof OnyxQueryMaterialsImpl)) {
+            return false;
+        }
+        OnyxQueryMaterialsImpl queryLabels = (OnyxQueryMaterialsImpl) obj;
+        return StringUtils.equals(this.kid, queryLabels.kid);
+    }
 
-	@Override
-	public List<Map<String, Object>> queryList(long limit) {
-		OnyxCacheService cacheService = onyxService.getCacheService();
-		List<Map<String, Object>> values = cacheService.query(this, new OnyxCacheQuery<List<Map<String, Object>>>() {
-			public List<Map<String, Object>> query() {
-				OnyxStorageService storageService = onyxService.getStorageService();
-				OnyxStorage storage = storageService.getStorage();
-				OnyxStorageSession session = storage.openSession();
-				try {
-					List<Map<String, Object>> labels = session.queryMaterials(kid);
-					return labels;
-				}
-				finally {
-					session.close();
-				}
-			}
-		});
-		return values;
-	}
+    @Override
+    public List<Map<String, Object>> queryList(long limit) {
+        OnyxCacheService cacheService = onyxService.getCacheService();
+        List<Map<String, Object>> values = cacheService.query(this, new OnyxCacheQuery<List<Map<String, Object>>>() {
+            @Override
+            public List<Map<String, Object>> query() {
+                OnyxStorageService storageService = onyxService.getStorageService();
+                OnyxStorage storage = storageService.getStorage();
+                OnyxStorageSession session = storage.openSession();
+                try {
+                    List<Map<String, Object>> labels = session.queryMaterials(kid);
+                    return labels;
+                }
+                finally {
+                    session.close();
+                }
+            }
+        });
+        return values;
+    }
 
 }

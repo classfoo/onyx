@@ -1,12 +1,33 @@
 package org.classfoo.onyx.api.storage.tables;
 
+/**
+ * Table
+ * @author ClassFoo
+ * @createdate 20180102
+ */
 public interface OnyxTable {
 
-	public String getUUID();
+    /**
+     * get uuid
+     * @return
+     */
+    public String getUUID();
 
-	public void setUUID(String uuid);
+    /**
+     * set uuid
+     * @param uuid
+     */
+    public void setUUID(String uuid);
 
-	public String getName();
+    /**
+     * get name
+     * @return
+     */
+    public String getName();
 
-	public void setName(String name);
+    /**
+     * set name
+     * @param name
+     */
+    public void setName(String name);
 }

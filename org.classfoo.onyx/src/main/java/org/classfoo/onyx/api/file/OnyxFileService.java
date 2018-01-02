@@ -11,9 +11,23 @@ import org.springframework.web.multipart.MultipartFile;
  */
 public interface OnyxFileService {
 
-	public String createTempFile();
+    /**
+     * create new temp file
+     * @return
+     */
+    public String createTempFile();
 
-	public File getTempFile(String id);
+    /**
+     * get new temp file by id
+     * @param id
+     * @return
+     */
+    public File getTempFile(String id);
 
-	public String saveAsTempFile(MultipartFile file);
+    /**
+     * save multipart file as temp file
+     * @param file
+     * @return
+     */
+    public String saveAsTempFile(MultipartFile file);
 }

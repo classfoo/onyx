@@ -7,16 +7,16 @@ package org.classfoo.onyx.api.streaming;
  */
 public interface OnyxStreamingMessage {
 
-	/**
-	 * get streaming name
-	 * @return
-	 */
-	public String getStreaming();
+    /**
+     * get streaming name
+     * @return
+     */
+    public String getStreaming();
 
-	/**
-	 * get message body
-	 * @return
-	 */
-	public Object getBody();
+    /**
+     * get message body
+     * @return
+     */
+    public Object getBody();
 
 }

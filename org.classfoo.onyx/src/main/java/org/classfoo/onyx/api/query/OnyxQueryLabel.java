@@ -9,16 +9,16 @@ import java.util.Map;
  */
 public interface OnyxQueryLabel extends OnyxQuerySingle<Map<String, Object>> {
 
-	/**
-	 * set base id
-	 * @param eid
-	 */
-	public void setKid(String kid);
+    /**
+     * set base id
+     * @param kid
+     */
+    public void setKid(String kid);
 
-	/**
-	 * set label name
-	 * @param name
-	 */
-	public void setName(String name);
+    /**
+     * set label name
+     * @param name
+     */
+    public void setName(String name);
 
 }

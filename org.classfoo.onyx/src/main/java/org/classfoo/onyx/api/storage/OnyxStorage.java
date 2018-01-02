@@ -7,10 +7,10 @@ package org.classfoo.onyx.api.storage;
  */
 public interface OnyxStorage {
 
-	/**
-	 * open onyx storage session
-	 * @return
-	 */
-	public OnyxStorageSession openSession();
+    /**
+     * open onyx storage session
+     * @return
+     */
+    public OnyxStorageSession openSession();
 
 }

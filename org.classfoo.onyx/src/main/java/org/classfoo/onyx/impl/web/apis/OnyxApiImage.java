@@ -17,7 +17,7 @@ import org.classfoo.onyx.api.file.OnyxFileService;
 import org.classfoo.onyx.api.query.OnyxQueryEntities;
 import org.classfoo.onyx.api.query.OnyxQueryEntity;
 import org.classfoo.onyx.api.web.OnyxApi;
-import org.classfoo.onyx.impl.web.OnyxApiImpl;
+import org.classfoo.onyx.impl.web.AbstractOnyxApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,33 +28,25 @@ import org.springframework.web.multipart.MultipartFile;
  *
  */
 @Component
-public class OnyxApi_Image extends OnyxApiImpl implements OnyxApi {
+public class OnyxApiImage extends AbstractOnyxApi implements OnyxApi {
 
-	private static final String IMAGE = "image";
+    private static final String IMAGE = "image";
 
-	@Autowired
-	private OnyxService onyxService;
+    @Autowired
+    private OnyxService onyxService;
 
-	@Autowired
-	private OnyxFileService fileService;
+    @Autowired
+    private OnyxFileService fileService;
 
-	@Override
-	public String getResource() {
-		return IMAGE;
-	}
+    @Override
+    public String getResource() {
+        return IMAGE;
+    }
 
-	@Override
-	public Object get(Map<String, Object> args) throws IOException {
-		HttpServletResponse response = (HttpServletResponse) MapUtils.getObject(args, "response");
-//		ServletOutputStream os = response.getOutputStream();
-//		InputStream is = OnyxApi_Image.class.getResourceAsStream("image.png");
-//		try {
-//			IOUtils.copy(is, os);
-//		}
-//		finally {
-//			is.close();
-//		}
-		response.sendError(HttpStatus.SC_NOT_FOUND);
-		return null;
-	}
+    @Override
+    public Object get(Map<String, Object> args) throws IOException {
+        HttpServletResponse response = (HttpServletResponse) MapUtils.getObject(args, "response");
+        response.sendError(HttpStatus.SC_NOT_FOUND);
+        return null;
+    }
 }

@@ -5,41 +5,44 @@ import java.util.Map;
 
 import org.classfoo.onyx.api.OnyxService;
 import org.classfoo.onyx.api.operate.OnyxOperateUpdateEntity;
-import org.classfoo.onyx.api.storage.OnyxStorage;
-import org.classfoo.onyx.api.storage.OnyxStorageService;
 import org.classfoo.onyx.api.storage.OnyxStorageSession;
 
-public class OnyxOperateUpdateEntityImpl extends OnyxOperateImpl implements OnyxOperateUpdateEntity {
+/**
+ * @see OnyxOperateUpdateEntity
+ * @author ClassFoo
+ * @createdate 20180102
+ */
+public class OnyxOperateUpdateEntityImpl extends AbstractOnyxOperate implements OnyxOperateUpdateEntity {
 
-	private String kid;
+    private String kid;
 
-	private String eid;
+    private String eid;
 
-	private List<Map<String, Object>> modifies;
+    private List<Map<String, Object>> modifies;
 
-	public OnyxOperateUpdateEntityImpl(OnyxService onyxService) {
-		super(onyxService);
-	}
+    public OnyxOperateUpdateEntityImpl(OnyxService onyxService) {
+        super(onyxService);
+    }
 
-	@Override
-	public void setKnowledgeBase(String kid) {
-		this.kid = kid;
-	}
+    @Override
+    public void setKnowledgeBase(String kid) {
+        this.kid = kid;
+    }
 
-	@Override
-	public void setEntityId(String eid) {
-		this.eid = eid;
+    @Override
+    public void setEntityId(String eid) {
+        this.eid = eid;
 
-	}
+    }
 
-	@Override
-	public void setModifies(List<Map<String, Object>> modifies) {
-		this.modifies = modifies;
-	}
+    @Override
+    public void setModifies(List<Map<String, Object>> modifies) {
+        this.modifies = modifies;
+    }
 
-	@Override
-	public Map<String, Object> execute(OnyxStorageSession session) {
-		return session.updateEntity(this.kid, this.eid, this.modifies);
-	}
+    @Override
+    public Map<String, Object> execute(OnyxStorageSession session) {
+        return session.updateEntity(this.kid, this.eid, this.modifies);
+    }
 
 }

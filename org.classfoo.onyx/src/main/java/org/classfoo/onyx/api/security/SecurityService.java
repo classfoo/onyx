@@ -1,6 +1,15 @@
 package org.classfoo.onyx.api.security;
 
+/**
+ * Security Service
+ * @author ClassFoo
+ * @createdate 20180102
+ */
 public interface SecurityService {
 
-	public Login getLogin();
+    /**
+     * get Login
+     * @return
+     */
+    public Login getLogin();
 }

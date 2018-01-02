@@ -9,27 +9,27 @@ import org.classfoo.onyx.api.streaming.OnyxStreamingMessage;
  */
 public class OnyxStreamingMessageImpl implements OnyxStreamingMessage {
 
-	private String streaming;
+    private String streaming;
 
-	private Object message;
+    private Object message;
 
-	public OnyxStreamingMessageImpl(String streaming, Object message) {
-		this.streaming = streaming;
-		this.message = message;
-	}
+    public OnyxStreamingMessageImpl(String streaming, Object message) {
+        this.streaming = streaming;
+        this.message = message;
+    }
 
-	@Override
-	public String getStreaming() {
-		return this.streaming;
-	}
+    @Override
+    public String getStreaming() {
+        return this.streaming;
+    }
 
-	@Override
-	public Object getBody() {
-		return this.message;
-	}
+    @Override
+    public Object getBody() {
+        return this.message;
+    }
 
-	@Override
-	public String toString() {
-		return this.streaming;
-	}
+    @Override
+    public String toString() {
+        return this.streaming;
+    }
 }

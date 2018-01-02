@@ -9,10 +9,10 @@ import java.util.Map;
  */
 public interface OnyxOperate {
 
-	/**
-	 * commit the operate to storage
-	 * @return
-	 */
-	public Map<String, Object> commit();
+    /**
+     * commit the operate to storage
+     * @return
+     */
+    public Map<String, Object> commit();
 
 }
